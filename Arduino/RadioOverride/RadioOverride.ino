@@ -16,13 +16,20 @@ int dir = 1;
  
 void setup() 
 { 
-  myservo.attach(9);  // attaches the servo on pin 9 to the servo object 
+  myservo.attach(9);  // attaches the servo on pin 9 to the servo object
+  Serial.begin(9600);
 } 
  
 void loop() 
 {
   val = analogRead(potpin);            // reads the value of the potentiometer (value between 0 and 1023)
-  if (val < 300) {                     //
+  
+  //Print value to serial
+  Serial.print("Analog Value:");
+  Serial.println(val);
+  
+  //Check if value is relevant to 
+  if (val < 300) {
     if (pos < 180 && pos > 0) {
       pos += dir;
     } else {
@@ -32,8 +39,10 @@ void loop()
     myservo.write(pos);
     delay(15);
   } else {
-    val = map(val, 0, 1023, 0, 180);     // scale it to use it with the servo (value between 0 and 180) 
-    myservo.write(val);                  // sets the servo position according to the scaled value 
-    delay(15);   // waits for the servo to get there 
+    //Convert value to servo scale (1-180)
+    val = map(val, 0, 1023, 0, 180);
+    myservo.write(val);                 
+    delay(15);
   }
+
 } 
