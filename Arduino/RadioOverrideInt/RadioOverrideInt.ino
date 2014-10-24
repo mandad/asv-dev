@@ -6,6 +6,8 @@ Servo position sweeps unless overridden by radio input
  */
 
 #include <Servo.h> 
+
+//#define _DEBUG
  
 Servo throttle;
 Servo rudder;
@@ -27,15 +29,31 @@ int out_throttle = 0;
 int out_rudder = 0;
 int pos = 1;  //servo position
 int dir = 1;
+
+//Interrupt variables
+volatile long ch3pulse = 0;
+long ch3_up_time = 0;
+//long ch3_down_time = 0;
  
 void setup() 
 { 
   throttle.attach(servo_throttle);  // attaches the servo on pin 9 to the servo object
   rudder.attach(servo_rudder);
-  pinMode(radio_throttle, INPUT);
+  //pinMode(radio_throttle, INPUT);
   pinMode(radio_rudder, INPUT);
   pinMode(radio_mode, INPUT);
+  
+  //Interrupt on Pin2
+  pinMode(2, INPUT);
+  //attachInterrupt(0, isrCh3Rise, RISING);
+  //attachInterrupt(0, isrCh3Fall, FALLING);
+  attachInterrupt(0, isrCh3Change, CHANGE);
+  
+  #ifdef _DEBUG
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
   Serial.begin(9600);
+  #endif
 } 
  
 void loop() 
@@ -55,7 +73,10 @@ void loop()
     //delay(15);
   } else {
     //Read additional channels
-    val_throttle = pulseIn(radio_throttle, HIGH, 25000);
+    //Turn off interrupts to read the volatile variable
+    noInterrupts();
+    val_throttle = ch3pulse;
+    interrupts();
     val_rudder = pulseIn(radio_rudder, HIGH, 25000);
     //Convert value to servo scale (1-180)
     //Throttle
@@ -68,8 +89,38 @@ void loop()
     rudder.write(out_rudder);
     
     //Print value to serial
-    //Serial.print("Radio Throttle: ");
-    //Serial.println(val_throttle);
+    #ifdef _DEBUG
+    Serial.print("Radio Throttle: ");
+    Serial.println(val_throttle);
+    #endif
   }
 
-} 
+}
+
+void isrCh3Change ()
+{
+  if (digitalRead(2) == HIGH) {
+    ch3_up_time = micros();
+  } else if (ch3_up_time > 0) {
+    ch3pulse = micros() - ch3_up_time;
+  }
+}
+
+void isrCh3Rise ()
+{
+  ch3_up_time = micros();
+  #ifdef _DEBUG
+  digitalWrite(13, HIGH);
+  #endif
+}
+
+void isrCh3Fall ()
+{
+  #ifdef _DEBUG
+  digitalWrite(13, HIGH);
+  #endif
+  if (ch3_up_time > 0) {
+    //this ignores overflow for the moment
+    ch3pulse = micros() - ch3_up_time;
+  }
+}
