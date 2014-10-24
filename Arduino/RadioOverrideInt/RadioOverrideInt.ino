@@ -20,6 +20,7 @@ Servo rudder;
 //PWM
 #define servo_throttle 9
 #define servo_rudder 10
+#define num_channels 3
 
 //Initialize variables
 int val_mode;    // variable to read the value from the ppm pin
@@ -31,8 +32,9 @@ int pos = 1;  //servo position
 int dir = 1;
 
 //Interrupt variables
-volatile long ch3pulse = 0;
-long ch3_up_time = 0;
+volatile unsigned long pulse[num_channels];
+byte first_pulse;
+unsigned long up_time[num_channels];
 //long ch3_down_time = 0;
  
 void setup() 
@@ -44,10 +46,14 @@ void setup()
   pinMode(radio_mode, INPUT);
   
   //Interrupt on Pin2
-  pinMode(2, INPUT);
+  pinMode(2, INPUT);  //ch3
+  pinMode(3, INPUT);  //ch4
+  pinMode(21, INPUT);  //ch5
   //attachInterrupt(0, isrCh3Rise, RISING);
   //attachInterrupt(0, isrCh3Fall, FALLING);
   attachInterrupt(0, isrCh3Change, CHANGE);
+  attachInterrupt(1, isrCh4Change, CHANGE);
+  //attachInterrupt(2, isrCh5Change, CHANGE);
   
   #ifdef _DEBUG
   pinMode(13, OUTPUT);
@@ -58,7 +64,13 @@ void setup()
  
 void loop() 
 {
+  //Turn off interrupts to read the volatile variable
   val_mode = pulseIn(radio_mode, HIGH, 22000);
+  noInterrupts();
+  val_throttle = pulse[0];
+  val_rudder = pulse[1];
+  //val_mode = pulse[3];
+  interrupts();
   
   //Check if mode switch is engaged 
   if (val_mode < 1500) {
@@ -72,12 +84,6 @@ void loop()
     rudder.write(pos);
     //delay(15);
   } else {
-    //Read additional channels
-    //Turn off interrupts to read the volatile variable
-    noInterrupts();
-    val_throttle = ch3pulse;
-    interrupts();
-    val_rudder = pulseIn(radio_rudder, HIGH, 25000);
     //Convert value to servo scale (1-180)
     //Throttle
     out_throttle = map(val_throttle, 1110, 1910, 0, 180);
@@ -96,31 +102,38 @@ void loop()
   }
 
 }
+//==========================
+//        ISRs
+//==========================
 
 void isrCh3Change ()
 {
   if (digitalRead(2) == HIGH) {
-    ch3_up_time = micros();
-  } else if (ch3_up_time > 0) {
-    ch3pulse = micros() - ch3_up_time;
+    up_time[0] = micros();
+    first_pulse = first_pulse | 1;
+  } else if (first_pulse & 1) {
+    pulse[0] = micros() - up_time[0];
   }
 }
 
-void isrCh3Rise ()
+void isrCh4Change ()
 {
-  ch3_up_time = micros();
-  #ifdef _DEBUG
-  digitalWrite(13, HIGH);
-  #endif
-}
-
-void isrCh3Fall ()
-{
-  #ifdef _DEBUG
-  digitalWrite(13, HIGH);
-  #endif
-  if (ch3_up_time > 0) {
-    //this ignores overflow for the moment
-    ch3pulse = micros() - ch3_up_time;
+  if (digitalRead(3) == HIGH) {
+    up_time[1] = micros();
+    first_pulse = first_pulse | 2;
+  } else if (first_pulse & 2) {
+    pulse[1] = micros() - up_time[1];
   }
 }
+
+void isrCh5Change ()
+{
+  if (digitalRead(21) == HIGH) {
+    up_time[2] = micros();
+    first_pulse = first_pulse | 4;
+  } else if (first_pulse & 4) {
+    pulse[2] = micros() - up_time[2];
+  }
+}
+
+
