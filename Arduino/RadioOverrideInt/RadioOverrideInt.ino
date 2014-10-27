@@ -57,12 +57,12 @@ void setup()
   
   //Only attach the mode one at this point
   attachInterrupt(4, isrCh5Change, CHANGE);
-  toggleInterrupts(true);
+  //toggleInterrupts(true);
     
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
   
-  Serial.begin(9600);
+  //Serial.begin(9600);
 } 
  
 void loop() 
@@ -77,14 +77,11 @@ void loop()
   interrupts();
    
   //Check if mode switch is engaged 
-  //mode_change_count > 10 && val_mode < 1500
-  //val_mode < 1500;
   if (mode_change_count > 100 && val_mode < 1500) {
-    mode_change = true;
-//    if (!mode_change) {
-//      toggleInterrupts(false);
-//      mode_change = true;
-//    }
+    if (!mode_change) {
+      toggleInterrupts(false);
+      mode_change = true;
+    }
     
     if (pos < 180 && pos > 0) {
       pos += dir;
@@ -94,7 +91,8 @@ void loop()
     }
     throttle.write(pos);
     rudder.write(pos);
-    //Serial.println(val_mode);
+    
+    //have to delay or else it increments faster than the servos turn
     delayMicroseconds(15000);
   } else {
     //Trying to eliminate jitter due to switching modes
@@ -103,11 +101,10 @@ void loop()
     } else {
       mode_change_count = 0;
     }
-//    if (mode_change) {
-//      toggleInterrupts(true);
-//      mode_change = false;
-//    }
-    mode_change = false;
+    if (mode_change) {
+      toggleInterrupts(true);
+      mode_change = false;
+    }
 
     //Convert value to servo scale (1-180)
     //Throttle
