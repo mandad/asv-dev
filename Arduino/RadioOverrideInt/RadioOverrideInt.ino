@@ -1,7 +1,7 @@
 /* 
 Servo position sweeps unless overridden by radio input
 
- modified on 22 Oct 2014
+ modified on 27 Oct 2014
  by Damian Manda
  */
 
@@ -17,16 +17,18 @@ Servo rudder;
 #define radio_throttle 2
 #define radio_rudder 3
 #define radio_mode 19
-#define radio_
+#define radio_starter 18
 //PWM
 #define servo_throttle 9
 #define servo_rudder 10
-#define num_channels 3
+//Number of input/output channels
+#define num_channels 4
 
 //Initialize variables
 int val_mode;    // variable to read the value from the ppm pin
 int val_throttle;
 int val_rudder;
+int val_starter;
 int out_throttle = 0;
 int out_rudder = 0;
 int pos = 1;  //servo position
@@ -34,32 +36,31 @@ int dir = 1;
 
 //Interrupt variables
 volatile unsigned long pulse[num_channels];
+boolean mode_change = true;
 byte first_pulse;
 unsigned long up_time[num_channels];
+unsigned long down_time[num_channels];
+
 //long ch3_down_time = 0;
  
 void setup() 
 { 
   throttle.attach(servo_throttle);  // attaches the servo on pin 9 to the servo object
   rudder.attach(servo_rudder);
-  //pinMode(radio_throttle, INPUT);
-  pinMode(radio_rudder, INPUT);
-  pinMode(radio_mode, INPUT);
   
-  //Interrupt on Pin2
-  pinMode(2, INPUT);  //ch3
-  pinMode(3, INPUT);  //ch4
-  pinMode(18, INPUT);  //ch5
-  //attachInterrupt(0, isrCh3Rise, RISING);
-  //attachInterrupt(0, isrCh3Fall, FALLING);
-  attachInterrupt(0, isrCh3Change, CHANGE);
-  attachInterrupt(1, isrCh4Change, CHANGE);
+  //Interrupt inputs
+  pinMode(radio_throttle, INPUT);  //ch3
+  pinMode(radio_rudder, INPUT);  //ch4
+  //pinMode(radio_mode, INPUT);  //ch5
+  
+  //Only attach the mode one at this point
   attachInterrupt(4, isrCh5Change, CHANGE);
-  
-  #ifdef _DEBUG
+  toggleInterrupts(true);
+    
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
-  Serial.begin(9600);
+  #ifdef _DEBUG
+  //Serial.begin(9600);
   #endif
 } 
  
@@ -71,10 +72,17 @@ void loop()
   val_throttle = pulse[0];
   val_rudder = pulse[1];
   val_mode = pulse[2];
+  val_starter = pulse[3];
   interrupts();
   
   //Check if mode switch is engaged 
   if (val_mode < 1500) {
+    mode_change = true;
+//    if (!mode_change) {
+//      toggleInterrupts(false);
+//      mode_change = true;
+//    }
+    
     if (pos < 180 && pos > 0) {
       pos += dir;
     } else {
@@ -83,11 +91,14 @@ void loop()
     }
     throttle.write(pos);
     rudder.write(pos);
-    delay(15);
+    delayMicroseconds(15000);
   } else {
 //    if (mode_change) {
 //      toggleInterrupts(true);
+//      mode_change = false;
 //    }
+    mode_change = false;
+
     //Convert value to servo scale (1-180)
     //Throttle
     out_throttle = map(val_throttle, 1110, 1910, 0, 180);
@@ -104,11 +115,35 @@ void loop()
     Serial.println(val_throttle);
     #endif
   }
+  
+  if (mode_change) {
+    digitalWrite(13, HIGH);  
+  } else {
+    digitalWrite(13, LOW);
+  }
+  #ifdef _DEBUG
+  delay(15);
+  Serial.println(val_mode);
+  #endif
 
 }
 
-//void toggleInterrupts(boolean is_RC) {
-//  if (is_RC) {
+void toggleInterrupts(boolean is_RC) {
+  noInterrupts();
+  if (is_RC) {
+    //throttle = pin 2
+    attachInterrupt(0, isrCh3Change, CHANGE);
+    //rudder = pin 3
+    attachInterrupt(1, isrCh4Change, CHANGE);
+    //Starter = pin 18
+    attachInterrupt(5, isrCh6Change, CHANGE);
+  } else {
+    detachInterrupt(0);
+    detachInterrupt(1);
+    detachInterrupt(5);
+  }
+  interrupts();
+}
     
 
 //==========================
@@ -146,4 +181,12 @@ void isrCh5Change ()
   }
 }
 
-
+void isrCh6Change ()
+{
+  if (digitalRead(18) == HIGH) {
+    up_time[3] = micros();
+    first_pulse = first_pulse | 8;
+  } else if (first_pulse & 8) {
+    pulse[3] = micros() - up_time[3];
+  }
+}
