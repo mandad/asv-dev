@@ -34,9 +34,11 @@ int out_rudder = 0;
 int pos = 1;  //servo position
 int dir = 1;
 
+boolean mode_change = true;
+byte mode_change_count = 0;
+
 //Interrupt variables
 volatile unsigned long pulse[num_channels];
-boolean mode_change = true;
 byte first_pulse;
 unsigned long up_time[num_channels];
 unsigned long down_time[num_channels];
@@ -59,9 +61,8 @@ void setup()
     
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
-  #ifdef _DEBUG
-  //Serial.begin(9600);
-  #endif
+  
+  Serial.begin(9600);
 } 
  
 void loop() 
@@ -74,9 +75,11 @@ void loop()
   val_mode = pulse[2];
   val_starter = pulse[3];
   interrupts();
-  
+   
   //Check if mode switch is engaged 
-  if (val_mode < 1500) {
+  //mode_change_count > 10 && val_mode < 1500
+  //val_mode < 1500;
+  if (mode_change_count > 100 && val_mode < 1500) {
     mode_change = true;
 //    if (!mode_change) {
 //      toggleInterrupts(false);
@@ -91,8 +94,15 @@ void loop()
     }
     throttle.write(pos);
     rudder.write(pos);
+    //Serial.println(val_mode);
     delayMicroseconds(15000);
   } else {
+    //Trying to eliminate jitter due to switching modes
+    if (val_mode < 1500) {
+      mode_change_count++;
+    } else {
+      mode_change_count = 0;
+    }
 //    if (mode_change) {
 //      toggleInterrupts(true);
 //      mode_change = false;
@@ -111,8 +121,8 @@ void loop()
     
     //Print value to serial
     #ifdef _DEBUG
-    Serial.print("Radio Throttle: ");
-    Serial.println(val_throttle);
+    Serial.print("Radio Mode: ");
+    Serial.println(val_mode);
     #endif
   }
   
@@ -121,10 +131,9 @@ void loop()
   } else {
     digitalWrite(13, LOW);
   }
-  #ifdef _DEBUG
-  delay(15);
-  Serial.println(val_mode);
-  #endif
+
+//  delayMicroseconds(15000);
+//  Serial.println(mode_change_count);
 
 }
 
