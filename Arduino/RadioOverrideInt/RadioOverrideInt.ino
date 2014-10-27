@@ -14,9 +14,10 @@ Servo rudder;
  
 //Pin definitions 
 //Digital
-#define radio_throttle 22
-#define radio_rudder 24
-#define radio_mode 26
+#define radio_throttle 2
+#define radio_rudder 3
+#define radio_mode 19
+#define radio_
 //PWM
 #define servo_throttle 9
 #define servo_rudder 10
@@ -48,12 +49,12 @@ void setup()
   //Interrupt on Pin2
   pinMode(2, INPUT);  //ch3
   pinMode(3, INPUT);  //ch4
-  pinMode(21, INPUT);  //ch5
+  pinMode(18, INPUT);  //ch5
   //attachInterrupt(0, isrCh3Rise, RISING);
   //attachInterrupt(0, isrCh3Fall, FALLING);
   attachInterrupt(0, isrCh3Change, CHANGE);
   attachInterrupt(1, isrCh4Change, CHANGE);
-  //attachInterrupt(2, isrCh5Change, CHANGE);
+  attachInterrupt(4, isrCh5Change, CHANGE);
   
   #ifdef _DEBUG
   pinMode(13, OUTPUT);
@@ -65,11 +66,11 @@ void setup()
 void loop() 
 {
   //Turn off interrupts to read the volatile variable
-  val_mode = pulseIn(radio_mode, HIGH, 22000);
+  //val_mode = pulseIn(radio_mode, HIGH, 22000);
   noInterrupts();
   val_throttle = pulse[0];
   val_rudder = pulse[1];
-  //val_mode = pulse[3];
+  val_mode = pulse[2];
   interrupts();
   
   //Check if mode switch is engaged 
@@ -82,8 +83,11 @@ void loop()
     }
     throttle.write(pos);
     rudder.write(pos);
-    //delay(15);
+    delay(15);
   } else {
+//    if (mode_change) {
+//      toggleInterrupts(true);
+//    }
     //Convert value to servo scale (1-180)
     //Throttle
     out_throttle = map(val_throttle, 1110, 1910, 0, 180);
@@ -102,10 +106,16 @@ void loop()
   }
 
 }
+
+//void toggleInterrupts(boolean is_RC) {
+//  if (is_RC) {
+    
+
 //==========================
 //        ISRs
 //==========================
 
+//These ignore that time wraps
 void isrCh3Change ()
 {
   if (digitalRead(2) == HIGH) {
@@ -128,7 +138,7 @@ void isrCh4Change ()
 
 void isrCh5Change ()
 {
-  if (digitalRead(21) == HIGH) {
+  if (digitalRead(19) == HIGH) {
     up_time[2] = micros();
     first_pulse = first_pulse | 4;
   } else if (first_pulse & 4) {
