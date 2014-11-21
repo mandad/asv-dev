@@ -1,17 +1,22 @@
 /* 
 Servo position sweeps unless overridden by radio input
 
- modified on 27 Oct 2014
+ modified on 20 Nov 2014
  by Damian Manda
  */
 
-#include <Servo.h> 
+#include <Servo.h>
+//#include "MOOS.h"
 
 //#define _DEBUG
  
 Servo throttle;
 Servo rudder;
  
+//-----------------------------------
+// Definitions for RC Control
+//-----------------------------------
+
 //Pin definitions 
 //Digital
 #define radio_mode 2
@@ -43,6 +48,33 @@ volatile unsigned long pulse[num_channels];
 byte first_pulse;
 unsigned long up_time[num_channels];
 unsigned long down_time[num_channels];
+
+//-----------------------------------
+// Definitions for MOOS I/O
+//-----------------------------------
+// Message Variables
+const int bufLen = 4096;
+const char delimiter = ',';
+// Input key names
+const char *DESIRED_THRUST = "DESIRED_THRUST";
+const char *DESIRED_RUDDER = "DESIRED_RUDDER";
+
+// Output key names
+const char *NAV_X = "NAV_X";
+const char *NAV_Y = "NAV_Y";
+const char *NAV_HEADING = "NAV_HEADING";
+const char *NAV_SPEED = "NAV_SPEED";
+const char *DEBUG = "DEBUG";
+const char *OBSTACLE_DATA = "OBSTACLE_DATA";
+
+double nav_x = 0;
+double nav_y = 0;
+double nav_heading = 0;
+double nav_speed = 0;
+
+double desired_thrust = 0;
+double desired_rudder = 0;
+
  
 void setup() 
 { 
@@ -65,12 +97,17 @@ void setup()
   //this is the blinker LED for 
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
-  
-  //Serial.begin(9600);
+  //Serial is output to USB
+  //Serial2 is comms with MOOS
+  Serial.begin(9600);
+  Serial2.begin(115200);
 } 
  
 void loop() 
 {
+  //Read Serial Input from MOOS
+  readInput();
+  
   //Turn off interrupts to read the volatile variable
   //val_mode = pulseIn(radio_mode, HIGH, 22000);
   noInterrupts();
@@ -86,17 +123,20 @@ void loop()
       mode_change = true;
     }
     
-    if (pos < 180 && pos > 0) {
-      pos += dir;
-    } else {
-      pos -= dir;
-      dir = dir * -1;
-    }
-    throttle.write(pos);
-    rudder.write(pos);
-    
+//    if (pos < 180 && pos > 0) {
+//      pos += dir;
+//    } else {
+//      pos -= dir;
+//      dir = dir * -1;
+//    }
+//    throttle.write(pos);
+//    rudder.write(pos);
     //have to delay or else it increments faster than the servos turn
-    delayMicroseconds(15000);
+    //delayMicroseconds(15000);
+
+      //Write values from MOOS to servos
+      throttle.write(map(desired_thrust, 0, 100, 0, 180));
+      rudder.write(map(desired_rudder, -90, 90, 0, 180));
   } else {
     //Trying to eliminate jitter due to switching modes
     if (val_mode < 1500) {
@@ -168,3 +208,96 @@ void isrCh6Change ()
     pulse[1] = micros() - up_time[1];
   }
 }
+
+//========================
+//  MOOS Related Comms
+//========================
+
+/* Read any input from the autonomy backend */
+bool readInput()
+{
+  bool ret = false;
+  
+  // Check if there's incoming serial data.
+  while (Serial2.available() > 0) // Need to adjust this so we don't starve out the rest of the loop if there is a lot of data to read
+  {
+    char buf[bufLen];
+    int nBytes;
+
+    // Read bytes from the serial buffer
+    nBytes = Serial2.readBytesUntil(delimiter, buf, bufLen);
+
+    // Check that data was actually read
+    if (nBytes > 0)
+    {
+      double val;
+      String sBuf;
+
+      buf[nBytes] = '\0';
+      sBuf = String(buf);
+      ret = true;
+
+      // Parse the received data for different key-value pairs
+      if (ValFromString(sBuf, DESIRED_THRUST, &val, delimiter))
+      { // Got speed value
+        //writeOutput("DEBUG", buf);
+        desired_thrust = val;
+        Serial.print("Throttle = ");
+        Serial.println(desired_thrust);
+      }
+
+      else if (ValFromString(sBuf, DESIRED_RUDDER, &val, delimiter))
+      { // Got heading value
+        //writeOutput("DEBUG", buf);
+        desired_rudder = val;
+        Serial.print("Rudder = ");
+        Serial.println(desired_rudder);
+      }
+
+      else
+        continue;
+    }
+  }
+
+  return ret;
+} /* readInput */
+
+/**
+ * Get the value of a key from within a string.  The string should be in the
+ * form: key=val<delim>...
+ *    where <delim> is the value of the delimiter.
+ *
+ * @param str the string to parse
+ * @param key the name of the key whose value to extract
+ * @param valBuf (out) a buffer to place the value in
+ * @param delim the delimiter separating key-value pairs
+ *
+ * @return true  if the value was successfully extracted
+ *         false if the string was not correctly formatted
+ */
+bool ValFromString(String str, String key, double *valBuf, char delim)
+{
+  int eqIndex = str.indexOf('=');    // index of equals sign
+  int delIndex = str.indexOf(delim); // index of delimiter
+  int valStart = eqIndex + 1;        // index of start of value
+
+  // Check that an '=' was found and the value field is not empty
+  if (eqIndex == -1 || delIndex == valStart)
+    return false;
+
+  // Get the key from the string
+  String sKey = str.substring(0, eqIndex);
+
+  // Check that the key is correct
+  if (sKey != key)
+    return false;
+
+  // Get the value of the key from the string
+  const int bufLen = 255;
+  char val[bufLen];
+  str.substring(valStart, delIndex).toCharArray(val, bufLen);
+
+  // Place the value in the buffer
+  *valBuf = atof(val);
+  return true;
+} /* ValFromString */
