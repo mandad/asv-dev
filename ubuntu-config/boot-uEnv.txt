@@ -1,0 +1,16 @@
+#Docs: http://elinux.org/Beagleboard:U-boot_partitioning_layout_2.0
+
+uname_r=3.14.22-ti-r31
+
+dtb=am335x-boneblack-alluart.dtb
+
+cmdline=quiet 
+
+##Example
+#cape_disable=capemgr.disable_partno=
+#cape_enable=capemgr.enable_partno=
+
+##enable BBB: eMMC Flasher:
+##make sure, these tools are installed: dosfstools rsync
+#cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh
+
