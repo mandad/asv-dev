@@ -44,7 +44,7 @@ class GP9_packet:
         if self.header == '':
             self.header = header_bytes
 
-        split_bytes = struct.unpack('<2B', header_bytes);
+        split_bytes = struct.unpack('>2B', header_bytes);
         # Keep a running tally of bytes for the checksum
         self.raw_bytes.extend(list(split_bytes))
 
@@ -69,12 +69,12 @@ class GP9_packet:
         self.data = data
 
         # Add to the checksum calc
-        data_format = '<' + str(self.data_length) + 'B'
+        data_format = '>' + str(self.data_length) + 'B'
         split_bytes = struct.unpack(data_format, self.data)
         self.raw_bytes.extend(list(split_bytes))
 
     def set_checksum(self, checksum):
-        self.checksum = struct.unpack('<H', checksum)[0]
+        self.checksum = struct.unpack('>H', checksum)[0]
         self.verify_checksum()
 
     def verify_checksum(self):
@@ -122,7 +122,7 @@ class Data120:
 
     def decode(self):
         try:
-            decoded_data = list(struct.unpack('<4hf', self.raw_data))
+            decoded_data = list(struct.unpack('>4hf', self.raw_data))
             # 4th field is unused
             decoded_data.pop(3)
             # Convert the angles to degrees
@@ -133,6 +133,5 @@ class Data120:
             print('Could not parse data: %s' % str(e))
 
     def convert_to_deg(self, angle_value):
+        #return angle_value
         return angle_value / 5215.18917
-
-        
