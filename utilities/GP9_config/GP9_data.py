@@ -25,11 +25,11 @@ class GP9_data(object):
 
     def close_port(self):
         self.ser.close()
-        if !self.ser.isOpen():
+        if not self.ser.isOpen():
             self.port_open = False
 
         # Return true on successful closing
-        return !self.port_open
+        return not self.port_open
 
     def read_one_packet(self):
         byte_hist = [0,0,0]
@@ -55,7 +55,7 @@ class GP9_data(object):
         try:
             while True:
                 packet = self.read_one_packet()
-                if packet.address = 120:
+                if packet.address == 120:
                     packet_data = GP9_packet.DataDecoder.decode(packet)
                     #self.packets.append(packet_data)
                     print(packet_data.data)
