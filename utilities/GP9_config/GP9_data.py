@@ -7,20 +7,22 @@ class GP9_data(object):
     """Reads data from a CHRobotics GP9
     Has ability to read continuously or one packet at a time
     """
-    def __init__(self, serial_port, baudrate):
+    def __init__(self, serial_port = '/dev/ttyO2', baudrate = 115200):
         super(GP9_data, self).__init__()
         self.serial_port = serial_port
         self.baudrate = baudrate
         self.packets = []
+        self.port_open = False
 
     def open_port(self):
         try:
             self.ser = serial.Serial(self.serial_port, self.baudrate, timeout=10)
-            if ser.isOpen():
+            if self.ser.isOpen():
+                self.port_open = True
                 return True
             else:
                 return False
-        except SerialException:
+        except serial.SerialException:
             return False
 
     def read_one_packet(self):
@@ -34,7 +36,7 @@ class GP9_data(object):
 
         # Have start of packet, read it in
         header_bytes = self.ser.read(2)
-        this_packet = GP9_packet(header=header_bytes)
+        this_packet = GP9_packet.GP9_packet(header=header_bytes)
 
         data = self.ser.read(this_packet.data_length)
         this_packet.set_data(data)
