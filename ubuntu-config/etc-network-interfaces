@@ -5,9 +5,19 @@
 auto lo
 iface lo inet loopback
 
-# The primary network interface
+# WiFi (First so it is default when connected)
+auto wlan0
+iface wlan0 inet dhcp
+    wpa-ssid "CCOMGuest"
+    wpa-psk  "GreatBay"
+    post-up route add default gw 192.168.200.1 wlan0
+    #dns-nameservers 132.177.140.13 132.177.102.2
+
+# The ethernet connection
+# Static config for CCOM network
 auto eth0
-iface eth0 inet staticaddress 192.168.8.200
+iface eth0 inet static
+    address 192.168.8.200
     netmask 255.255.255.0
     gateway 192.168.8.1
     dns-nameservers 192.168.2.20 192.168.2.21
@@ -18,13 +28,6 @@ iface eth0 inet staticaddress 192.168.8.200
 #auto eth1
 #iface eth1 inet dhcp
 
-# WiFi Example
-auto wlan0
-iface wlan0 inet dhcp
-    wpa-ssid "CCOMGuest"
-    wpa-psk  "GreatBay"
-    post-up route change default via 192.168.200.1 dev wlan0
-    #dns-nameservers 132.177.140.13 132.177.102.2
 
 # Ethernet/RNDIS gadget (g_ether)
 # ... or on host side, usbnet and random hwaddr
