@@ -1,49 +1,66 @@
+from __future__ import print_function
 import serial
 import struct
 import GP9_packet
-#from __future__ import print_function
 
-def main():
-    ser = serial.Serial('/dev/ttyO2', 115200, timeout=10)
-    byte_hist = [0,0,0]
-    if ser.isOpen:
+class GP9_data(object):
+    """Reads data from a CHRobotics GP9
+    Has ability to read continuously or one packet at a time
+    """
+    def __init__(self, serial_port, baudrate):
+        super(GP9_data, self).__init__()
+        self.serial_port = serial_port
+        self.baudrate = baudrate
+        self.packets = []
+
+    def open_port(self):
         try:
-             while True:
-                #find start of packet
-                read_byte = ser.read(1)
-                #read_up = struct.unpack('<B', read_byte)
+            self.ser = serial.Serial(self.serial_port, self.baudrate, timeout=10)
+            if ser.isOpen():
+                return True
+            else:
+                return False
+        except SerialException:
+            return False
+
+    def read_one_packet(self):
+        byte_hist = [0,0,0]
+        while byte_hist != ['p', 'n', 's']:
+                # find start of packet
+                read_byte = self.ser.read(1)
+                # read_up = struct.unpack('<B', read_byte)
                 byte_hist.pop()
                 byte_hist.insert(0, read_byte)
 
-                if byte_hist == ['p', 'n', 's']:
-                    #Have start of packet, read it in
-                    header_bytes = ser.read(2)
-                    data_length = decode_header(header)
-                    data = ser.read(data_length)
-                    checksum = ser.read(2)
+        # Have start of packet, read it in
+        header_bytes = self.ser.read(2)
+        this_packet = GP9_packet(header=header_bytes)
 
-         except (KeyboardInterrupt, SystemExit):
-             ser.close()
-             break
+        data = self.ser.read(this_packet.data_length)
+        this_packet.set_data(data)
+        checksum = self.ser.read(2)
+        this_packet.set_checksum(checksum)
 
-def decode_header(header_bytes):
-    split_bytes = struct.unpack('<2B');
-    packet_type = split_bytes[0]
-    address = split_bytes[1]
+        return this_packet
 
-    #Split the Packet Type
-    has_data = (((packet_type & 0b10000000) >> 7) == 1)
-    is_batch = (((packet_type & 0b01000000) >> 6) == 1)
-    batch_length = (packet_type & 0b00111100) >> 2
-    hidden = (((packet_type & 0b00000010) >> 1) == 1)
-    command_failed = ((packet_type & 0b00000001) == 1)
 
-    #Determine data length
-    #4 times the batch length, or 4 bytes
-    data_len = 4*batch_length if is_batch else 4
+    def read_loop(self):
+        try:
+            while True:
+                self.packets.append(self.read_one_packet())
+        except (KeyboardInterrupt, SystemExit):
+            pass
+        finally:
+            self.ser.close()
 
-    return data_len
 
+def main():
+    data_reader = GP9_data()
+    if data_reader.open_port():
+        data_reader.read_one_packet()
+    else:
+        print('Could not open serial port')
+    
 
 if __name__ == '__main__':
     main()
