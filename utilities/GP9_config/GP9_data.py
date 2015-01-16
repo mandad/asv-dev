@@ -52,13 +52,19 @@ class GP9_data(object):
 
 
     def read_loop(self):
+        counter = 0
         try:
             while True:
                 packet = self.read_one_packet()
                 if packet.address == 120:
-                    packet_data = GP9_packet.DataDecoder.decode(packet)
-                    #self.packets.append(packet_data)
-                    print(packet_data.data)
+		    if counter > 20:	
+                        packet_data = GP9_packet.DataDecoder.decode(packet)
+                        #self.packets.append(packet_data)
+                        print(packet_data.data)
+                        counter = 0
+                    else:
+                        counter = counter + 1
+
         except (KeyboardInterrupt, SystemExit):
             self.ser.close()
             print('Closed serial port.')
