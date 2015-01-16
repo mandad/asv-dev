@@ -19,18 +19,23 @@ class GP9_data(object):
             self.ser = serial.Serial(self.serial_port, self.baudrate, timeout=10)
             if self.ser.isOpen():
                 self.port_open = True
-                return True
-            else:
-                return False
+            return self.port_open
         except serial.SerialException:
             return False
+
+    def close_port(self):
+        self.ser.close()
+        if !self.ser.isOpen():
+            self.port_open = False
+
+        # Return true on successful closing
+        return !self.port_open
 
     def read_one_packet(self):
         byte_hist = [0,0,0]
         while byte_hist != ['p', 'n', 's']:
                 # find start of packet
                 read_byte = self.ser.read(1)
-                # read_up = struct.unpack('<B', read_byte)
                 byte_hist.pop()
                 byte_hist.insert(0, read_byte)
 
@@ -49,11 +54,14 @@ class GP9_data(object):
     def read_loop(self):
         try:
             while True:
-                self.packets.append(self.read_one_packet())
+                packet = self.read_one_packet()
+                if packet.address = 120:
+                    packet_data = GP9_packet.DataDecoder.decode(packet)
+                    #self.packets.append(packet_data)
+                    print(packet_data.data)
         except (KeyboardInterrupt, SystemExit):
-            pass
-        finally:
             self.ser.close()
+            print('Closed serial port.')
 
 
 def main():

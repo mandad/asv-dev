@@ -5,6 +5,7 @@ class GP9_packet:
     """Defines a GP9_packet and reading functions
     
     Public Member Variables:
+    raw_bytes
     header
         address
         has_data
@@ -118,6 +119,7 @@ class Data120:
     def __init__(self, raw_data):
         self.field_names = ('roll', 'pitch', 'yaw', 'time')
         self.raw_data = raw_data
+        self.address = 120
         self.decode()
 
     def decode(self):
