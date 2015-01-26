@@ -3,12 +3,12 @@ import serial
 import struct
 import GP9_packet
 
-class GP9_data(object):
+class GP9Data(object):
     """Reads data from a CHRobotics GP9
     Has ability to read continuously or one packet at a time
     """
     def __init__(self, serial_port = '/dev/ttyO2', baudrate = 115200):
-        super(GP9_data, self).__init__()
+        super(GP9Data, self).__init__()
         self.serial_port = serial_port
         self.baudrate = baudrate
         self.packets = []
@@ -41,7 +41,7 @@ class GP9_data(object):
 
         # Have start of packet, read it in
         header_bytes = self.ser.read(2)
-        this_packet = GP9_packet.GP9_packet(header=header_bytes)
+        this_packet = GP9_packet.GP9Packet(header=header_bytes)
 
         data = self.ser.read(this_packet.data_length)
         this_packet.set_data(data)
@@ -71,7 +71,7 @@ class GP9_data(object):
 
 
 def main():
-    data_reader = GP9_data()
+    data_reader = GP9Data()
     if data_reader.open_port():
         data_reader.read_one_packet()
     else:
