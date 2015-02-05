@@ -105,6 +105,11 @@ class DataDecoder:
             # Check through known packet types
             if packet.address == 120:
                 data = Data120(packet.raw_data)
+            elif packet.address == 86 and packet.batch_length == 14:
+                #Decode first part
+                data = Data86(packet.raw_data[0:12])
+            elif packet.address == 86 and packet.batch_length == 3:
+                data = Data86(packet.raw_data)
             else:
                 data = None
                 print('Unrecognized packet type.')
@@ -151,9 +156,14 @@ class DataFormat(object):
         else:
             print('No Decoded Data')
 
+    @staticmethod
+    def twos_complement(val, bits):
+        if (val & (1 << (bits - 1))) != 0:
+            val = val - (1 << bits)
+        return val
+
 class Data120(DataFormat):
     """Handles the Euler Angle packet, which is a batch of 3
-
     Variables:
     data - Contains a dictionary with the data descriptions and values
     """
@@ -170,7 +180,7 @@ class Data120(DataFormat):
     def decode(self):
         # Decode into basic numbers
         super(Data120, self).decode()
-        # decoded_data.pop(3)
+        #decoded_data.pop(3)
         # Convert the angles to degrees
         for field in self.field_names[0:3]:
             self.data[field] = self.convert_to_rad(self.data[field])
@@ -193,25 +203,24 @@ class Data120(DataFormat):
         return angle_value * 5215.18917
 
 
-class Data68(object):
+class Data86(object):
     """Handles the raw gyro data packet
     """
     def __init__(self, raw_data):
-        self.field_names = ('gyro x', 'gyro y', 'gyro z', 'time')
-        self.raw_data = raw_data
+        self.field_names = ('gyro x', 'gyro y', 'gyro z', 'none', 'time')
+        self.field_formats = ('H', 'H', 'H', 'H' 'f')
         self.address = 86
-        self.decode()
+        super(Data86, self).__init__(raw_data, data_values)
 
     def decode(self):
-        try:
-            # This is not currently correct
-            decoded_data = list(struct.unpack('>4hf', self.raw_data))
-            # 4th field is unused
-            decoded_data.pop(3)
-            # Convert the angles to degrees
-            for i in range(3):
-                decoded_data[i] = self.convert_to_rad(decoded_data[i])
-            self.data = dict(zip(self.field_names, decoded_data))
-        except Exception, e:
-            print('Could not parse data: %s' % str(e))
+        super(Data86, self).decode()
+        # Convert the two's complement numbers
+        for field in self.field_names[0:3]
+            self.data[field] = self.twos_complement(self.data[field], 16)
+
+        self.data.pop('none')
+
+    def encode(self):
+        # This is raw data, no need to write
+        raise NotImplementedError()
         
