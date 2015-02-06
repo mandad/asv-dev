@@ -43,7 +43,8 @@ class GP9SerialInterface(object):
         header_bytes = self.ser.read(2)
         this_packet = GP9Reader.GP9Packet(header=header_bytes)
 
-        data = self.ser.read(this_packet.data_length)
+        if this_packet.has_data:
+            data = self.ser.read(this_packet.data_length)
         this_packet.set_data(data)
         checksum = self.ser.read(2)
         this_packet.set_checksum(checksum)

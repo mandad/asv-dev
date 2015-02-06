@@ -4,8 +4,14 @@ import GP9DataFormat
 
 class GP9Packet(object):
     """Defines a GP9Packet and reading functions
+
+    Keyword Arguments
+    -----------------
+    header: decode only a packet header
+    full_packet: decode a full packet
     
     Public Member Variables:
+    ------------------------
     raw_bytes
     header
         address
@@ -40,7 +46,8 @@ class GP9Packet(object):
 
     def ingest_packet(self, packet):
         self.decode_header(packet[3:5])
-        self.set_data(packet[5:-2])
+        if self.has_data:
+            self.set_data(packet[5:-2])
         self.set_checksum(packet[-2:])
 
     def decode_header(self, header_bytes):
@@ -104,17 +111,22 @@ class DataDecoder(object):
     @staticmethod
     def decode(packet):
         if packet.checksum_good:
-            # Check through known packet types
-            if packet.address == 120:
-                data = GP9DataFormat.Data120(packet.raw_data)
-            elif packet.address == 86 and packet.batch_length == 14:
-                #Decode first part
-                data = GP9DataFormat.Data86(packet.raw_data[0:12])
-            elif packet.address == 86 and packet.batch_length == 3:
-                data = GP9DataFormat.Data86(packet.raw_data)
+            if packet.has_data:
+                # Check through known packet types
+                if packet.address == 120:
+                    data = GP9DataFormat.Data120(packet.raw_data)
+                elif packet.address == 86 and packet.batch_length == 14:
+                    #Decode first part
+                    data = GP9DataFormat.Data86(packet.raw_data[0:12])
+                elif packet.address == 86 and packet.batch_length == 3:
+                    data = GP9DataFormat.Data86(packet.raw_data)
+                elif packet.address == 1:
+                    data = GP9DataFormat.Config1(packet.raw_data)
+                else:
+                    data = None
+                    print('Unrecognized packet type.')
+                return data
             else:
-                data = None
-                print('Unrecognized packet type.')
-            return data
+                return GP9DataFormat.CommandResponse(packet.address, not packet.command_failed)
         else:
             print('Can\'t process data with bad checksum.')

@@ -1,5 +1,21 @@
 import struct
 
+class CommandResponse(object):
+    def __init__(self, address, successful):
+        self.address = address
+        #For compatibility with DataFormat usage
+        self.data = None
+        self.has_data = False
+        if successful:
+            self.successful = 'success'
+        else:
+            self.successful = 'failure'
+
+    def print_data(self):
+        print('Command Response: address {0}, result {1}'.format(self.address, \
+            self.successful))
+
+
 class DataFormat(object):
     """Defines the super class for data formats"""
     def __init__(self, raw_data=None, data_values=None,
@@ -156,7 +172,7 @@ class Config1(DataFormat):
     -----------
     Raw Accel Rate: 0-255
     Raw Gyro Rate: 0-255
-    Raw Magnetomerter Rate: 0-255
+    Raw Magnetometer Rate: 0-255
     Raw Pressure Rate: 0-255
     """
     def __init__(self, raw_data=None, data_values=None):
@@ -266,7 +282,7 @@ class Config7(DataFormat):
         self.field_names = ('health/pose rate', 'attitude/sensor rate', 'none')
         self.field_formats = ('B', 'B', 'H')
         self.address = 7
-        super(Data7, self).__init__(raw_data, data_values, False, 0)
+        super(Config7, self).__init__(raw_data, data_values, False, 0)
 
     def decode(self):
         raise NotImplementedError()
@@ -279,6 +295,32 @@ class Config7(DataFormat):
         self.encode_values.pop(2)
         super(Config7, self).encode()
 
+class Config8(DataFormat):
+    """Handles the CREG_COM_RATES8 data register.
+
+    Input Tuple
+    -----------
+    Use GPS: 0/1
+    Use Magnetomter: 0/1
+    Use Accelerometers: 0/1
+    0
+    0
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('GPS/Mag/Accel', 'none', 'none2')
+        self.field_formats = ('B', 'B', 'H')
+        self.address = 8
+        super(Config8, self).__init__(raw_data, data_values, False, 0)
+
+    def decode(self):
+        raise NotImplementedError()
+
+    def encode(self):
+        self.encode_values[0] = (self.data_values[0] << 6) \
+            + (self.data_values[1] << 5) + (self.data_values[2] << 4)
+        self.encode_values.pop(1)
+        self.encode_values.pop(1)
+        super(Config8, self).encode()
 
 class DataXX(DataFormat):
     """Handles the XX data register
