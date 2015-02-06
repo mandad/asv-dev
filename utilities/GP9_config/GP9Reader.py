@@ -1,8 +1,9 @@
 from __future__ import print_function
 import struct
+import GP9DataFormat
 
-class GP9Packet:
-    """Defines a GP9_packet and reading functions
+class GP9Packet(object):
+    """Defines a GP9Packet and reading functions
     
     Public Member Variables:
     raw_bytes
@@ -24,17 +25,18 @@ class GP9Packet:
         # Clear all the member variables
         self.header = ''
         self.data = ''
+        self.raw_data = ''
         self.checksum = ''
         # Checksum includes the start bytes
         self.raw_bytes = [ord(c) for c in 'snp']
-        checksum_good = False
+        self.checksum_good = False
 
         if 'header' in kwargs:
             self.decode_header(kwargs['header'])
 
         # Use for testing with full packet at once
         if 'full_packet' in kwargs:
-            self.ingest_packet(kwargs['full_packet']);
+            self.ingest_packet(kwargs['full_packet'])
 
     def ingest_packet(self, packet):
         self.decode_header(packet[3:5])
@@ -45,7 +47,7 @@ class GP9Packet:
         if self.header == '':
             self.header = header_bytes
 
-        split_bytes = struct.unpack('>2B', header_bytes);
+        split_bytes = struct.unpack('>2B', header_bytes)
         # Keep a running tally of bytes for the checksum
         self.raw_bytes.extend(list(split_bytes))
 
@@ -71,7 +73,7 @@ class GP9Packet:
 
         # Add to the checksum calc
         data_format = '>' + str(self.data_length) + 'B'
-        split_bytes = struct.unpack(data_format, self.data)
+        split_bytes = struct.unpack(data_format, data)
         self.raw_bytes.extend(list(split_bytes))
 
     def decode_data(self):
@@ -82,16 +84,16 @@ class GP9Packet:
         self.verify_checksum()
 
     def verify_checksum(self):
-        if (self.checksum != ''):
+        if self.checksum != '':
             self.checksum_good = (sum(self.raw_bytes) == self.checksum)
 
         return self.checksum_good
 
-    def print_packet_info():
+    def print_packet_info(self):
         pass
 
 
-class DataDecoder:
+class DataDecoder(object):
     """Decodes data from the GP9 based on packet address
     """
     def __init__(self, packet):
@@ -104,123 +106,15 @@ class DataDecoder:
         if packet.checksum_good:
             # Check through known packet types
             if packet.address == 120:
-                data = Data120(packet.raw_data)
+                data = GP9DataFormat.Data120(packet.raw_data)
             elif packet.address == 86 and packet.batch_length == 14:
                 #Decode first part
-                data = Data86(packet.raw_data[0:12])
+                data = GP9DataFormat.Data86(packet.raw_data[0:12])
             elif packet.address == 86 and packet.batch_length == 3:
-                data = Data86(packet.raw_data)
+                data = GP9DataFormat.Data86(packet.raw_data)
             else:
                 data = None
                 print('Unrecognized packet type.')
             return data
         else:
             print('Can\'t process data with bad checksum.')
-
-class DataFormat(object):
-    """Defines the super class for data formats"""
-    def __init__(self, raw_data = None, data_values = None):
-        self.data = None
-        self.raw_data = raw_data
-        self.data_values = [x for x in data_values]
-        self.encode_values = [x for x in data_values]
-        # Do the decoding or encoding if something was passed in
-        if self.raw_data != None:
-            self.decode()
-        elif data_values != None:
-            self.encode()
-
-    def encode(self):
-        self.raw_data = ''
-        for item in zip(self.field_formats, self.encode_values):
-            self.raw_data = self.raw_data + struct.pack('>' + item[0], item[1])
-        # Note that the data values may be different from those encoded
-        self.data = dict(zip(self.field_names, self.data_values))
-
-    def decode(self):
-        concat_format = '>'
-        for bit_format in self.field_formats:
-            concat_format = concat_format + bit_format
-        try:
-            decoded_data = list(struct.unpack(bit_format, self.raw_data))
-            self.data = dict(zip(self.field_names, decoded_data))
-        except Exception, e:
-            print('Could not parse data: %s' % str(e))
-
-    def print_data(self):
-        if self.data != None:
-            # Note that this is not the same as all the self.field_names because
-            # blank fields may have been removed
-            for field in self.data:
-                print('%s: %d' % (field,  self.data['field']))
-        else:
-            print('No Decoded Data')
-
-    @staticmethod
-    def twos_complement(val, bits):
-        if (val & (1 << (bits - 1))) != 0:
-            val = val - (1 << bits)
-        return val
-
-class Data120(DataFormat):
-    """Handles the Euler Angle packet, which is a batch of 3
-    Variables:
-    data - Contains a dictionary with the data descriptions and values
-    """
-    def __init__(self, raw_data = None, data_values = None):
-        """raw_data is data to decode
-        data_values is data to encode
-        """
-        # 4th field is unused
-        self.field_names = ('roll', 'pitch', 'yaw', 'none', 'time')
-        self.field_formats = ('h', 'h', 'h', 'h', 'f')
-        self.address = 120
-        super(Data120, self).__init__(raw_data, data_values)
-
-    def decode(self):
-        # Decode into basic numbers
-        super(Data120, self).decode()
-        #decoded_data.pop(3)
-        # Convert the angles to degrees
-        for field in self.field_names[0:3]:
-            self.data[field] = self.convert_to_rad(self.data[field])
-
-        # Remove unused field
-        self.data.pop('none')
-
-    def encode(self):
-        for i in range(3):
-            self.encode_values[i] = self.convert_from_rad(self.encode_values[i])
-        super(Data120, self).encode()
-        self.data.pop('none')
-
-    @staticmethod
-    def convert_to_rad(angle_value):
-        return angle_value / 5215.18917
-
-    @staticmethod
-    def convert_from_rad(angle_value):
-        return angle_value * 5215.18917
-
-
-class Data86(object):
-    """Handles the raw gyro data packet
-    """
-    def __init__(self, raw_data):
-        self.field_names = ('gyro x', 'gyro y', 'gyro z', 'none', 'time')
-        self.field_formats = ('H', 'H', 'H', 'H' 'f')
-        self.address = 86
-        super(Data86, self).__init__(raw_data, data_values)
-
-    def decode(self):
-        super(Data86, self).decode()
-        # Convert the two's complement numbers
-        for field in self.field_names[0:3]
-            self.data[field] = self.twos_complement(self.data[field], 16)
-
-        self.data.pop('none')
-
-    def encode(self):
-        # This is raw data, no need to write
-        raise NotImplementedError()
-        
