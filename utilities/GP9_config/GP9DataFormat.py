@@ -2,19 +2,19 @@ import struct
 
 class DataFormat(object):
     """Defines the super class for data formats"""
-    def __init__(self, raw_data=None, data_values=None, has_data=True,
+    def __init__(self, raw_data=None, data_values=None,
                  is_batch=False, batch_len=0):
         self.data = None
         self.raw_data = raw_data
         # Make a copy of these data lists
         if data_values is None:
             self.data_values = data_values
-            self.data_values = data_values
+            self.encode_values = data_values
         else:
             self.data_values = [x for x in data_values]
             self.encode_values = [x for x in data_values]
 
-        self.has_data = has_data
+        self.has_data = True
         self.is_batch = is_batch
         self.batch_len = batch_len
         # Do the decoding or encoding if something was passed in
@@ -24,6 +24,8 @@ class DataFormat(object):
             self.encode()
 
     def encode(self):
+        if len(self.data_values) != len(self.field_names):
+            raise Exception('Incorrect number of data values')
         self.raw_data = ''
         for item in zip(self.field_formats, self.encode_values):
             self.raw_data = self.raw_data + struct.pack('>' + item[0], item[1])
@@ -68,7 +70,7 @@ class Data120(DataFormat):
         self.field_names = ('roll', 'pitch', 'yaw', 'none', 'time')
         self.field_formats = ('h', 'h', 'h', 'h', 'f')
         self.address = 120
-        super(Data120, self).__init__(raw_data, data_values, True, True, 3)
+        super(Data120, self).__init__(raw_data, data_values, True, 3)
 
     def decode(self):
         # Decode into basic numbers
@@ -120,10 +122,11 @@ class Data86(DataFormat):
 #===============================================================================
 # Configuration Registers
 #===============================================================================
-class Data0(DataFormat):
+class Config0(DataFormat):
     """Handles the CREG_COM_SETTINGS data register
 
-    Input Tuple:
+    Input Tuple
+    -----------
     Baud Rate: 0-11
     0
     GPS: 0/1
@@ -133,7 +136,7 @@ class Data0(DataFormat):
         self.field_names = ('baud rate', 'none', 'GPS', 'Sat Info')
         self.field_formats = ('B', 'B', 'B', 'B')
         self.address = 86
-        super(Data0, self).__init__(raw_data, data_values, True, False, 0)
+        super(Config0, self).__init__(raw_data, data_values, False, 0)
 
     def decode(self):
         raise NotImplementedError()
@@ -144,20 +147,150 @@ class Data0(DataFormat):
         # Note that this cannot be run multiple times, perhaps test for this?
         self.encode_values[0] = self.encode_values[0] << 4
         self.encode_values[3] = self.encode_values[3] << 4
-        super(Data0, self).encode()
+        super(Config0, self).encode()
+
+class Config1(DataFormat):
+    """Handles the CREG_COM_RATES1 data register
+
+    Input Tuple
+    -----------
+    Raw Accel Rate: 0-255
+    Raw Gyro Rate: 0-255
+    Raw Magnetomerter Rate: 0-255
+    Raw Pressure Rate: 0-255
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('accel rate', 'gyro rate', 'mag rate', 'press rate')
+        self.field_formats = ('B', 'B', 'B', 'B')
+        self.address = 1
+        super(Config1, self).__init__(raw_data, data_values, False, 0)
+
+
+class Config2(DataFormat):
+    """Handles the CREG_COM_RATES2 data register
+
+    Input Tuple
+    -----------
+    Raw Temp Rate: 0-255
+    0
+    0
+    All Raw Rate: 0-255
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('temp rate', 'none', 'none2', 'all raw rate')
+        self.field_formats = ('B', 'B', 'B', 'B')
+        self.address = 2
+        super(Config2, self).__init__(raw_data, data_values, False, 0)
+
+
+class Config3(DataFormat):
+    """Handles the CREG_COM_RATES3 data register
+
+    Input Tuple
+    -----------
+    Processed Acceleration Rate: 0-255
+    Proc Gyro Rate: 0-255
+    Proc Mag Rate: 0-255
+    Proc Pressure Rate: 0-255
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('proc accel rate', 'proc gyro rate', 'proc mag rate', \
+            'proc press rate')
+        self.field_formats = ('B', 'B', 'B', 'B')
+        self.address = 3
+        super(Config3, self).__init__(raw_data, data_values, False, 0)
+
+
+class Config4(DataFormat):
+    """Handles the CREG_COM_RATES4 data register
+
+    Input Tuple
+    -----------
+    Processed Temperature Rate: 0-255
+    0
+    0
+    All Proc Rate: 0-255
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('proc temp rate', 'none', 'none2', 'all proc rate')
+        self.field_formats = ('B', 'B', 'B', 'B')
+        self.address = 4
+        super(Config4, self).__init__(raw_data, data_values, False, 0)
+
+
+class Config5(DataFormat):
+    """Handles the CREG_COM_RATES5 data register
+
+    Input Tuple
+    -----------
+    Quaternion Rate: 0-255
+    Euler Angle Rate: 0-255
+    Position Rate: 0-255
+    Velocity Rate: 0-255
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('quat rate', 'euler rate', 'posn rate', 'vel rate')
+        self.field_formats = ('B', 'B', 'B', 'B')
+        self.address = 5
+        super(Config5, self).__init__(raw_data, data_values, False, 0)
+
+
+class Config6(DataFormat):
+    """Handles the CREG_COM_RATES6 data register
+
+    Input Tuple
+    -----------
+    Pose Rate: 0-255
+    Health Rate: 0-6
+    0
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('pose rate', 'health rate', 'none')
+        self.field_formats = ('B', 'B', 'H')
+        self.address = 6
+        super(Config6, self).__init__(raw_data, data_values, False, 0)
+
+class Config7(DataFormat):
+    """Handles the CREG_COM_RATES7 data register.  This provides NMEA style
+    output in plain text format.
+
+    Input Tuple
+    -----------
+    Health Rate: 0-7
+    Pose Rate: 0-7
+    Attitude Rate: 0-7
+    Sensor Rate: 0-7
+    0
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('health/pose rate', 'attitude/sensor rate', 'none')
+        self.field_formats = ('B', 'B', 'H')
+        self.address = 7
+        super(Data7, self).__init__(raw_data, data_values, False, 0)
+
+    def decode(self):
+        raise NotImplementedError()
+
+    def encode(self):
+        self.encode_values[0] = (self.data_values[0] << 4) + self.data_values[1]
+        self.encode_values[1] = (self.data_values[2] << 4) + self.data_values[3]
+        # Remove the two extra values
+        self.encode_values.pop(2)
+        self.encode_values.pop(2)
+        super(Config7, self).encode()
+
 
 class DataXX(DataFormat):
     """Handles the XX data register
     """
     def __init__(self, raw_data=None, data_values=None):
         self.field_names = ('baud rate', 'none')
-        self.field_formats = ('H', 'H')
-        self.address = 86
-        super(DataXX, self).__init__(raw_data, data_values)
+        self.field_formats = ('B', 'B', 'B', 'B')
+        self.address = XX
+        super(DataXX, self).__init__(raw_data, data_values, False, 0)
 
     def decode(self):
         raise NotImplementedError()
 
     def encode(self):
-        # This is raw data, no need to write
         raise NotImplementedError()
