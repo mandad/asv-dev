@@ -24,6 +24,7 @@ def test_follow_path():
     vehicle.set_sim_resolution(.5)
 
     path = followpath.Path()
+    path.add_waypoint(0, 0)
     path.add_waypoint(100, 0)
 
     follower = followpath.FollowPath(vehicle, path)
@@ -33,6 +34,20 @@ def test_follow_path():
         locs.append(follower.get_vehicle_loc())
 
     plt.plot(locs)
+
+
+def run_tests():
+    # at shallow end, changing depth
+    beam_info = test_beam_trace(0, 100, -1, 0)
+    assert beam_info[0] == (0, 100, 10), 'Wrong Nadir Depth'
+    assert [round(x, 2) for x in beam_info[1]] == [0.0, 68.28, 14.7], 'Wrong Outer Beam Depth'
+    assert round(beam_info[2]) == 31.52, 'Wrong Swath Width'
+
+    # at deep end, along the changing depth axis
+    beam_info = test_beam_trace(0, 0, 1, 0)
+    assert beam_info[0] == (0, 0, 25), 'Wrong Nadir Depth'
+    assert [round(x, 2) for x in beam_info[1]] == [0.0, 40.78, 18.94], 'Wrong Outer Beam Depth'
+    assert round(beam_info[2]) == 40.62, 'Wrong Swath Width'
 
 
 if __name__ == '__main__':
