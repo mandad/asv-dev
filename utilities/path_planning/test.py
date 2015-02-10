@@ -1,9 +1,11 @@
 import beamtrace
 import gridgen
+import followpath
 import numpy as np
+import matplotlib.pyplot as plt
 
 def test_beam_trace(x0, y0, hdg_x, hdg_y):
-    swath_angle = 70
+    swath_angle = 65
 
     bg = gridgen.BathyGrid(100, 100, 1)
     bg.generate_slope(10, 25)
@@ -16,6 +18,21 @@ def test_beam_trace(x0, y0, hdg_x, hdg_y):
     swath = beamtrace.width_from_depth(swath_angle, edge_depth[2])
 
     return (nadir_depth, edge_depth, swath)
+
+def test_follow_path():
+    vehicle = followpath.Vehicle(0, 0, 90)
+    vehicle.set_sim_resolution(.5)
+
+    path = followpath.Path()
+    path.add_waypoint(100, 0)
+
+    follower = followpath.FollowPath(vehicle, path)
+
+    locs = [follower.get_vehicle_loc()]
+    while follower.increment():
+        locs.append(follower.get_vehicle_loc())
+
+    plt.plot(locs)
 
 
 if __name__ == '__main__':
