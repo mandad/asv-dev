@@ -1,15 +1,34 @@
+"""
+Functions to trace a beam (ray) from a sonar system to an arbitrary seafloor
+defined by a grid of depths
+
+Damian Manda
+2/8/2015
+"""
+
 import numpy as np
 #def unit_vector(vector)
 
 # beam_dx = +-hdg_dy
 # beam_dy = -+hdg_dx
-def hdg_to_beam(hdg_x, hdg_y, dir='stbd'):
-    if dir == 'stbd':
-        beam_dx = -hdg_y
-        beam_dy = hdg_x
-    elif dir == 'port':
+def hdg_to_beam(hdg_x, hdg_y, direction='stbd'):
+    """Given a heading vector, converts this to a beam pointing direction of a
+    sonar that has a swath perpendicular to the direction of travel.
+
+    Arguments
+    ---------
+    hdg_x, hdg_y - Heading vector components
+    dir - side to project ('port' or 'stbd')
+
+    Returns unit vector of beam direction on desired side
+    """
+    # Switch these to go from left handed to right handed coord.
+    if direction == 'stbd':
         beam_dx = hdg_y
         beam_dy = -hdg_x
+    elif direction == 'port':
+        beam_dx = -hdg_y
+        beam_dy = hdg_x
     else:
         raise Exception('Unknown direction')
 

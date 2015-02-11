@@ -1,15 +1,31 @@
+"""
+Defines classes to simulate a vessel or vehicle following a path of (x, y)
+waypoints and record a simulated sonar swath at these points using the bathymetic
+grid defined by gridgen.py
+
+Damian Manda
+2/9/2015
+"""
+
 import numpy as np
 import beamtrace
 
 def vector_from_heading(heading, length):
-    raise NotImplementedError()
+    hdg_rad = np.radians(heading)
+    return (length * np.sin(hdg_rad), length * np.cos(hdg_rad))
 
 def next_pos(x0, y0, heading, length):
     hdg_vec = vector_from_heading(heading, length)
     return (x0 + hdg_vec[0], y0 + hdg_vec[1])
 
 def hdg_to_point(cur_x, cur_y, wpt_x, wpt_y):
-    raise NotImplementedError()
+    vec_x = wpt_x - cur_x
+    vec_y = wpt_y - cur_y
+
+    hdg = np.degrees(np.math.atan2(vec_x, vec_y))
+    if hdg < 0:
+        hdg = 360 + hdg
+    return hdg
 
 class Vehicle(object):
     def __init__(self, start_x, start_y, start_hdg):
@@ -34,7 +50,7 @@ class Vehicle(object):
 class Path(object):
     def __init__(self):
         self.waypoints = []
-        self.cur_wpt = 0;
+        self.cur_wpt = 0
 
     def add_waypoint(self, *args):
         if len(args) == 1:
@@ -44,6 +60,7 @@ class Path(object):
             self.waypoints.append(wpt)
 
     def get_cur_wpt(self):
+        #print("Getting wpt: {0}".format(self.cur_wpt))
         if len(self.waypoints) > 0:
             return self.waypoints[self.cur_wpt]
         else:
@@ -52,17 +69,17 @@ class Path(object):
     def mark_cur_visited(self):
         if len(self.waypoints) > 0:
             # Does this work?
-            self.waypoints[cur_wpt].visit()
+            self.waypoints[self.cur_wpt].visit()
 
     def get_next_wpt(self):
-        if len(self.waypoints) > self.cur_wpt:
+        if len(self.waypoints) - 1 > self.cur_wpt:
             return self.waypoints[self.cur_wpt + 1]
         else:
             return None
 
     def increment_wpt(self):
-        if len(self.waypoints) > self.cur_wpt:
-            self.cur_wpt =  self.cur_wpt + 1
+        if len(self.waypoints) - 1 > self.cur_wpt:
+            self.cur_wpt = self.cur_wpt + 1
             return True
         else:
             return False
@@ -93,7 +110,7 @@ class RecordSwath(object):
         rec = np.array([loc_x, loc_y, heading, swath])
         self.full_record.append(rec)
         self.interval_record.append(rec)
-        np.append(interval_swath, swath)
+        self.interval_swath = np.append(self.interval_swath, swath)
 
         if self.last_x is not None and self.last_y is not None:
             # Calculate distance from last recorded position
@@ -106,11 +123,11 @@ class RecordSwath(object):
         self.last_y = loc_y
 
     def min_interval(self):
-        idx = interval_swath.argmin()
+        idx = self.interval_swath.argmin()
         # Add the first point if this is the first interval
-        if len(min_record) == 0 and idx != 0:
-            min_record.append(interval_record[0])
-        self.min_record.append(interval_record[idx])
+        if len(self.min_record) == 0 and idx != 0:
+            self.min_record.append(self.interval_record[0])
+        self.min_record.append(self.interval_record[idx])
         self.interval_record = []
         self.interval_swath = np.array([])
 
@@ -121,11 +138,16 @@ class RecordSwath(object):
         self.min_record = []
         self.acc_dist = 0
 
+    # Right now we just record one side, picked to be port here - should be both
+    # Doesn't cache the points because this would in theory only be called once
     def get_swath_outer_pts(self):
         outer_rec = []
         for record in self.min_record:
-            hdg_x, hdg_y = vector_from_heading(record[2])
-            beam_dx, beam_dy = beamtrace.hdg_to_beam(hdg_x, hdg_y, 'stbd')
+            hdg_x, hdg_y = vector_from_heading(record[2], 1)
+            beam_dx, beam_dy = beamtrace.hdg_to_beam(hdg_x, hdg_y, 'port')
+            outer_pt = (record[0] + beam_dx * record[3], record[1] + beam_dy * record[3])
+            outer_rec.append(outer_pt)
+        return outer_rec
 
 
 class FollowPath(object):
@@ -142,19 +164,21 @@ class FollowPath(object):
                 first_wpt.x, first_wpt.y)
 
     def increment(self):
-        cur_wpt = path.get_cur_wpt()
+        cur_wpt = self.path.get_cur_wpt()
         # Check if reached next waypoint
-        if (abs(self.vehicle.x) - cur_wpt.x) <= self.vehicle.resolution \
-            and (abs(self.vehicle.y) - cur_wpt.y) <= self.vehicle.resolution:
+        if (abs(self.vehicle.x - cur_wpt.x)) <= self.vehicle.resolution \
+            and (abs(self.vehicle.y - cur_wpt.y)) <= self.vehicle.resolution:
             # Put it exactly at the waypoint
+            print('At Waypoint {0}'.format(self.path.cur_wpt))
             self.vehicle.set_location(cur_wpt.x, cur_wpt.y)
-            path.mark_cur_visited()
+            self.path.mark_cur_visited()
             if self.path.increment_wpt():
                 # The next is now the "current"
                 next_wpt = self.path.get_cur_wpt()
                 # Note that this does not transistion headings between lines
                 self.vehicle.hdg = hdg_to_point(cur_wpt.x, cur_wpt.y, \
                     next_wpt.x, next_wpt.y)
+                print('Now on hdg {0:.2f}'.format(self.vehicle.hdg))
             else:
                 # Reached the last waypoint
                 return False
@@ -164,3 +188,6 @@ class FollowPath(object):
 
     def get_vehicle_loc(self):
         return self.vehicle.get_location()
+
+    def get_vehicle_hdg(self):
+        return self.vehicle.hdg

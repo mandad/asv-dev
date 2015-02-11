@@ -1,3 +1,11 @@
+"""
+Generates a bathymetric grid using parameters
+Allows arbitrary size and resolution regular grids to be created
+
+Damian Manda
+2/8/2015
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -16,6 +24,13 @@ class BathyGrid(object):
         x_comp = np.zeros(self.size_x)
         # 'ij' indexing means yv[x,y]
         xv, self.grid = np.meshgrid(x_comp, y_comp, indexing='ij')
+
+    def generate_flat(self, depth):
+        self.grid = np.full((self.size_x, self.size_y), depth)
+
+    def generate_hump(self, deep, shallow, direction='y'):
+        # Create a gaussian in the desired direction
+        raise NotImplementedError()
 
     def disp_grid(self):
         if self.grid is not None:
