@@ -12,7 +12,8 @@ import beamtrace
 
 def vector_from_heading(heading, length):
     hdg_rad = np.radians(heading)
-    return (length * np.sin(hdg_rad), length * np.cos(hdg_rad))
+    # Rounding makes ~0 => 0 (from numerical sin/cos)
+    return (round(length * np.sin(hdg_rad), 15), round(length * np.cos(hdg_rad), 15))
 
 def next_pos(x0, y0, heading, length):
     hdg_vec = vector_from_heading(heading, length)
@@ -140,14 +141,32 @@ class RecordSwath(object):
 
     # Right now we just record one side, picked to be port here - should be both
     # Doesn't cache the points because this would in theory only be called once
-    def get_swath_outer_pts(self):
+    def get_swath_outer_pts(self, side = 'stbd'):
         outer_rec = []
         for record in self.min_record:
             hdg_x, hdg_y = vector_from_heading(record[2], 1)
-            beam_dx, beam_dy = beamtrace.hdg_to_beam(hdg_x, hdg_y, 'port')
+            beam_dx, beam_dy = beamtrace.hdg_to_beam(hdg_x, hdg_y, side)
             outer_pt = (record[0] + beam_dx * record[3], record[1] + beam_dy * record[3])
             outer_rec.append(outer_pt)
         return outer_rec
+
+    # For if I decide to integrate port/stbd recording
+    @staticmethod
+    def append_ps(ps_array, port, stbd):
+        if ps_array is None:
+            ps_array = np.array([[port, stbd]])
+        else:
+            ps_array = np.concatenate(ps_array[[port, stbd]])
+
+        return ps_array
+
+    @staticmethod
+    def get_port(ps_array):
+        return ps_array[:,0]
+
+    @staticmethod
+    def get_stbd(ps_array):
+        return ps_array[:,1]
 
 
 class FollowPath(object):

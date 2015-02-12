@@ -30,7 +30,21 @@ class BathyGrid(object):
 
     def generate_hump(self, deep, shallow, direction='y'):
         # Create a gaussian in the desired direction
-        raise NotImplementedError()
+        if direction == 'y':
+            axis_size = self.size_y
+        else:
+            axis_size = self.size_x
+        v_pts = np.arange(axis_size, dtype=np.float)
+        mu = axis_size / 2
+        sigma = axis_size / 10
+        v_comp = 1/(sigma * np.sqrt(2 * np.pi)) * np.exp(-(v_pts - mu)**2 / (2 * sigma**2))
+
+        # compensate to desired depths
+        v_comp = v_comp * (shallow-deep)/np.max(v_comp) + deep
+        if direction == 'y':
+            self.grid = np.tile(v_comp.reshape(100,1), (1, self.size_y))
+        else:
+            self.grid = np.tile(v_comp.reshape(1,100), (self.size_x, 1))
 
     def disp_grid(self):
         if self.grid is not None:
