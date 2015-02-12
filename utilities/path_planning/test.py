@@ -1,6 +1,7 @@
 import beamtrace
 import gridgen
 import followpath
+import simulator
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -122,6 +123,12 @@ def test_swath_record():
     plt.show()
     return swath_record_stbd
 
+def test_swath_sim():
+    sim = simulator.Simulator(0, 0, .5)
+    sim.add_waypoints([(1000, 0)])
+    if sim.run_simulation():
+        sim.plot_sim()
+
 def run_tests():
     # at shallow end, changing depth
     beam_info = test_beam_trace(0, 100, 1, 0)
@@ -146,4 +153,4 @@ if __name__ == '__main__':
         beam_info[2]))
     print('Intersection of outer beam: x={0:.2f}, y={1:.2f}'.format(beam_info[1][0], beam_info[1][1]))
     """
-    run_tests()
+    test_swath_sim()

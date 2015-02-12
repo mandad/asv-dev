@@ -40,11 +40,12 @@ class BathyGrid(object):
         v_comp = 1/(sigma * np.sqrt(2 * np.pi)) * np.exp(-(v_pts - mu)**2 / (2 * sigma**2))
 
         # compensate to desired depths
-        v_comp = v_comp * (shallow-deep)/np.max(v_comp) + deep
+        v_comp = v_comp * ((shallow-deep) / np.max(v_comp)) + deep
+        print('axis_size: {0}, v_comp: {1}'.format(axis_size, len(v_comp)))
         if direction == 'y':
-            self.grid = np.tile(v_comp.reshape(100,1), (1, self.size_y))
+            self.grid = np.tile(v_comp.reshape(axis_size, 1), (1, self.size_y))
         else:
-            self.grid = np.tile(v_comp.reshape(1,100), (self.size_x, 1))
+            self.grid = np.tile(v_comp.reshape(1, axis_size), (self.size_x, 1))
 
     def disp_grid(self):
         if self.grid is not None:
