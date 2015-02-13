@@ -19,14 +19,18 @@ def next_pos(x0, y0, heading, length):
     hdg_vec = vector_from_heading(heading, length)
     return (x0 + hdg_vec[0], y0 + hdg_vec[1])
 
-def hdg_to_point(cur_x, cur_y, wpt_x, wpt_y):
+def hdg_to_point(cur_x, cur_y, wpt_x, wpt_y, heading_basis=0):
     vec_x = wpt_x - cur_x
     vec_y = wpt_y - cur_y
 
-    hdg = np.degrees(np.math.atan2(vec_x, vec_y))
-    if hdg < 0:
-        hdg = 360 + hdg
-    return hdg
+    if round(vec_x, 15) == 0 and round(vec_y, 15) == 0:
+        # Keep heading same if next waypoint is the same
+        return heading_basis
+    else:
+        hdg = np.degrees(np.math.atan2(vec_x, vec_y))
+        if hdg < 0:
+            hdg = 360 + hdg
+        return hdg
 
 class Vehicle(object):
     def __init__(self, start_x, start_y, start_hdg):
@@ -50,8 +54,7 @@ class Vehicle(object):
 
 class Path(object):
     def __init__(self):
-        self.waypoints = []
-        self.cur_wpt = 0
+        self.clear()
 
     def add_waypoint(self, *args):
         if len(args) == 1:
@@ -84,6 +87,10 @@ class Path(object):
             return True
         else:
             return False
+
+    def clear(self):
+        self.waypoints = []
+        self.cur_wpt = 0
 
 class Waypoint(object):
     def __init__(self, x, y):
@@ -150,6 +157,12 @@ class RecordSwath(object):
             outer_rec.append(outer_pt)
         return outer_rec
 
+    def get_swath_width(self, index):
+        return self.min_record[index][3]
+
+    def get_swath_location(self, index):
+        return (self.min_record[index][0], self.min_record[index][1])
+
     # For if I decide to integrate port/stbd recording
     @staticmethod
     def append_ps(ps_array, port, stbd):
@@ -180,7 +193,7 @@ class FollowPath(object):
         first_wpt = self.path.get_cur_wpt()
         if first_wpt is not None:
             self.vehicle.hdg = hdg_to_point(self.vehicle.x, self.vehicle.y, \
-                first_wpt.x, first_wpt.y)
+                first_wpt.x, first_wpt.y, self.vehicle.hdg)
 
     def increment(self):
         cur_wpt = self.path.get_cur_wpt()
@@ -196,7 +209,7 @@ class FollowPath(object):
                 next_wpt = self.path.get_cur_wpt()
                 # Note that this does not transistion headings between lines
                 self.vehicle.hdg = hdg_to_point(cur_wpt.x, cur_wpt.y, \
-                    next_wpt.x, next_wpt.y)
+                    next_wpt.x, next_wpt.y, self.vehicle.hdg)
                 print('Now on hdg {0:.2f}'.format(self.vehicle.hdg))
             else:
                 # Reached the last waypoint

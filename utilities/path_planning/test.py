@@ -125,8 +125,8 @@ def test_swath_record():
 
 def test_swath_sim():
     sim = simulator.Simulator(0, 0, .5)
-    sim.add_waypoints([(1000, 0)])
-    if sim.run_simulation():
+    sim.add_waypoints([(0,0), (1000, 0)])
+    if sim.run_simulation(4):
         sim.plot_sim()
 
 def run_tests():
