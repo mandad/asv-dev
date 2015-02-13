@@ -3,7 +3,7 @@ Encapsulates overall simulation functions
 
 Damian Manda
 damian.manda@noaa.gov
-12 Feb 2015
+11 Feb 2015
 """
 
 import followpath
