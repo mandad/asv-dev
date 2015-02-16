@@ -1,0 +1,3 @@
+[submodule "utilities/path_planning/lsi"]
+	path = utilities/path_planning/lsi
+	url = https://github.com/mandad/lsi

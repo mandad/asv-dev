@@ -1,5 +1,13 @@
 import struct
 
+def data_encoder(address, data_values):
+    data = None
+    class_names = {0: Config0, 1: Config1, 2: Config2, 3: Config3}
+    if address in class_names.keys():
+        data = class_names[address]
+    return data
+
+
 class CommandResponse(object):
     def __init__(self, address, successful):
         self.address = address
