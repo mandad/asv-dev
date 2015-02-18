@@ -7,6 +7,15 @@ Damian Manda
 """
 
 import numpy as np
+# try:
+#     from mayavi import mlab
+# except:
+#     has_mlab = False
+# else:
+#     has_mlab = True
+
+has_mlab = False
+
 import matplotlib.pyplot as plt
 
 class BathyGrid(object):
@@ -51,9 +60,12 @@ class BathyGrid(object):
 
     def disp_grid(self):
         if self.grid is not None:
-            plt.imshow(self.grid, cmap='jet')
-            plt.colorbar()
-            plt.show()
+            if has_mlab:
+                mlab.surf(self.grid, colormap='jet')
+            else:
+                plt.imshow(self.grid, cmap='jet')
+                plt.colorbar()
+                plt.show()
 
     def get_depth(self, x, y):
         if self.grid is None:

@@ -103,8 +103,9 @@ class PathPlan(object):
         # Check for overlapping paths
         # brute force this for now as a solution to adjacent paths
         print('Eliminating path intersects itself.')
-        # These arrays will never be longer than next_path_points, could be faster to pre-allocate
-        # and then delete unused ones at the end
+        # These arrays will never be longer than next_path_pts, could be faster to pre-allocate
+        # and then delete unused ones at the end since a new array is created each
+        # time np.append runs
         intersect_pts = []
         non_intersect_idx = np.array([], dtype=np.int64)
         i = 0
@@ -163,17 +164,76 @@ class PathPlan(object):
                 i = i + 1
         non_bend_idx = np.append(non_bend_idx, np.arange(i, len(next_path_pts)))
         next_path_pts = next_path_pts[non_bend_idx]
-        # pdb.set_trace()
 
         print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
+        pre_len = len(next_path_pts)
 
-        # TODO: Extend end points to edge of op region
+        print('Extending ends of path to edge of region.')
+        # Extend end points to edge of op region
+        if op_poly is not None:
+            for i, segments in enumerate([(1,0), (len(next_path_pts)-2, len(next_path_pts) - 1)]): 
+                extend_vec = next_path_pts[segments[1]] - next_path_pts[segments[0]]
+                starting_pt = next_path_pts[segments[1]]
+                intersection = self.find_nearest_intersect(extend_vec, starting_pt, op_poly)
+                # First or last point
+                if i == 0:
+                    next_path_pts = np.insert(next_path_pts, 0, intersection, 0)
+                else:
+                    next_path_pts = np.append(next_path_pts, [intersection], 0)
 
-        # pdb.set_trace()
+        print('Added {0} points.\n'.format(len(next_path_pts) - pre_len))
+
         return next_path_pts
 
+    # TODO: All these methods need to be moved to a geometry utilities library
     @staticmethod
-    def  point_in_poly(x, y, poly):
+    def find_nearest_intersect(ray_vector, start_pt, poly):
+        """ Finds the closest intersection of a ray with a polygon
+
+        Arguments:
+        ray_vector: array(dx,dy)
+        start_pt: array(x,y)
+        poly: array([(x1,y1), (x2,y2), ...])
+        """
+        num_vtx = len(poly)
+        # Could pre-fill these to len(poly)
+        intersect_dist = np.array([])
+        intersect_pts = []
+        for vtx_idx1 in range(num_vtx):
+            if vtx_idx1 < (num_vtx - 1):
+                vtx_idx2 = vtx_idx1 + 1
+            else:
+                vtx_idx2 = 0
+            poly_seg = np.array([poly[vtx_idx1], poly[vtx_idx2]])
+            intersection = PathPlan.intersect_ray_segment(ray_vector, start_pt, poly_seg)
+            if intersection is not None:
+                intersect_dist = np.append(intersect_dist, \
+                    np.linalg.norm(intersection - start_pt))
+                intersect_pts.append(tuple(intersection))
+                # pdb.set_trace()
+
+        # Will this work if equadistant from two?
+        near_pt = intersect_pts[intersect_dist.argmin()]
+        return np.array(near_pt)
+
+
+    @staticmethod
+    def intersect_ray_segment(ray_vector, start_pt, segment):
+        """http://stackoverflow.com/questions/563198/how-do-you-detect-where-two-line-segments-intersect/565282#565282
+        """
+        seg_start = segment[0]
+        seg_vector = segment[1] - segment[0]
+        rxs = np.cross(ray_vector, seg_vector)
+        if rxs == 0:
+            return None
+        else:
+            t = np.cross(seg_start - start_pt, seg_vector) / rxs
+            # u = np.cross(seg_start - start_pt, ray_vector) / rxs
+            return start_pt + t * ray_vector
+
+
+    @staticmethod
+    def point_in_poly(x, y, poly):
         """ Determines if a given point is inside a polygon
         x, y -- x and y coordinates of point
         a list of tuples [(x, y), (x, y), ...]

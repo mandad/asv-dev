@@ -49,7 +49,7 @@ def test_swath_sim(gtype):
     sim.add_waypoints([(0,0), (1000, 0)])
     # One big square to start
     sim.set_operation_polygon([(0,0), (0,1000), (1000, 1000), (1000, 0)])
-    if sim.run_simulation(20):
+    if sim.run_simulation(3):
         sim.plot_sim()
 
 def run_tests():
