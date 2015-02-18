@@ -11,6 +11,7 @@ import beamtrace
 import gridgen
 import pathplan
 import matplotlib.pyplot as plt
+import numpy as np
 import copy
 
 new_path_side = ['port', 'stbd']
@@ -22,6 +23,7 @@ class Simulator(object):
         self.path = followpath.Path()
         self.follower = followpath.FollowPath(self.vehicle, self.path)
         self.swath_record = dict()
+        self.prev_swath = dict()
         self.swath_record['port'] = followpath.RecordSwath(swath_interval)
         self.swath_record['stbd'] = followpath.RecordSwath(swath_interval)
 
@@ -30,12 +32,14 @@ class Simulator(object):
         self.stbd_outer = []
         self.swath_angle = 65
 
+        self.op_poly = None
         self.generate_grid()
         self.generate_path()
 
-    def generate_grid(self):
-        self.bathy_grid = gridgen.BathyGrid(1000, 1000, 1)
-        self.bathy_grid.generate_hump(20, 15, 'y')
+    def generate_grid(self, size_x=1000, size_y=1000, gtype='hump'):
+        self.bathy_grid = gridgen.BathyGrid(size_x, size_y, 1)
+        if gtype == 'hump':
+            self.bathy_grid.generate_hump(20, 15, 'y')
 
     def generate_path(self, waypoints=None):
         """
@@ -59,7 +63,6 @@ class Simulator(object):
             # Don't record going to the first waypoint (0 = cur_loc, 1 = first pt)
             # and cur_wpt is the one the vessel is going toward
             if self.path.cur_wpt > 1:
-                #print('I\'m fucking storing this shit {0}'.format(self.path.cur_wpt))
                 self.record_swath_point(this_loc, hdg_deg)
             self.veh_locs.append(this_loc)
             return True
@@ -82,7 +85,7 @@ class Simulator(object):
                     # Plan a new path on the starboard side
                     path_planner = pathplan.PathPlan(self.swath_record[new_path_side[i % 2]], \
                         new_path_side[i % 2], 0.2)
-                    next_path = path_planner.generate_next_path()
+                    next_path = path_planner.generate_next_path(self.op_poly)
                     print('New Path Length: {0}'.format(len(next_path)))
 
                     # xy_pts = zip(*next_path)
@@ -101,6 +104,12 @@ class Simulator(object):
             return False
         return True
 
+    def set_operation_polygon(self, vertices):
+        """
+        vertices is a list of (x,y) tuples
+        Assumes the polygon has been checked before passing to the function
+        """
+        self.op_poly = vertices
 
     def record_swath_point(self, this_loc, hdg_deg):
         """
@@ -138,12 +147,13 @@ class Simulator(object):
         plt.plot(swath_xy_stbd[0], swath_xy_stbd[1], 'go-', label='Swath Edge Stbd')
 
         # First Swath
-        swath_edge = self.prev_swath['port'].get_swath_outer_pts('port')
-        prev_swath_xy_port = zip(*swath_edge)
-        swath_edge = self.prev_swath['stbd'].get_swath_outer_pts('stbd')
-        prev_swath_xy_stbd = zip(*swath_edge)
-        plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'r--', label='Prev Edge Port')
-        plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'g--', label='Prev Edge Stbd')
+        if len(self.prev_swath) > 0:
+            swath_edge = self.prev_swath['port'].get_swath_outer_pts('port')
+            prev_swath_xy_port = zip(*swath_edge)
+            swath_edge = self.prev_swath['stbd'].get_swath_outer_pts('stbd')
+            prev_swath_xy_stbd = zip(*swath_edge)
+            plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'r--', label='Prev Edge Port')
+            plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'g--', label='Prev Edge Stbd')
 
         plt.legend()
 
