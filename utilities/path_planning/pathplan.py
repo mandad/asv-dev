@@ -3,15 +3,17 @@ Plans a new path based on a recorded path and swath
 
 Damian Manda
 damian.manda@noaa.gov
-12 Feb 2015
+18 Feb 2015
 """
 
 import numpy as np
 import beamtrace
 import pdb
-# from lsi import lsi
 
+# from lsi import lsi
+# debug = True
 np.set_printoptions(suppress=True)
+MAX_BEND_ANGLE = 70 # degrees
 
 def unit_vector(vector):
     """
@@ -39,9 +41,8 @@ class PathPlan(object):
         self.margin = margin
 
     def generate_next_path(self, op_poly=None):
-        print('Generating Next Path')
+        print('\n======== Generating Next Path ========')
         edge_pts = self.swath_record.get_swath_outer_pts(self.side)
-        # pdb.set_trace()
         
         print ('Basis Points: {0}'.format(len(edge_pts)))
         
@@ -85,17 +86,23 @@ class PathPlan(object):
         # Next line is in opposite direction
         next_path_pts.reverse()
 
-        # pdb.set_trace()
+        pre_len = len(next_path_pts)
+
         # Eliminate points not in op region
         # Eventually needs to see if paths intersect the boundaries as well
         print('Eliminating points outside op region.')
         if op_poly is not None:
             next_path_pts = [pt for pt in next_path_pts if self.point_in_poly(pt[0], pt[1], op_poly)]
-        
+        print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
+        pre_len = len(next_path_pts)
+
+        # Done with op region (in nieve case)
+        if pre_len == 0:
+            return next_path_pts
+
         # Check for overlapping paths
         # brute force this for now as a solution to adjacent paths
-        # pdb.set_trace()
-        print('Eliminating path bends on itself.')
+        print('Eliminating path intersects itself.')
         # These arrays will never be longer than next_path_points, could be faster to pre-allocate
         # and then delete unused ones at the end
         intersect_pts = []
@@ -106,6 +113,7 @@ class PathPlan(object):
             non_intersect_idx = np.append(non_intersect_idx, i)
             this_seg_a = next_path_pts[i]
             this_seg_b = next_path_pts[i+1]
+            # Check all following segments
             for j in range(i + 2, len(next_path_pts)-1):
                 check_seg_a = next_path_pts[j]
                 check_seg_b = next_path_pts[j+1]
@@ -125,13 +133,42 @@ class PathPlan(object):
         else:
             non_intersect_idx = np.append(non_intersect_idx, len(next_path_pts) - 1)
 
-
         next_path_pts = np.array(next_path_pts)
         next_path_pts = next_path_pts[non_intersect_idx]
 
-        #   Check for drastic angles between segments
+        print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
+        pre_len = len(next_path_pts)
 
-        # return [tuple(x) for x in pts_np]
+        # Check for drastic angles between segments
+        # Note that this goes to the last point being checked
+        # There has got to be a more efficient way to do this
+        print('Eliminating dramatic bends.')
+        non_bend_idx = np.array([], dtype=np.int64)
+        i = 0
+        while i < (len(next_path_pts) - 2):
+            non_bend_idx = np.append(non_bend_idx, i)
+            this_vec = next_path_pts[i+1] - next_path_pts[i]
+            next_vec = next_path_pts[i+2] - next_path_pts[i+1]
+            # Angle between this and following
+            if self.vector_angle(this_vec, next_vec) > MAX_BEND_ANGLE:
+                j = i + 2
+                # If too large, have to find the next point that makes it small enough
+                while j < len(next_path_pts):
+                    next_vec = next_path_pts[j] - next_path_pts[i+1]
+                    if self.vector_angle(this_vec, next_vec) < MAX_BEND_ANGLE:
+                        break
+                    j = j + 1
+                i = j
+            else:
+                i = i + 1
+        non_bend_idx = np.append(non_bend_idx, np.arange(i, len(next_path_pts)))
+        next_path_pts = next_path_pts[non_bend_idx]
+        # pdb.set_trace()
+
+        print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
+
+        # TODO: Extend end points to edge of op region
+
         # pdb.set_trace()
         return next_path_pts
 
@@ -162,4 +199,13 @@ class PathPlan(object):
         # Does not check for colinearity
         return PathPlan.ccw(A, C, D) != PathPlan.ccw(B, C, D) and \
             PathPlan.ccw(A, B, C) != PathPlan.ccw(A, B, D)
+
+    @staticmethod
+    def vector_angle(vector1, vector2):
+        """ Returns the angle in degrees between vectors 'vector1' and 'vector2'
+        Tan(ang) = |(axb)|/(a.b)
+        """
+        cosang = np.dot(vector1, vector2)
+        sinang = np.linalg.norm(np.cross(vector1, vector2))
+        return np.arctan2(sinang, cosang) * 180/np.pi
 

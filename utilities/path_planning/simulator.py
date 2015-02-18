@@ -77,6 +77,7 @@ class Simulator(object):
     def run_simulation(self, num_lines=2):
         try:
             for i in range(num_lines):
+                print('\n======== Following Line {0} ========'.format(i+1))
                 while self.iterate():
                     pass
 
@@ -94,11 +95,12 @@ class Simulator(object):
                     # plt.show()
 
                     # Run the second path
+                    if len(next_path) == 0:
+                        return True
                     self.generate_path(next_path)
                     self.prev_swath = copy.deepcopy(self.swath_record)
                     self.swath_record['stbd'].reset_line()
                     self.swath_record['port'].reset_line()
-            
 
         except KeyboardInterrupt:
             return False

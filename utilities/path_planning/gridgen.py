@@ -3,7 +3,7 @@ Generates a bathymetric grid using parameters
 Allows arbitrary size and resolution regular grids to be created
 
 Damian Manda
-2/8/2015
+8 Feb 2015
 """
 
 import numpy as np

@@ -3,7 +3,7 @@ Functions to trace a beam (ray) from a sonar system to an arbitrary seafloor
 defined by a grid of depths
 
 Damian Manda
-2/8/2015
+8 Feb 2015
 """
 
 import numpy as np
