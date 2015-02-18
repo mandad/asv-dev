@@ -17,7 +17,7 @@ import copy
 new_path_side = ['port', 'stbd']
 
 class Simulator(object):
-    def __init__(self, start_x, start_y, resolution, swath_interval=10):
+    def __init__(self, start_x, start_y, resolution, grid_type='hump', swath_interval=10):
         self.vehicle = followpath.Vehicle(start_x, start_y, 90)
         self.vehicle.set_sim_resolution(resolution)
         self.path = followpath.Path()
@@ -33,13 +33,17 @@ class Simulator(object):
         self.swath_angle = 65
 
         self.op_poly = None
-        self.generate_grid()
+        self.generate_grid(gtype=grid_type)
         self.generate_path()
 
     def generate_grid(self, size_x=1000, size_y=1000, gtype='hump'):
         self.bathy_grid = gridgen.BathyGrid(size_x, size_y, 1)
         if gtype == 'hump':
             self.bathy_grid.generate_hump(20, 15, 'y')
+        elif gtype == 'flat':
+            self.bathy_grid.generate_flat(25)
+        elif gtype =='slope':
+            self.bathy_grid.generate_slope(10, 40)
 
     def generate_path(self, waypoints=None):
         """

@@ -20,6 +20,8 @@ class BathyGrid(object):
         self.index_y = np.linspace(0, size_y * res, size_y)
 
     def generate_slope(self, min, max):
+        if max < min:
+            raise Exception('Maximum depth specified less than minumum.')
         y_comp = np.linspace(max, min, self.size_y)
         x_comp = np.zeros(self.size_x)
         # 'ij' indexing means yv[x,y]

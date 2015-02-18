@@ -4,6 +4,7 @@ import followpath
 import simulator
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 
 swath_angle = 65
@@ -43,12 +44,12 @@ def test_follow_path():
     plt.show()
     return locs
 
-def test_swath_sim():
-    sim = simulator.Simulator(0, 0, .5)
+def test_swath_sim(gtype):
+    sim = simulator.Simulator(0, 0, .5, gtype)
     sim.add_waypoints([(0,0), (1000, 0)])
     # One big square to start
     sim.set_operation_polygon([(0,0), (0,1000), (1000, 1000), (1000, 0)])
-    if sim.run_simulation(16):
+    if sim.run_simulation(20):
         sim.plot_sim()
 
 def run_tests():
@@ -75,4 +76,7 @@ if __name__ == '__main__':
         beam_info[2]))
     print('Intersection of outer beam: x={0:.2f}, y={1:.2f}'.format(beam_info[1][0], beam_info[1][1]))
     """
-    test_swath_sim()
+    if len(sys.argv) > 1:
+        test_swath_sim(sys.argv[1])
+    else:
+        test_swath_sim()
