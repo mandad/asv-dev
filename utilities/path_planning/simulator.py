@@ -95,9 +95,21 @@ class Simulator(object):
                     # plt.show()
 
                     # Run the second path
-                    if len(next_path) == 0:
+                    if len(next_path) < 2:
                         return True
                     self.generate_path(next_path)
+                    
+                    # Check if have to turn from first position, if so we are done
+                    # TODO: Think through this logic a bit more systematically
+                    veh_pos = self.path.get_cur_wpt()
+                    line_start = self.path.get_next_wpt()
+                    line_second_pt = self.path.get_wpt(2)
+                    vec_to_start = np.array([line_start.x - veh_pos.x, line_start.y - veh_pos.y])
+                    vec_first_leg = np.array([line_second_pt.x - line_start.x, \
+                        line_second_pt.y - line_start.y])
+                    if pathplan.PathPlan.vector_angle(vec_to_start, vec_first_leg) > 90:
+                        return True
+
                     self.prev_swath = copy.deepcopy(self.swath_record)
                     self.swath_record['stbd'].reset_line()
                     self.swath_record['port'].reset_line()

@@ -129,7 +129,7 @@ class PathPlan(object):
         # Add the last segment as long as it was not overlapping
         if i < len(next_path_pts):
             # Normal end, have three points left
-            non_intersect_idx = np.append(non_intersect_idx, [i, i + 1, i + 2])
+            non_intersect_idx = np.append(non_intersect_idx, np.arange(i, len(next_path_pts)))
         else:
             non_intersect_idx = np.append(non_intersect_idx, len(next_path_pts) - 1)
 

@@ -4,7 +4,7 @@ waypoints and record a simulated sonar swath at these points using the bathymeti
 grid defined by gridgen.py
 
 Damian Manda
-2/9/2015
+9 Feb 2015
 """
 
 import numpy as np
@@ -78,6 +78,12 @@ class Path(object):
     def get_next_wpt(self):
         if len(self.waypoints) - 1 > self.cur_wpt:
             return self.waypoints[self.cur_wpt + 1]
+        else:
+            return None
+
+    def get_wpt(self, index):
+        if index < len(self.waypoints):
+            return self.waypoints[index]
         else:
             return None
 
