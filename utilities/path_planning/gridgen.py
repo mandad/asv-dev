@@ -7,14 +7,14 @@ Damian Manda
 """
 
 import numpy as np
-# try:
-#     from mayavi import mlab
-# except:
-#     has_mlab = False
-# else:
-#     has_mlab = True
+try:
+    from mayavi import mlab
+except:
+    has_mlab = False
+else:
+    has_mlab = True
 
-has_mlab = False
+# has_mlab = False
 
 import matplotlib.pyplot as plt
 

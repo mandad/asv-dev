@@ -175,11 +175,13 @@ class PathPlan(object):
                 extend_vec = next_path_pts[segments[1]] - next_path_pts[segments[0]]
                 starting_pt = next_path_pts[segments[1]]
                 intersection = self.find_nearest_intersect(extend_vec, starting_pt, op_poly)
-                # First or last point
-                if i == 0:
-                    next_path_pts = np.insert(next_path_pts, 0, intersection, 0)
-                else:
-                    next_path_pts = np.append(next_path_pts, [intersection], 0)
+                # Make sure we aren't extending too far
+                if intersection[0] < (2 * self.swath_record.interval):
+                    # First or last point
+                    if i == 0:
+                        next_path_pts = np.insert(next_path_pts, 0, intersection[1], 0)
+                    else:
+                        next_path_pts = np.append(next_path_pts, [intersection[1]], 0)
 
         print('Added {0} points.\n'.format(len(next_path_pts) - pre_len))
 
@@ -214,7 +216,7 @@ class PathPlan(object):
 
         # Will this work if equadistant from two?
         near_pt = intersect_pts[intersect_dist.argmin()]
-        return np.array(near_pt)
+        return (intersect_dist.min(), np.array(near_pt))
 
 
     @staticmethod

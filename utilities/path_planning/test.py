@@ -5,7 +5,7 @@ import simulator
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
-
+import pdb
 
 swath_angle = 65
 
@@ -49,8 +49,9 @@ def test_swath_sim(gtype):
     sim.add_waypoints([(0,0), (1000, 0)])
     # One big square to start
     sim.set_operation_polygon([(0,0), (0,1000), (1000, 1000), (1000, 0)])
-    if sim.run_simulation(3):
+    if sim.run_simulation(20):
         sim.plot_sim()
+        pdb.set_trace()
 
 def run_tests():
     # at shallow end, changing depth

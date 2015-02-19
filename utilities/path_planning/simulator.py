@@ -105,13 +105,16 @@ class Simulator(object):
                     
                     # Check if have to turn from first position, if so we are done
                     # TODO: Think through this logic a bit more systematically
+                    # Should actually test angles between subsequent lines, how far they
+                    # are from parallel
                     veh_pos = self.path.get_cur_wpt()
                     line_start = self.path.get_next_wpt()
                     line_second_pt = self.path.get_wpt(2)
                     vec_to_start = np.array([line_start.x - veh_pos.x, line_start.y - veh_pos.y])
                     vec_first_leg = np.array([line_second_pt.x - line_start.x, \
                         line_second_pt.y - line_start.y])
-                    if pathplan.PathPlan.vector_angle(vec_to_start, vec_first_leg) > 90:
+                    if pathplan.PathPlan.vector_angle(vec_to_start, vec_first_leg) > 100:
+                        print('Large bend to get to first leg, done.')
                         return True
 
                     self.prev_swath = copy.deepcopy(self.swath_record)
