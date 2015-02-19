@@ -176,7 +176,7 @@ class PathPlan(object):
                 starting_pt = next_path_pts[segments[1]]
                 intersection = self.find_nearest_intersect(extend_vec, starting_pt, op_poly)
                 # Make sure we aren't extending too far
-                if intersection[0] < (2 * self.swath_record.interval):
+                if intersection[0] < (15 * self.swath_record.interval):
                     # First or last point
                     if i == 0:
                         next_path_pts = np.insert(next_path_pts, 0, intersection[1], 0)
@@ -184,6 +184,8 @@ class PathPlan(object):
                         next_path_pts = np.append(next_path_pts, [intersection[1]], 0)
 
         print('Added {0} points.\n'.format(len(next_path_pts) - pre_len))
+
+        # TODO: Remove points in already covered regions
 
         return next_path_pts
 

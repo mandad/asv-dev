@@ -40,6 +40,8 @@ class Simulator(object):
         self.bathy_grid = gridgen.BathyGrid(size_x, size_y, 1)
         if gtype == 'hump':
             self.bathy_grid.generate_hump(20, 15, 'y')
+        elif gtype == 'dip':
+            self.bathy_grid.generate_dip(25, 20, 'y')
         elif gtype == 'flat':
             self.bathy_grid.generate_flat(25)
         elif gtype =='slope':
@@ -113,9 +115,9 @@ class Simulator(object):
                     vec_to_start = np.array([line_start.x - veh_pos.x, line_start.y - veh_pos.y])
                     vec_first_leg = np.array([line_second_pt.x - line_start.x, \
                         line_second_pt.y - line_start.y])
-                    if pathplan.PathPlan.vector_angle(vec_to_start, vec_first_leg) > 100:
-                        print('Large bend to get to first leg, done.')
-                        return True
+                    # if pathplan.PathPlan.vector_angle(vec_to_start, vec_first_leg) > 100:
+                    #     print('Large bend to get to first leg, done.')
+                    #     return True
 
                     self.prev_swath = copy.deepcopy(self.swath_record)
                     self.swath_record['stbd'].reset_line()
@@ -175,6 +177,12 @@ class Simulator(object):
             prev_swath_xy_stbd = zip(*swath_edge)
             plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'r--', label='Prev Edge Port')
             plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'g--', label='Prev Edge Stbd')
+
+        if self.op_poly is not None:
+            plot_poly = self.op_poly[:]
+            plot_poly.append(plot_poly[0])
+            poly_x, poly_y = zip(*plot_poly)
+            plt.plot(poly_x, poly_y, 'k')
 
         plt.legend()
 

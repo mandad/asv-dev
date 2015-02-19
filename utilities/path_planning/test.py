@@ -44,12 +44,12 @@ def test_follow_path():
     plt.show()
     return locs
 
-def test_swath_sim(gtype):
+def test_swath_sim(gtype='slope', num_lines=5):
     sim = simulator.Simulator(0, 0, .5, gtype)
-    sim.add_waypoints([(0,0), (1000, 0)])
+    sim.add_waypoints([(0, 20), (20, 0)])
     # One big square to start
     sim.set_operation_polygon([(0,0), (0,1000), (1000, 1000), (1000, 0)])
-    if sim.run_simulation(20):
+    if sim.run_simulation(num_lines):
         sim.plot_sim()
         pdb.set_trace()
 
@@ -77,7 +77,9 @@ if __name__ == '__main__':
         beam_info[2]))
     print('Intersection of outer beam: x={0:.2f}, y={1:.2f}'.format(beam_info[1][0], beam_info[1][1]))
     """
-    if len(sys.argv) > 1:
+    if len(sys.argv) == 2:
         test_swath_sim(sys.argv[1])
+    if len(sys.argv) == 3:
+        test_swath_sim(sys.argv[1], int(sys.argv[2]))
     else:
         test_swath_sim()
