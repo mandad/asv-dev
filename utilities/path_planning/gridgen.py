@@ -40,8 +40,14 @@ class BathyGrid(object):
         self.grid = np.full((self.size_x, self.size_y), depth)
 
     def generate_hump(self, deep, shallow, direction='y'):
+        self.generate_linear_bump(deep, shallow, 'up', direction)
+
+    def generate_dip(self, deep, shallow, direction='y'):
+        self.generate_linear_bump(shallow, deep, 'up', direction)
+
+    def generate_linear_bump(self, deep, shallow, vert_dir='up', orientation='y'):
         # Create a gaussian in the desired direction
-        if direction == 'y':
+        if orientation == 'y':
             axis_size = self.size_y
         else:
             axis_size = self.size_x
@@ -51,21 +57,30 @@ class BathyGrid(object):
         v_comp = 1/(sigma * np.sqrt(2 * np.pi)) * np.exp(-(v_pts - mu)**2 / (2 * sigma**2))
 
         # compensate to desired depths
-        v_comp = v_comp * ((shallow-deep) / np.max(v_comp)) + deep
+        if (vert_dir == 'up'):
+            v_comp = v_comp * ((shallow-deep) / np.max(v_comp)) + deep
+        else:
+            v_comp = deep - (v_comp * ((shallow-deep) / np.max(v_comp)))
+
         print('axis_size: {0}, v_comp: {1}'.format(axis_size, len(v_comp)))
-        if direction == 'y':
+        if orientation == 'y':
             self.grid = np.tile(v_comp.reshape(axis_size, 1), (1, self.size_y))
         else:
             self.grid = np.tile(v_comp.reshape(1, axis_size), (self.size_x, 1))
 
+    def generate_hole():
+        pass
+
     def disp_grid(self):
         if self.grid is not None:
             if has_mlab:
-                mlab.surf(self.grid, colormap='jet')
+                mlab.surf(-self.grid, colormap='jet', warp_scale='20')
             else:
                 plt.imshow(self.grid, cmap='jet')
                 plt.colorbar()
                 plt.show()
+        else:
+            raise Exception('No grid has been generated')
 
     def get_depth(self, x, y):
         if self.grid is None:
