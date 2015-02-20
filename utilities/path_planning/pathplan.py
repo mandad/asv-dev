@@ -169,8 +169,9 @@ class PathPlan(object):
         pre_len = len(next_path_pts)
 
         print('Extending ends of path to edge of region.')
+        next_path_pts_extend = np.array(next_path_pts, copy=True)
         # Extend end points to edge of op region
-        if op_poly is not None:
+        if op_poly is not None and pre_len > 1:
             for i, segments in enumerate([(1,0), (len(next_path_pts)-2, len(next_path_pts) - 1)]): 
                 extend_vec = next_path_pts[segments[1]] - next_path_pts[segments[0]]
                 starting_pt = next_path_pts[segments[1]]
@@ -179,10 +180,11 @@ class PathPlan(object):
                 if intersection[0] < (15 * self.swath_record.interval):
                     # First or last point
                     if i == 0:
-                        next_path_pts = np.insert(next_path_pts, 0, intersection[1], 0)
+                        next_path_pts_extend = np.insert(next_path_pts_extend, 0, intersection[1], 0)
                     else:
-                        next_path_pts = np.append(next_path_pts, [intersection[1]], 0)
+                        next_path_pts_extend = np.append(next_path_pts_extend, [intersection[1]], 0)
 
+        next_path_pts = next_path_pts_extend
         print('Added {0} points.\n'.format(len(next_path_pts) - pre_len))
 
         # TODO: Remove points in already covered regions
@@ -233,7 +235,10 @@ class PathPlan(object):
         else:
             t = np.cross(seg_start - start_pt, seg_vector) / rxs
             # u = np.cross(seg_start - start_pt, ray_vector) / rxs
-            return start_pt + t * ray_vector
+            if t > 0:
+                return start_pt + t * ray_vector
+            else:
+                return None
 
 
     @staticmethod

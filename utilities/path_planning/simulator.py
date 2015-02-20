@@ -13,8 +13,10 @@ import pathplan
 import matplotlib.pyplot as plt
 import numpy as np
 import copy
+import pdb
 
 new_path_side = ['port', 'stbd']
+SWATH_OVERLAP = 0.2
 
 class Simulator(object):
     def __init__(self, start_x, start_y, resolution, grid_type='hump', swath_interval=10):
@@ -41,11 +43,19 @@ class Simulator(object):
         if gtype == 'hump':
             self.bathy_grid.generate_hump(20, 15, 'y')
         elif gtype == 'dip':
-            self.bathy_grid.generate_dip(25, 20, 'y')
+            self.bathy_grid.generate_dip(25, 20, 'x')
         elif gtype == 'flat':
             self.bathy_grid.generate_flat(25)
         elif gtype =='slope':
             self.bathy_grid.generate_slope(10, 40)
+        elif gtype == 'x':
+            self.bathy_grid.generate_x(25, 20)
+        elif gtype == 'x_hole':
+            self.bathy_grid.generate_x_hole(30, 20)
+        elif gtype == 'x_bump':
+            self.bathy_grid.generate_x_bump(30, 20)
+        elif gtype == 'hole':
+            self.bathy_grid.generate_hole(30, 20)
 
     def generate_path(self, waypoints=None):
         """
@@ -91,7 +101,7 @@ class Simulator(object):
                 if i < num_lines - 1:
                     # Plan a new path on the starboard side
                     path_planner = pathplan.PathPlan(self.swath_record[new_path_side[i % 2]], \
-                        new_path_side[i % 2], 0.2)
+                        new_path_side[i % 2], SWATH_OVERLAP)
                     next_path = path_planner.generate_next_path(self.op_poly)
                     print('New Path Length: {0}'.format(len(next_path)))
 
@@ -156,33 +166,37 @@ class Simulator(object):
         swath_width = beamtrace.width_from_depth(self.swath_angle, ray_trace[2])
         self.swath_record['stbd'].record(swath_width, this_loc[0], this_loc[1], hdg_deg)
 
-    def plot_sim(self):
-        # Plot the path that was followed
-        xy_locs = zip(*self.veh_locs)
-        plt.plot(xy_locs[0], xy_locs[1], label='Vessel Path')
-
-        # Swath Edge
-        swath_edge = self.swath_record['port'].get_swath_outer_pts('port')
-        swath_xy_port = zip(*swath_edge)
-        swath_edge = self.swath_record['stbd'].get_swath_outer_pts('stbd')
-        swath_xy_stbd = zip(*swath_edge)
-        plt.plot(swath_xy_port[0], swath_xy_port[1], 'ro-', label='Swath Edge Port')
-        plt.plot(swath_xy_stbd[0], swath_xy_stbd[1], 'go-', label='Swath Edge Stbd')
-
-        # First Swath
-        if len(self.prev_swath) > 0:
-            swath_edge = self.prev_swath['port'].get_swath_outer_pts('port')
-            prev_swath_xy_port = zip(*swath_edge)
-            swath_edge = self.prev_swath['stbd'].get_swath_outer_pts('stbd')
-            prev_swath_xy_stbd = zip(*swath_edge)
-            plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'r--', label='Prev Edge Port')
-            plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'g--', label='Prev Edge Stbd')
-
+    def plot_sim(self, show_swath=True):
+        # Plot the operation region
         if self.op_poly is not None:
             plot_poly = self.op_poly[:]
             plot_poly.append(plot_poly[0])
             poly_x, poly_y = zip(*plot_poly)
-            plt.plot(poly_x, poly_y, 'k')
+            plt.plot(poly_x, poly_y, 'k', linewidth=3.0, label='Operation Region')
+
+        # Plot the path that was followed
+        xy_locs = zip(*self.veh_locs)
+        plt.plot(xy_locs[0], xy_locs[1], linewidth=2.0, label='Vessel Path')
+
+        if show_swath:
+            # Swath Edge
+            swath_edge = self.swath_record['port'].get_swath_outer_pts('port')
+            swath_xy_port = zip(*swath_edge)
+            swath_edge = self.swath_record['stbd'].get_swath_outer_pts('stbd')
+            swath_xy_stbd = zip(*swath_edge)
+            plt.plot(swath_xy_port[0], swath_xy_port[1], 'ro-', label='Swath Edge Port')
+            plt.plot(swath_xy_stbd[0], swath_xy_stbd[1], 'go-', label='Swath Edge Stbd')
+
+            # First Swath
+            if len(self.prev_swath) > 0:
+                swath_edge = self.prev_swath['port'].get_swath_outer_pts('port')
+                prev_swath_xy_port = zip(*swath_edge)
+                swath_edge = self.prev_swath['stbd'].get_swath_outer_pts('stbd')
+                prev_swath_xy_stbd = zip(*swath_edge)
+                plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'r--', label='Prev Edge Port')
+                plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'g--', label='Prev Edge Stbd')
+
+
 
         plt.legend()
 

@@ -46,11 +46,21 @@ def test_follow_path():
 
 def test_swath_sim(gtype='slope', num_lines=5):
     sim = simulator.Simulator(0, 0, .5, gtype)
+    # ===== Starting Line =======
+    # Regular, start along x axis
+    # sim.add_waypoints([(0, 0), (1000, 0)])
+    # 90 degree rotated
+    # sim.add_waypoints([(1000, 0), (1000, 1000)])
+    # 45 degrees
     sim.add_waypoints([(0, 20), (20, 0)])
+
+    # ===== Operation Region =====
     # One big square to start
     sim.set_operation_polygon([(0,0), (0,1000), (1000, 1000), (1000, 0)])
+
     if sim.run_simulation(num_lines):
-        sim.plot_sim()
+        # use plot_sim(False) to not show swaths
+        sim.plot_sim(False)
         pdb.set_trace()
 
 def run_tests():
