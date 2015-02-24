@@ -152,7 +152,7 @@ class RecordSwath(object):
         self.min_record = []
         self.acc_dist = 0
 
-    # Right now we just record one side, picked to be port here - should be both
+    # Right now we just record one side, picked to be stbd here - should be both
     # Doesn't cache the points because this would in theory only be called once
     def get_swath_outer_pts(self, side = 'stbd'):
         outer_rec = []

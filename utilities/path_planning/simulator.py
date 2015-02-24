@@ -12,6 +12,8 @@ import gridgen
 import pathplan
 import matplotlib.pyplot as plt
 import numpy as np
+from shapely.geometry import Polygon, MultiPoint, Point
+from shapely.prepared import prep
 import copy
 import pdb
 
@@ -28,6 +30,7 @@ class Simulator(object):
         self.prev_swath = dict()
         self.swath_record['port'] = followpath.RecordSwath(swath_interval)
         self.swath_record['stbd'] = followpath.RecordSwath(swath_interval)
+        self.coverage = Polygon()
 
         self.veh_locs = [(start_x, start_y)]
         self.port_outer = []
@@ -46,7 +49,7 @@ class Simulator(object):
             self.bathy_grid.generate_dip(25, 20, 'x')
         elif gtype == 'flat':
             self.bathy_grid.generate_flat(25)
-        elif gtype =='slope':
+        elif gtype == 'slope':
             self.bathy_grid.generate_slope(10, 40)
         elif gtype == 'x':
             self.bathy_grid.generate_x(25, 20)
@@ -56,6 +59,8 @@ class Simulator(object):
             self.bathy_grid.generate_x_bump(30, 20)
         elif gtype == 'hole':
             self.bathy_grid.generate_hole(30, 20)
+        elif gtype == 'bump':
+            self.bathy_grid.generate_bump(30, 20)
 
     def generate_path(self, waypoints=None):
         """
@@ -109,6 +114,20 @@ class Simulator(object):
                     # plt.plot(xy_pts[0], xy_pts[1], 'bo-')
                     # plt.axis('equal')
                     # plt.show()
+                    # pdb.set_trace()
+
+                    # Add swath to fully coverage polygon geometry
+                    all_edge_pts = list(self.swath_record['stbd'].get_swath_outer_pts('stbd'))
+                    all_edge_pts.append(self.swath_record['port'].get_swath_outer_pts('port'))
+                    all_edge_pts_mp = MultiPoint(all_edge_pts)
+                    new_coverage = all_edge_pts_mp.convex_hull
+                    self.coverage = self.coverage.union(new_coverage)
+
+                    # TODO: Remove pts on the path that are in the coverage
+                    prepared_coverage = prep(self.coverage)
+                    # next_path = [pt for pt in next_path if not prepared_coverage.contains(pt)]
+                    next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(tuple(pt)))]
+                    # pdb.set_trace()
 
                     # Run the second path
                     if len(next_path) < 2:
@@ -119,12 +138,12 @@ class Simulator(object):
                     # TODO: Think through this logic a bit more systematically
                     # Should actually test angles between subsequent lines, how far they
                     # are from parallel
-                    veh_pos = self.path.get_cur_wpt()
-                    line_start = self.path.get_next_wpt()
-                    line_second_pt = self.path.get_wpt(2)
-                    vec_to_start = np.array([line_start.x - veh_pos.x, line_start.y - veh_pos.y])
-                    vec_first_leg = np.array([line_second_pt.x - line_start.x, \
-                        line_second_pt.y - line_start.y])
+                    # veh_pos = self.path.get_cur_wpt()
+                    # line_start = self.path.get_next_wpt()
+                    # line_second_pt = self.path.get_wpt(2)
+                    # vec_to_start = np.array([line_start.x - veh_pos.x, line_start.y - veh_pos.y])
+                    # vec_first_leg = np.array([line_second_pt.x - line_start.x, \
+                    #     line_second_pt.y - line_start.y])
                     # if pathplan.PathPlan.vector_angle(vec_to_start, vec_first_leg) > 100:
                     #     print('Large bend to get to first leg, done.')
                     #     return True
@@ -169,14 +188,15 @@ class Simulator(object):
     def plot_sim(self, show_swath=True):
         # Plot the operation region
         if self.op_poly is not None:
-            plot_poly = self.op_poly[:]
+            plot_poly = list(self.op_poly)
             plot_poly.append(plot_poly[0])
             poly_x, poly_y = zip(*plot_poly)
             plt.plot(poly_x, poly_y, 'k', linewidth=3.0, label='Operation Region')
 
         # Plot the path that was followed
         xy_locs = zip(*self.veh_locs)
-        plt.plot(xy_locs[0], xy_locs[1], linewidth=2.0, label='Vessel Path')
+        # change the 'b' to 'w' for figures
+        plt.plot(xy_locs[0], xy_locs[1], 'b', linewidth=2.0, label='Vessel Path')
 
         if show_swath:
             # Swath Edge
@@ -198,7 +218,9 @@ class Simulator(object):
 
 
 
-        plt.legend()
-
+        # plt.legend()
         plt.axis('equal')
+        plt.ylim([-100, 1100])
+        # fig.patch.set_alpha(0.5)
+        plt.savefig('path_output.png', dpi=600, transparent=True)
         plt.show()

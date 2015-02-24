@@ -89,7 +89,8 @@ class PathPlan(object):
         pre_len = len(next_path_pts)
 
         # Eliminate points not in op region
-        # Eventually needs to see if paths intersect the boundaries as well
+        # Eventually needs to see if paths intersect the boundaries as well - current does
+        # not result in full coverage
         print('Eliminating points outside op region.')
         if op_poly is not None:
             next_path_pts = [pt for pt in next_path_pts if self.point_in_poly(pt[0], pt[1], op_poly)]

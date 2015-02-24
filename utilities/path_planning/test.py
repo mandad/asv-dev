@@ -48,11 +48,14 @@ def test_swath_sim(gtype='slope', num_lines=5):
     sim = simulator.Simulator(0, 0, .5, gtype)
     # ===== Starting Line =======
     # Regular, start along x axis
-    # sim.add_waypoints([(0, 0), (1000, 0)])
+    sim.add_waypoints([(0, 0), (1000, 0)])
+
     # 90 degree rotated
+    # sim = simulator.Simulator(1000, 0, .5, gtype)
     # sim.add_waypoints([(1000, 0), (1000, 1000)])
+
     # 45 degrees
-    sim.add_waypoints([(0, 20), (20, 0)])
+    # sim.add_waypoints([(0, 20), (20, 0)])
 
     # ===== Operation Region =====
     # One big square to start

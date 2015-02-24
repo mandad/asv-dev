@@ -90,6 +90,9 @@ class BathyGrid(object):
         self.grid = self.makeGaussian(self.size_x, self.size_x / 3)
         self.grid = shallow + (self.grid * ((deep-shallow) / np.max(self.grid)))
 
+    def generate_bump(self, deep, shallow):
+        self.generate_hole(shallow, deep)
+
     @staticmethod
     def makeGaussian(size, fwhm = 3, center=None):
         """ Make a square gaussian kernel.
