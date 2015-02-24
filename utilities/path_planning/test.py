@@ -63,7 +63,7 @@ def test_swath_sim(gtype='slope', num_lines=5):
 
     if sim.run_simulation(num_lines):
         # use plot_sim(False) to not show swaths
-        sim.plot_sim(False)
+        sim.plot_sim(True)
         pdb.set_trace()
 
 def run_tests():

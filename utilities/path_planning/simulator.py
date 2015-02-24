@@ -14,11 +14,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 from shapely.geometry import Polygon, MultiPoint, Point
 from shapely.prepared import prep
+from descartes.patch import PolygonPatch
 import copy
 import pdb
 
 new_path_side = ['port', 'stbd']
 SWATH_OVERLAP = 0.2
+RAY_TRACE_RES = 1
+BLUE = '#6699cc'
+GRAY = '#999999'
 
 class Simulator(object):
     def __init__(self, start_x, start_y, resolution, grid_type='hump', swath_interval=10):
@@ -124,9 +128,8 @@ class Simulator(object):
                     self.coverage = self.coverage.union(new_coverage)
 
                     # TODO: Remove pts on the path that are in the coverage
-                    prepared_coverage = prep(self.coverage)
-                    # next_path = [pt for pt in next_path if not prepared_coverage.contains(pt)]
-                    next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(tuple(pt)))]
+                    # prepared_coverage = prep(self.coverage)
+                    # next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(tuple(pt)))]
                     # pdb.set_trace()
 
                     # Run the second path
@@ -174,14 +177,14 @@ class Simulator(object):
         # Record port side swath
         beam_x, beam_y = beamtrace.hdg_to_beam(hdg_x, hdg_y, 'port')
         ray_trace = beamtrace.ray_depth(self.bathy_grid, self.swath_angle, \
-            this_loc[0], this_loc[1], beam_x, beam_y, 1)
+            this_loc[0], this_loc[1], beam_x, beam_y, RAY_TRACE_RES)
         swath_width = beamtrace.width_from_depth(self.swath_angle, ray_trace[2])
         self.swath_record['port'].record(swath_width, this_loc[0], this_loc[1], hdg_deg)
 
         # Record stbd side swath
         beam_x, beam_y = beamtrace.hdg_to_beam(hdg_x, hdg_y, 'stbd')
         ray_trace = beamtrace.ray_depth(self.bathy_grid, self.swath_angle, \
-            this_loc[0], this_loc[1], beam_x, beam_y, 1)
+            this_loc[0], this_loc[1], beam_x, beam_y, RAY_TRACE_RES)
         swath_width = beamtrace.width_from_depth(self.swath_angle, ray_trace[2])
         self.swath_record['stbd'].record(swath_width, this_loc[0], this_loc[1], hdg_deg)
 
@@ -213,10 +216,15 @@ class Simulator(object):
                 prev_swath_xy_port = zip(*swath_edge)
                 swath_edge = self.prev_swath['stbd'].get_swath_outer_pts('stbd')
                 prev_swath_xy_stbd = zip(*swath_edge)
-                plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'r--', label='Prev Edge Port')
-                plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'g--', label='Prev Edge Stbd')
+                plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'rs--', label='Prev Edge Port')
+                plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'gs--', label='Prev Edge Stbd')
 
-
+        pdb.set_trace()
+        for polygon in multi1:
+            plot_coords(ax, polygon.exterior)
+            patch = PolygonPatch(polygon, facecolor=v_color(multi1), edgecolor=v_color(multi1), alpha=0.5, zorder=2)
+            ax.add_patch(patch)
+        # plt.gca().add_patch(PolygonPatch(self.coverage, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2))
 
         # plt.legend()
         plt.axis('equal')
