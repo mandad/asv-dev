@@ -12,13 +12,14 @@ import gridgen
 import pathplan
 import matplotlib.pyplot as plt
 import numpy as np
-from shapely.geometry import Polygon, MultiPoint, Point
+from shapely.geometry import Polygon, MultiPoint, Point, MultiPolygon
+import shapely.geometry
 from shapely.prepared import prep
 from descartes.patch import PolygonPatch
 import copy
 import pdb
 
-new_path_side = ['port', 'stbd']
+NEXT_PATH_SIDE = ['port', 'stbd']
 SWATH_OVERLAP = 0.2
 RAY_TRACE_RES = 1
 BLUE = '#6699cc'
@@ -35,6 +36,7 @@ class Simulator(object):
         self.swath_record['port'] = followpath.RecordSwath(swath_interval)
         self.swath_record['stbd'] = followpath.RecordSwath(swath_interval)
         self.coverage = Polygon()
+        self.holiday_polys = []
 
         self.veh_locs = [(start_x, start_y)]
         self.port_outer = []
@@ -46,6 +48,11 @@ class Simulator(object):
         self.generate_path()
 
     def generate_grid(self, size_x=1000, size_y=1000, gtype='hump'):
+        """Generate a bathymetry grid with the designated pattern
+
+        Arguments:
+        size_x - 
+        """
         self.bathy_grid = gridgen.BathyGrid(size_x, size_y, 1)
         if gtype == 'hump':
             self.bathy_grid.generate_hump(20, 15, 'y')
@@ -77,11 +84,17 @@ class Simulator(object):
             self.add_waypoints(waypoints)
 
     def add_waypoints(self, waypoints):
+        """Add all waypoints to the stored path
+
+        Arguments:
+        waypoints - The list of waypoints in the form (x,y).  Can be anything
+            accessible with array indexing
+        """
         for waypoint in waypoints:
             self.path.add_waypoint(waypoint[0], waypoint[1])
 
-    # iterates over one path
     def iterate(self):
+        """Iterate over one path length, adding swaths to the record as we go"""
         if self.follower.increment():
             this_loc = self.follower.get_vehicle_loc()
             hdg_deg = self.follower.get_vehicle_hdg()
@@ -106,13 +119,27 @@ class Simulator(object):
                 while self.iterate():
                     pass
 
+                # Add swath to fully coverage polygon geometry
+                # all_edge_pts = list(self.swath_record['stbd'].get_swath_outer_pts('stbd'))
+                # all_edge_pts.extend(list(self.swath_record['port'].get_swath_outer_pts('port')))
+                # all_edge_pts_mp = MultiPoint(all_edge_pts)
+                # new_coverage = all_edge_pts_mp.convex_hull
+                print('-- Adding Swath Coverage --')
+                new_coverage = self.swath_record['stbd'].get_swath_coverage('stbd')
+                new_coverage = new_coverage.union(self.swath_record['port'].get_swath_coverage('port'))
+                self.coverage = self.coverage.union(new_coverage)
+                # plt.figure()
+                # plt.gca().add_patch(PolygonPatch(self.coverage, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2))
+                # plt.show()
+
                 # Shouldn't run this the final time, it erases the swath record
                 if i < num_lines - 1:
                     # Plan a new path on the starboard side
-                    path_planner = pathplan.PathPlan(self.swath_record[new_path_side[i % 2]], \
-                        new_path_side[i % 2], SWATH_OVERLAP)
+                    path_planner = pathplan.PathPlan(self.swath_record[NEXT_PATH_SIDE[i % 2]], \
+                        NEXT_PATH_SIDE[i % 2], SWATH_OVERLAP)
                     next_path = path_planner.generate_next_path(self.op_poly)
-                    print('New Path Length: {0}'.format(len(next_path)))
+                    new_len = len(next_path)
+                    print('New Path Length: {0}'.format(new_len))
 
                     # xy_pts = zip(*next_path)
                     # plt.plot(xy_pts[0], xy_pts[1], 'bo-')
@@ -120,21 +147,16 @@ class Simulator(object):
                     # plt.show()
                     # pdb.set_trace()
 
-                    # Add swath to fully coverage polygon geometry
-                    all_edge_pts = list(self.swath_record['stbd'].get_swath_outer_pts('stbd'))
-                    all_edge_pts.append(self.swath_record['port'].get_swath_outer_pts('port'))
-                    all_edge_pts_mp = MultiPoint(all_edge_pts)
-                    new_coverage = all_edge_pts_mp.convex_hull
-                    self.coverage = self.coverage.union(new_coverage)
-
-                    # TODO: Remove pts on the path that are in the coverage
-                    # prepared_coverage = prep(self.coverage)
-                    # next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(tuple(pt)))]
+                    # Remove pts on the path that are in the coverage
+                    print('Eliminating Points In Existing Coverage')
+                    prepared_coverage = prep(self.coverage)
+                    next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(tuple(pt)))]
+                    print('Removed {0} points'.format(new_len - len(next_path)))
                     # pdb.set_trace()
 
                     # Run the second path
                     if len(next_path) < 2:
-                        return True
+                        break
                     self.generate_path(next_path)
                     
                     # Check if have to turn from first position, if so we are done
@@ -154,6 +176,15 @@ class Simulator(object):
                     self.prev_swath = copy.deepcopy(self.swath_record)
                     self.swath_record['stbd'].reset_line()
                     self.swath_record['port'].reset_line()
+            
+            # Holiday determination
+            int_polys = [shapely.geometry.polygon.asPolygon(int_ring) \
+                for int_ring in self.coverage.interiors]
+            if len(int_polys) > 0: 
+                int_areas = np.array([poly.area for poly in int_polys])
+                holidays = np.argwhere(int_areas > 3)
+                pdb.set_trace()
+                self.holiday_polys = [int_polys[int(i)] for i in holidays]
 
         except KeyboardInterrupt:
             return False
@@ -216,15 +247,32 @@ class Simulator(object):
                 prev_swath_xy_port = zip(*swath_edge)
                 swath_edge = self.prev_swath['stbd'].get_swath_outer_pts('stbd')
                 prev_swath_xy_stbd = zip(*swath_edge)
-                plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'rs--', label='Prev Edge Port')
-                plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'gs--', label='Prev Edge Stbd')
+                plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'rs--', \
+                    label='Prev Edge Port')
+                plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'gs--', \
+                    label='Prev Edge Stbd')
 
+        # pdb.set_trace()
         pdb.set_trace()
-        for polygon in multi1:
-            plot_coords(ax, polygon.exterior)
-            patch = PolygonPatch(polygon, facecolor=v_color(multi1), edgecolor=v_color(multi1), alpha=0.5, zorder=2)
-            ax.add_patch(patch)
-        # plt.gca().add_patch(PolygonPatch(self.coverage, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2))
+        # Plot the coverage recorded
+        if type(self.coverage) is Polygon:
+            plt.gca().add_patch(PolygonPatch(self.coverage, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2))
+        else:
+            ax = plt.gca()
+            for polygon in self.coverage:
+                if type(polygon) is Polygon:
+                    patch = PolygonPatch(polygon, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2)
+                    ax.add_patch(patch)
+
+        # Plot Holiday centroids
+        holiday_cent_x = []
+        holiday_cent_y = []
+        for holiday_poly in self.holiday_polys:
+             this_x, this_y = holiday_poly.centroid.xy
+             holiday_cent_x.append(this_x)
+             holiday_cent_y.append(this_y)
+        if len(holiday_cent_x) > 0:
+            plt.plot(holiday_cent_x, holiday_cent_y, 'm*', label='Holidays')
 
         # plt.legend()
         plt.axis('equal')
@@ -232,3 +280,8 @@ class Simulator(object):
         # fig.patch.set_alpha(0.5)
         plt.savefig('path_output.png', dpi=600, transparent=True)
         plt.show()
+
+    @staticmethod
+    def plot_coords(ax, ob):
+        x, y = ob.xy
+        ax.plot(x, y, 'o', color='#999999', zorder=1)

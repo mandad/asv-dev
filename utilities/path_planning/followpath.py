@@ -9,6 +9,8 @@ Damian Manda
 
 import numpy as np
 import beamtrace
+from shapely.geometry import Polygon, MultiPoint, Point, MultiPolygon
+import shapely.ops
 
 def vector_from_heading(heading, length):
     hdg_rad = np.radians(heading)
@@ -55,6 +57,7 @@ class Vehicle(object):
 class Path(object):
     def __init__(self):
         self.clear()
+        self.cur_wpt = 0
 
     def add_waypoint(self, *args):
         if len(args) == 1:
@@ -120,6 +123,8 @@ class RecordSwath(object):
         self.last_x = None
         self.last_y = None
 
+        self.coverage = Polygon()
+
     def record(self, swath, loc_x, loc_y, heading):
         rec = np.array([loc_x, loc_y, heading, swath])
         self.full_record.append(rec)
@@ -151,10 +156,11 @@ class RecordSwath(object):
         self.full_record = []   # this is only for visualization
         self.min_record = []
         self.acc_dist = 0
+        self.coverage = Polygon()
 
     # Right now we just record one side, picked to be stbd here - should be both
     # Doesn't cache the points because this would in theory only be called once
-    def get_swath_outer_pts(self, side = 'stbd'):
+    def get_swath_outer_pts(self, side='stbd'):
         outer_rec = []
         for record in self.min_record:
             hdg_x, hdg_y = vector_from_heading(record[2], 1)
@@ -162,6 +168,39 @@ class RecordSwath(object):
             outer_pt = (record[0] + beam_dx * record[3], record[1] + beam_dy * record[3])
             outer_rec.append(outer_pt)
         return outer_rec
+
+    def get_swath_coverage(self, side='stbd'):
+        """Get the full recorded swath coverage
+        Intersects polygons along the line in order to avoid problems with having to generate
+        a concave hull to the outer points, and incorrect polygon from intersecting segments
+        as each set of points will always form a quadrilateral or triangle
+        """
+        step_polygons = []
+
+        first_record = self.full_record[0]
+        # rec = np.array([loc_x, loc_y, heading, swath])
+        last_outer_pt = self.get_outer_point(first_record[0], \
+            first_record[1], first_record[2], first_record[3], side)
+        last_pos = (first_record[0], first_record[1])
+        for record in self.full_record[1:]:
+            this_outer_pt = self.get_outer_point(record[0], record[1], \
+                record[2], record[3], side)
+            this_pos = (record[0], record[1])
+            swath_add = MultiPoint([last_outer_pt, last_pos, this_pos, this_outer_pt])
+            step_polygons.append(swath_add.convex_hull)
+            
+            # Store for next iteration
+            last_outer_pt = this_outer_pt
+            last_pos = this_pos
+
+        return shapely.ops.unary_union(step_polygons)
+
+    @staticmethod
+    def get_outer_point(loc_x, loc_y, heading, swath, side):
+        hdg_x, hdg_y = vector_from_heading(heading, 1)
+        beam_dx, beam_dy = beamtrace.hdg_to_beam(hdg_x, hdg_y, side)
+        outer_pt = (loc_x + beam_dx * swath, loc_y + beam_dy * swath)
+        return outer_pt
 
     def get_swath_width(self, index):
         return self.min_record[index][3]
@@ -181,11 +220,11 @@ class RecordSwath(object):
 
     @staticmethod
     def get_port(ps_array):
-        return ps_array[:,0]
+        return ps_array[:, 0]
 
     @staticmethod
     def get_stbd(ps_array):
-        return ps_array[:,1]
+        return ps_array[:, 1]
 
 
 class FollowPath(object):

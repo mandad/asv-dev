@@ -43,10 +43,23 @@ class PathPlan(object):
     def generate_next_path(self, op_poly=None):
         print('\n======== Generating Next Path ========')
         edge_pts = self.swath_record.get_swath_outer_pts(self.side)
-        
-        print ('Basis Points: {0}'.format(len(edge_pts)))
-        
         next_path_pts = []
+
+        pre_len = len(edge_pts)
+        print ('Basis Points: {0}'.format(pre_len))
+        # Eliminate points not in op region
+        # Eventually needs to see if paths intersect the boundaries as well - current does
+        # not result in full coverage
+        print('Eliminating basis points outside op region.')
+        if op_poly is not None:
+            edge_pts = [pt for pt in edge_pts if self.point_in_poly(pt[0], pt[1], op_poly)]
+        print('Removed {0} points.\n'.format(pre_len - len(edge_pts)))
+        pre_len = len(edge_pts)
+
+        # Done with op region (in nieve case)
+        if pre_len == 0:
+            return next_path_pts
+        
         # so this isn't very pythonic, but I need before and after...
         for i in range(len(edge_pts)):
             # There should always be either a forward or back heading
@@ -86,20 +99,8 @@ class PathPlan(object):
         # Next line is in opposite direction
         next_path_pts.reverse()
 
+        # Note that the meaning of pre_len switches here
         pre_len = len(next_path_pts)
-
-        # Eliminate points not in op region
-        # Eventually needs to see if paths intersect the boundaries as well - current does
-        # not result in full coverage
-        print('Eliminating points outside op region.')
-        if op_poly is not None:
-            next_path_pts = [pt for pt in next_path_pts if self.point_in_poly(pt[0], pt[1], op_poly)]
-        print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
-        pre_len = len(next_path_pts)
-
-        # Done with op region (in nieve case)
-        if pre_len == 0:
-            return next_path_pts
 
         # Check for overlapping paths
         # brute force this for now as a solution to adjacent paths
