@@ -51,7 +51,9 @@ class Simulator(object):
         """Generate a bathymetry grid with the designated pattern
 
         Arguments:
-        size_x - 
+        size_x - x dimension width of the grid
+        size_y - y dimension width of the grid
+        gtype - the type of grid to create
         """
         self.bathy_grid = gridgen.BathyGrid(size_x, size_y, 1)
         if gtype == 'hump':
@@ -119,18 +121,11 @@ class Simulator(object):
                 while self.iterate():
                     pass
 
-                # Add swath to fully coverage polygon geometry
-                # all_edge_pts = list(self.swath_record['stbd'].get_swath_outer_pts('stbd'))
-                # all_edge_pts.extend(list(self.swath_record['port'].get_swath_outer_pts('port')))
-                # all_edge_pts_mp = MultiPoint(all_edge_pts)
-                # new_coverage = all_edge_pts_mp.convex_hull
+                # Add swath to full coverage polygon geometry
                 print('-- Adding Swath Coverage --')
                 new_coverage = self.swath_record['stbd'].get_swath_coverage('stbd')
                 new_coverage = new_coverage.union(self.swath_record['port'].get_swath_coverage('port'))
                 self.coverage = self.coverage.union(new_coverage)
-                # plt.figure()
-                # plt.gca().add_patch(PolygonPatch(self.coverage, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2))
-                # plt.show()
 
                 # Shouldn't run this the final time, it erases the swath record
                 if i < num_lines - 1:
@@ -141,13 +136,8 @@ class Simulator(object):
                     new_len = len(next_path)
                     print('New Path Length: {0}'.format(new_len))
 
-                    # xy_pts = zip(*next_path)
-                    # plt.plot(xy_pts[0], xy_pts[1], 'bo-')
-                    # plt.axis('equal')
-                    # plt.show()
-                    # pdb.set_trace()
-
                     # Remove pts on the path that are in the coverage
+                    # TODO: Move this to pathplan.py
                     print('Eliminating Points In Existing Coverage')
                     prepared_coverage = prep(self.coverage)
                     next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(tuple(pt)))]
@@ -183,7 +173,7 @@ class Simulator(object):
             if len(int_polys) > 0: 
                 int_areas = np.array([poly.area for poly in int_polys])
                 holidays = np.argwhere(int_areas > 3)
-                pdb.set_trace()
+                # pdb.set_trace()
                 self.holiday_polys = [int_polys[int(i)] for i in holidays]
 
         except KeyboardInterrupt:

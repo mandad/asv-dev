@@ -161,11 +161,11 @@ class RecordSwath(object):
     # Right now we just record one side, picked to be stbd here - should be both
     # Doesn't cache the points because this would in theory only be called once
     def get_swath_outer_pts(self, side='stbd'):
+        """Get the outer points along a swath"""
         outer_rec = []
         for record in self.min_record:
-            hdg_x, hdg_y = vector_from_heading(record[2], 1)
-            beam_dx, beam_dy = beamtrace.hdg_to_beam(hdg_x, hdg_y, side)
-            outer_pt = (record[0] + beam_dx * record[3], record[1] + beam_dy * record[3])
+            outer_pt = self.get_outer_point(record[0], record[1], record[2], \
+                record[3], side)
             outer_rec.append(outer_pt)
         return outer_rec
 
@@ -176,7 +176,6 @@ class RecordSwath(object):
         as each set of points will always form a quadrilateral or triangle
         """
         step_polygons = []
-
         first_record = self.full_record[0]
         # rec = np.array([loc_x, loc_y, heading, swath])
         last_outer_pt = self.get_outer_point(first_record[0], \
@@ -231,10 +230,8 @@ class FollowPath(object):
     def __init__(self, vehicle, path):
         self.vehicle = vehicle
         self.path = path
-        #self.swath_record = RecordSwath(5) # this should be in the overall planning class
 
         #Initialize track
-        # veh_x, veh_y = self.vehicle.get_location()
         first_wpt = self.path.get_cur_wpt()
         if first_wpt is not None:
             self.vehicle.hdg = hdg_to_point(self.vehicle.x, self.vehicle.y, \

@@ -76,7 +76,7 @@ class PathPlan(object):
             if back_vec is None:
                 back_vec = forward_vec
 
-            # ** All of this could be done in a vector operation, just duplicate first
+            # TODO: All of this could be done in a vector operation, just duplicate first
             # and last points in the record arrays
 
             # average heading
@@ -188,8 +188,6 @@ class PathPlan(object):
 
         next_path_pts = next_path_pts_extend
         print('Added {0} points.\n'.format(len(next_path_pts) - pre_len))
-
-        # TODO: Remove points in already covered regions
 
         return next_path_pts
 
