@@ -7,13 +7,13 @@ Damian Manda
 """
 
 import numpy as np
+import rasterio
 try:
     from mayavi import mlab
 except:
     has_mlab = False
 else:
     has_mlab = True
-
 # has_mlab = False
 
 import matplotlib.pyplot as plt
@@ -87,14 +87,25 @@ class BathyGrid(object):
         self.grid = np.maximum(self.grid, grid_temp)
 
     def generate_hole(self, deep, shallow):
-        self.grid = self.makeGaussian(self.size_x, self.size_x / 3)
+        self.grid = self.make_gaussian(self.size_x, self.size_x / 3)
         self.grid = shallow + (self.grid * ((deep-shallow) / np.max(self.grid)))
 
     def generate_bump(self, deep, shallow):
         self.generate_hole(shallow, deep)
 
+    @classmethod
+    def read_bathymetry(cls, file, depth_pos=False):
+        grid_file = rasterio.open('terrain/Flat_Region.tif', 'r')
+        # to get pixels, mx, my are in map units
+        gt = grid_file.get_transform()
+        px = int((mx - gt[0]) / gt[1])
+        py = int((my - gt[3]) / gt[5])
+
+    def bathymetry_file(self):
+        pass
+
     @staticmethod
-    def makeGaussian(size, fwhm = 3, center=None):
+    def make_gaussian(size, fwhm = 3, center=None):
         """ Make a square gaussian kernel.
 
         size is the length of a side of the square
