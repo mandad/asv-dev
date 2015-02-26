@@ -19,7 +19,7 @@ else:
 import matplotlib.pyplot as plt
 
 class BathyGrid(object):
-    def __init__(self, size_x, size_y, res):
+    def __init__(self, size_x, size_y, res, geo_transform=None):
         self.grid = None
         self.size_x = size_x
         self.size_y = size_y
@@ -94,12 +94,12 @@ class BathyGrid(object):
         self.generate_hole(shallow, deep)
 
     @classmethod
-    def read_bathymetry(cls, file, depth_pos=False):
+    def from_bathymetry(cls, file, depth_pos=False):
         grid_file = rasterio.open('terrain/Flat_Region.tif', 'r')
         # to get pixels, mx, my are in map units
-        gt = grid_file.get_transform()
-        px = int((mx - gt[0]) / gt[1])
-        py = int((my - gt[3]) / gt[5])
+        dimensions = grid_file.shape
+        resolution = round(max(grid_file.res))
+        config_cls = cls(dimensions[0], dimensions[1], resolution, grid_file.get_transform())
 
     def bathymetry_file(self):
         pass
@@ -138,6 +138,9 @@ class BathyGrid(object):
     def get_depth(self, x, y):
         if self.grid is None:
             raise Exception('No grid has been generated')
+        if self.geo_transform is not None:
+            px = int((mx - gt[0]) / gt[1])
+            py = int((my - gt[3]) / gt[5])
         x_idx = self.find_nearest(self.index_x, x)
         y_idx = self.find_nearest(self.index_y, y)
         # Could interpolate or something if wanted to get fancy
