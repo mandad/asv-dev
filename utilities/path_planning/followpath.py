@@ -11,6 +11,7 @@ import numpy as np
 import beamtrace
 from shapely.geometry import Polygon, MultiPoint, Point, MultiPolygon
 import shapely.ops
+import pdb
 
 def vector_from_heading(heading, length):
     hdg_rad = np.radians(heading)

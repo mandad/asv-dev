@@ -1,7 +1,7 @@
 import beamtrace
-import gridgen
 import followpath
 import simulator
+import gridgen
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -66,6 +66,20 @@ def test_swath_sim(gtype='slope', num_lines=5):
         sim.plot_sim(True)
         pdb.set_trace()
 
+def test_swath_sim_import(terrain='flat', num_lines=2):
+    if terrain == 'flat':
+        filename='terrain/Flat_Region.tif'
+        sim = simulator.Simulator(359555.0, 4761967.0, 0.5, 'file', 10, filename)
+        sim.add_waypoints([(359555, 4761967), (359778, 4762369)])
+        sim.set_operation_polygon([(359555, 4761967), (359778, 4762369), \
+            (359568, 4762486), (359491, 4762666), (359188, 4762833), \
+            (358943, 4762316)])
+
+    if sim.run_simulation(num_lines):
+        # use plot_sim(False) to not show swaths
+        sim.plot_sim(True)
+        pdb.set_trace()
+
 def run_tests():
     # at shallow end, changing depth
     beam_info = test_beam_trace(0, 100, 1, 0)
@@ -93,6 +107,9 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         test_swath_sim(sys.argv[1])
     if len(sys.argv) == 3:
-        test_swath_sim(sys.argv[1], int(sys.argv[2]))
+        if sys.argv[1] == '--terrain':
+            test_swath_sim_import(sys.argv[2])
+        else:
+            test_swath_sim(sys.argv[1], int(sys.argv[2]))
     else:
         test_swath_sim()

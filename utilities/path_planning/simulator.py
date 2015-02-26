@@ -12,21 +12,22 @@ import gridgen
 import pathplan
 import matplotlib.pyplot as plt
 import numpy as np
+from descartes.patch import PolygonPatch
 from shapely.geometry import Polygon, MultiPoint, Point, MultiPolygon
 import shapely.geometry
 from shapely.prepared import prep
-from descartes.patch import PolygonPatch
 import copy
 import pdb
 
 NEXT_PATH_SIDE = ['port', 'stbd']
 SWATH_OVERLAP = 0.2
-RAY_TRACE_RES = 1
+RAY_TRACE_RES = 1.0
 BLUE = '#6699cc'
 GRAY = '#999999'
 
 class Simulator(object):
-    def __init__(self, start_x, start_y, resolution, grid_type='hump', swath_interval=10):
+    def __init__(self, start_x, start_y, resolution, grid_type='hump', \
+        swath_interval=10, bathy_file=None):
         self.vehicle = followpath.Vehicle(start_x, start_y, 90)
         self.vehicle.set_sim_resolution(resolution)
         self.path = followpath.Path()
@@ -44,7 +45,13 @@ class Simulator(object):
         self.swath_angle = 65
 
         self.op_poly = None
-        self.generate_grid(gtype=grid_type)
+        if grid_type == 'file':
+            if bathy_file is not None:
+                self.grid_from_file(bathy_file)
+            else:
+                raise Exception('No bathymetry filename specified.')
+        else:
+            self.generate_grid(gtype=grid_type)
         self.generate_path()
 
     def generate_grid(self, size_x=1000, size_y=1000, gtype='hump'):
@@ -75,6 +82,9 @@ class Simulator(object):
         elif gtype == 'bump':
             self.bathy_grid.generate_bump(30, 20)
 
+    def grid_from_file(self, filename):
+        self.bathy_grid = gridgen.BathyGrid.from_bathymetry(filename, False)
+
     def generate_path(self, waypoints=None):
         """
         waypoints is a list of (x, y) tuples
@@ -99,6 +109,7 @@ class Simulator(object):
         """Iterate over one path length, adding swaths to the record as we go"""
         if self.follower.increment():
             this_loc = self.follower.get_vehicle_loc()
+            # print('Current Location: {0}'.format(this_loc))
             hdg_deg = self.follower.get_vehicle_hdg()
             # Don't record going to the first waypoint (0 = cur_loc, 1 = first pt)
             # and cur_wpt is the one the vessel is going toward
@@ -123,6 +134,7 @@ class Simulator(object):
 
                 # Add swath to full coverage polygon geometry
                 print('-- Adding Swath Coverage --')
+                # pdb.set_trace()
                 new_coverage = self.swath_record['stbd'].get_swath_coverage('stbd')
                 new_coverage = new_coverage.union(self.swath_record['port'].get_swath_coverage('port'))
                 self.coverage = self.coverage.union(new_coverage)
@@ -243,7 +255,6 @@ class Simulator(object):
                     label='Prev Edge Stbd')
 
         # pdb.set_trace()
-        pdb.set_trace()
         # Plot the coverage recorded
         if type(self.coverage) is Polygon:
             plt.gca().add_patch(PolygonPatch(self.coverage, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2))
@@ -266,9 +277,12 @@ class Simulator(object):
 
         # plt.legend()
         plt.axis('equal')
-        plt.ylim([-100, 1100])
-        # fig.patch.set_alpha(0.5)
-        plt.savefig('path_output.png', dpi=600, transparent=True)
+        self.bathy_grid.disp_grid(False, True)
+
+        # For saving output
+        # plt.ylim([-100, 1100])
+        # plt.savefig('path_output.png', dpi=600, transparent=True)
+
         plt.show()
 
     @staticmethod

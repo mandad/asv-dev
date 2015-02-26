@@ -15,7 +15,7 @@ except:
 else:
     has_mlab = True
 # has_mlab = False
-
+import pdb
 import matplotlib.pyplot as plt
 
 class BathyGrid(object):
@@ -24,9 +24,23 @@ class BathyGrid(object):
         self.size_x = size_x
         self.size_y = size_y
         self.resolution = res
+        self.geo_transform = geo_transform
+        self.imported = False
 
-        self.index_x = np.linspace(0, size_x * res, size_x)
-        self.index_y = np.linspace(0, size_y * res, size_y)
+        if geo_transform is not None:
+            start_x = geo_transform[0]
+            start_y = geo_transform[3]
+            y_dir = geo_transform[5]
+            x_dir = geo_transform[1]
+        else:
+            self.geo_transform = [0, 1, 0, 0, 0, 1]
+            start_x = 0
+            start_y = 0
+            y_dir = 1
+            x_dir = 1
+
+        self.index_x = np.linspace(start_x, start_x + size_x * res * x_dir, size_x)
+        self.index_y = np.linspace(start_y, start_y + size_y * res * y_dir, size_y)
 
     def generate_slope(self, min, max):
         if max < min:
@@ -100,9 +114,16 @@ class BathyGrid(object):
         dimensions = grid_file.shape
         resolution = round(max(grid_file.res))
         config_cls = cls(dimensions[0], dimensions[1], resolution, grid_file.get_transform())
+        config_cls.pregenerated_grid(grid_file.read_band(1), depth_pos)
+        grid_file.close()
+        return config_cls
 
-    def bathymetry_file(self):
-        pass
+    def pregenerated_grid(self, grid, depth_pos):
+        if depth_pos:
+            self.grid = grid
+        else:
+            self.grid = -grid
+        self.imported = True
 
     @staticmethod
     def make_gaussian(size, fwhm = 3, center=None):
@@ -124,27 +145,57 @@ class BathyGrid(object):
         
         return np.exp(-4*np.log(2) * ((x-x0)**2 + (y-y0)**2) / fwhm**2)
 
-    def disp_grid(self, view_3D=True):
+    def disp_grid(self, view_3D=True, existing_fig=False):
         if self.grid is not None:
             if has_mlab and view_3D:
                 mlab.surf(-self.grid, colormap='jet', warp_scale='20')
             else:
-                plt.imshow(-np.transpose(self.grid), cmap='jet')
+                if self.imported:
+                    plt.imshow(-self.grid, cmap='jet', zorder=0, \
+                        extent=self.get_extents())
+                else:
+                    plt.imshow(-np.transpose(self.grid), cmap='jet', zorder=0, \
+                        extent=self.get_extents())
                 plt.colorbar()
-                plt.show()
+                if not existing_fig:
+                    plt.show()
         else:
             raise Exception('No grid has been generated')
 
     def get_depth(self, x, y):
         if self.grid is None:
             raise Exception('No grid has been generated')
-        if self.geo_transform is not None:
-            px = int((mx - gt[0]) / gt[1])
-            py = int((my - gt[3]) / gt[5])
+        # if self.geo_transform is not None:
+        #     x_idx = int((x - self.geo_transform[0]) / self.geo_transform[1])
+        #     y_idx = int((y - self.geo_transform[3]) / self.geo_transform[5])
+        #     if x_idx >= self.size_x:
+        #         x_idx = self
+        # else:
+        #     x_idx = self.find_nearest(self.index_x, x)
+        #     y_idx = self.find_nearest(self.index_y, y)
+
         x_idx = self.find_nearest(self.index_x, x)
         y_idx = self.find_nearest(self.index_y, y)
         # Could interpolate or something if wanted to get fancy
-        return self.grid[x_idx, y_idx]
+        depth_val = self.grid[x_idx, y_idx]
+        # pdb.set_trace()
+        if depth_val is np.ma.masked:
+            #if we end up doing this a lot, should be cached
+            depth_val = np.mean(self.grid)
+        return depth_val
+
+    def get_extents(self):
+        """Return extents in [left, right, bottom, top]"""
+        left = self.geo_transform[0]
+        right = self.geo_transform[0] + self.size_x * self.resolution * self.geo_transform[1]
+        if self.imported:
+            top = self.geo_transform[3]
+            bottom = self.geo_transform[3] + self.size_y * self.resolution * self.geo_transform[5]
+        else:
+            bottom = self.geo_transform[3]
+            top = self.geo_transform[3] + self.size_y * self.resolution * self.geo_transform[5]
+
+        return [left, right, bottom, top]
 
     @staticmethod
     def find_nearest(array, value):
