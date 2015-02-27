@@ -10,10 +10,11 @@ import numpy as np
 import beamtrace
 import pdb
 
+RESTRICT_ASV_TO_REGION = True
+
 # from lsi import lsi
-# debug = True
 np.set_printoptions(suppress=True)
-MAX_BEND_ANGLE = 70 # degrees
+MAX_BEND_ANGLE = 90 # degrees
 
 def unit_vector(vector):
     """
@@ -45,20 +46,22 @@ class PathPlan(object):
         edge_pts = self.swath_record.get_swath_outer_pts(self.side)
         next_path_pts = []
 
-        pre_len = len(edge_pts)
-        print ('Basis Points: {0}'.format(pre_len))
-        # Eliminate points not in op region
-        # Eventually needs to see if paths intersect the boundaries as well - current does
-        # not result in full coverage
-        print('Eliminating basis points outside op region.')
-        if op_poly is not None:
-            edge_pts = [pt for pt in edge_pts if self.point_in_poly(pt[0], pt[1], op_poly)]
-        print('Removed {0} points.\n'.format(pre_len - len(edge_pts)))
-        pre_len = len(edge_pts)
+        print ('Basis Points: {0}'.format(len(edge_pts)))
+        # Only clip the basis swath to region, not the vehicle path
+        if not RESTRICT_ASV_TO_REGION:
+            pre_len = len(edge_pts)
+            # Eliminate points not in op region
+            # Eventually needs to see if paths intersect the boundaries as well - current does
+            # not result in full coverage
+            print('Eliminating basis points outside op region.')
+            if op_poly is not None:
+                edge_pts = [pt for pt in edge_pts if self.point_in_poly(pt[0], pt[1], op_poly)]
+            print('Removed {0} points.\n'.format(pre_len - len(edge_pts)))
+            pre_len = len(edge_pts)
 
-        # Done with op region (in nieve case)
-        if pre_len == 0:
-            return next_path_pts
+            # Done with op region (in nieve case)
+            if pre_len == 0:
+                return next_path_pts
         
         # so this isn't very pythonic, but I need before and after...
         for i in range(len(edge_pts)):
@@ -101,6 +104,19 @@ class PathPlan(object):
 
         # Note that the meaning of pre_len switches here
         pre_len = len(next_path_pts)
+
+        # Eliminate points not in op region
+        if RESTRICT_ASV_TO_REGION:
+            print('Eliminating points outside op region.')
+            if op_poly is not None:
+                next_path_pts = [pt for pt in next_path_pts if self.point_in_poly(pt[0], pt[1], op_poly)]
+            print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
+            pre_len = len(next_path_pts)
+
+            # Done with op region (in nieve case)
+            if pre_len == 0:
+                return next_path_pts
+
 
         # Check for overlapping paths
         # brute force this for now as a solution to adjacent paths
@@ -273,8 +289,14 @@ class PathPlan(object):
     def vector_angle(vector1, vector2):
         """ Returns the angle in degrees between vectors 'vector1' and 'vector2'
         Tan(ang) = |(axb)|/(a.b)
+        cos(ang) = (a.b)/(||a||*||b||)
         """
-        cosang = np.dot(vector1, vector2)
-        sinang = np.linalg.norm(np.cross(vector1, vector2))
-        return np.arctan2(sinang, cosang) * 180/np.pi
+        # cosang = np.dot(vector1, vector2)
+        # sinang = np.linalg.norm(np.cross(vector1, vector2))
+        dotp = np.dot(vector1, vector2)
+        mags = np.linalg.norm(vector1) * np.linalg.norm(vector2)
+        # avoid division by zero
+        if mags == 0:
+            return 0
+        return np.arccos(dotp/mags) * 180/np.pi
 

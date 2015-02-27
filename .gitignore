@@ -6,3 +6,5 @@ moos-ivp-emily/bin
 .phostinfo
 *.pyc
 utilities/path_planning/path_output.png
+
+utilities/path_planning/path_output_flat.png

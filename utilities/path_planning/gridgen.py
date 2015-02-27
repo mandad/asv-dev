@@ -26,6 +26,7 @@ class BathyGrid(object):
         self.resolution = res
         self.geo_transform = geo_transform
         self.imported = False
+        self.grid_mean = 0
 
         if geo_transform is not None:
             start_x = geo_transform[0]
@@ -41,6 +42,17 @@ class BathyGrid(object):
 
         self.index_x = np.linspace(start_x, start_x + size_x * res * x_dir, size_x)
         self.index_y = np.linspace(start_y, start_y + size_y * res * y_dir, size_y)
+
+    @classmethod
+    def from_bathymetry(cls, filename, depth_pos=False):
+        grid_file = rasterio.open(filename, 'r')
+        # to get pixels, mx, my are in map units
+        dimensions = grid_file.shape
+        resolution = round(max(grid_file.res))
+        config_cls = cls(dimensions[0], dimensions[1], resolution, grid_file.get_transform())
+        config_cls.pregenerated_grid(grid_file.read_band(1), depth_pos)
+        grid_file.close()
+        return config_cls
 
     def generate_slope(self, min, max):
         if max < min:
@@ -107,23 +119,13 @@ class BathyGrid(object):
     def generate_bump(self, deep, shallow):
         self.generate_hole(shallow, deep)
 
-    @classmethod
-    def from_bathymetry(cls, file, depth_pos=False):
-        grid_file = rasterio.open('terrain/Flat_Region.tif', 'r')
-        # to get pixels, mx, my are in map units
-        dimensions = grid_file.shape
-        resolution = round(max(grid_file.res))
-        config_cls = cls(dimensions[0], dimensions[1], resolution, grid_file.get_transform())
-        config_cls.pregenerated_grid(grid_file.read_band(1), depth_pos)
-        grid_file.close()
-        return config_cls
-
     def pregenerated_grid(self, grid, depth_pos):
         if depth_pos:
             self.grid = grid
         else:
             self.grid = -grid
         self.imported = True
+        self.calc_grid_mean()
 
     @staticmethod
     def make_gaussian(size, fwhm = 3, center=None):
@@ -163,25 +165,26 @@ class BathyGrid(object):
             raise Exception('No grid has been generated')
 
     def get_depth(self, x, y):
+        """Get the depth from the grid at a specified x,y point which does not
+        necessarily correspond to the size of the grid"""
         if self.grid is None:
             raise Exception('No grid has been generated')
-        # if self.geo_transform is not None:
-        #     x_idx = int((x - self.geo_transform[0]) / self.geo_transform[1])
-        #     y_idx = int((y - self.geo_transform[3]) / self.geo_transform[5])
-        #     if x_idx >= self.size_x:
-        #         x_idx = self
-        # else:
-        #     x_idx = self.find_nearest(self.index_x, x)
-        #     y_idx = self.find_nearest(self.index_y, y)
 
-        x_idx = self.find_nearest(self.index_x, x)
-        y_idx = self.find_nearest(self.index_y, y)
+        # x_idx = self.find_nearest(self.index_x, x)
+        # y_idx = self.find_nearest(self.index_y, y)
+
+        # Translate locations to indicies
+        x_idx = np.clip(int((x - self.geo_transform[0]) / self.geo_transform[1]), \
+            0, self.size_x - 1)
+        y_idx = np.clip(int((y - self.geo_transform[3]) / self.geo_transform[5]), \
+            0, self.size_y - 1)
+
         # Could interpolate or something if wanted to get fancy
         depth_val = self.grid[x_idx, y_idx]
         # pdb.set_trace()
-        if depth_val is np.ma.masked:
+        if self.imported and depth_val is np.ma.masked:
             #if we end up doing this a lot, should be cached
-            depth_val = np.mean(self.grid)
+            depth_val = self.grid_mean
         return depth_val
 
     def get_extents(self):
@@ -196,6 +199,10 @@ class BathyGrid(object):
             top = self.geo_transform[3] + self.size_y * self.resolution * self.geo_transform[5]
 
         return [left, right, bottom, top]
+
+    def calc_grid_mean(self):
+        if self.grid is not None:
+            self.grid_mean = np.mean(self.grid)
 
     @staticmethod
     def find_nearest(array, value):

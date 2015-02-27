@@ -68,12 +68,18 @@ def test_swath_sim(gtype='slope', num_lines=5):
 
 def test_swath_sim_import(terrain='flat', num_lines=2):
     if terrain == 'flat':
-        filename='terrain/Flat_Region.tif'
+        filename = 'terrain/Flat_Region.tif'
         sim = simulator.Simulator(359555.0, 4761967.0, 0.5, 'file', 10, filename)
         sim.add_waypoints([(359555, 4761967), (359778, 4762369)])
         sim.set_operation_polygon([(359555, 4761967), (359778, 4762369), \
             (359568, 4762486), (359491, 4762666), (359188, 4762833), \
             (358943, 4762316)])
+    elif terrain == 'complex':
+        filename = 'terrain/Complex_Region.tif'
+        sim = simulator.Simulator(359800.0, 4762440.0, 0.5, 'file', 10, filename)
+        sim.add_waypoints([(359800.0, 4762440.0), (360265, 4763290)])
+        sim.set_operation_polygon([(359800.0, 4762440.0), (360265, 4763290), \
+            (359617, 4763633), (359133, 4762800)])
 
     if sim.run_simulation(num_lines):
         # use plot_sim(False) to not show swaths
@@ -106,10 +112,13 @@ if __name__ == '__main__':
     """
     if len(sys.argv) == 2:
         test_swath_sim(sys.argv[1])
-    if len(sys.argv) == 3:
+    elif len(sys.argv) == 3:
         if sys.argv[1] == '--terrain':
             test_swath_sim_import(sys.argv[2])
         else:
             test_swath_sim(sys.argv[1], int(sys.argv[2]))
+    elif len(sys.argv) == 4:
+        if sys.argv[1] == '--terrain':
+            test_swath_sim_import(sys.argv[2], int(sys.argv[3]))
     else:
         test_swath_sim()

@@ -9,7 +9,7 @@ Damian Manda
 
 import numpy as np
 import beamtrace
-from shapely.geometry import Polygon, MultiPoint, Point, MultiPolygon
+from shapely.geometry import Polygon, MultiPoint, Point, MultiPolygon, JOIN_STYLE
 import shapely.ops
 import pdb
 
@@ -58,7 +58,6 @@ class Vehicle(object):
 class Path(object):
     def __init__(self):
         self.clear()
-        self.cur_wpt = 0
 
     def add_waypoint(self, *args):
         if len(args) == 1:
@@ -107,6 +106,9 @@ class Waypoint(object):
         self.x = x
         self.y = y
         self.visited = False
+
+    def xy(self):
+        return (self.x, self.y)
 
     def visit(self):
         self.visited = True
@@ -176,6 +178,10 @@ class RecordSwath(object):
         a concave hull to the outer points, and incorrect polygon from intersecting segments
         as each set of points will always form a quadrilateral or triangle
         """
+        # Assume that if it is calculated, this was done at the end
+        if not self.coverage.is_empty:
+            return self.coverage
+
         step_polygons = []
         first_record = self.full_record[0]
         # rec = np.array([loc_x, loc_y, heading, swath])
@@ -193,7 +199,12 @@ class RecordSwath(object):
             last_outer_pt = this_outer_pt
             last_pos = this_pos
 
-        return shapely.ops.unary_union(step_polygons)
+        full_swath = shapely.ops.unary_union(step_polygons)
+        # Remove small polygons
+        full_swath = full_swath.buffer(0.01, 1, join_style=JOIN_STYLE.mitre).buffer(
+            -0.01, 1, join_style=JOIN_STYLE.mitre)
+        self.coverage = full_swath
+        return full_swath
 
     @staticmethod
     def get_outer_point(loc_x, loc_y, heading, swath, side):
