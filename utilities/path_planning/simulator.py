@@ -231,7 +231,7 @@ class Simulator(object):
         # Plot the path that was followed
         xy_locs = zip(*self.veh_locs)
         # change the 'b' to 'w' for figures
-        plt.plot(xy_locs[0], xy_locs[1], 'b', linewidth=2.0, label='Vessel Path')
+        plt.plot(xy_locs[0], xy_locs[1], 'w', linewidth=2.0, label='Vessel Path')
 
         if show_swath:
             # Swath Edge

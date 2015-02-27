@@ -9,12 +9,14 @@ damian.manda@noaa.gov
 import numpy as np
 import beamtrace
 import pdb
+import matplotlib.pyplot as plt
 
 RESTRICT_ASV_TO_REGION = True
 
 # from lsi import lsi
 np.set_printoptions(suppress=True)
-MAX_BEND_ANGLE = 90 # degrees
+MAX_BEND_ANGLE = 70 # degrees
+DEBUG_PLOTS = True
 
 def unit_vector(vector):
     """
@@ -62,7 +64,8 @@ class PathPlan(object):
             # Done with op region (in nieve case)
             if pre_len == 0:
                 return next_path_pts
-        
+
+        # ---------- Generate Path -----------
         # so this isn't very pythonic, but I need before and after...
         for i in range(len(edge_pts)):
             # There should always be either a forward or back heading
@@ -105,7 +108,7 @@ class PathPlan(object):
         # Note that the meaning of pre_len switches here
         pre_len = len(next_path_pts)
 
-        # Eliminate points not in op region
+        # ---------- Restrict to Region -----------
         if RESTRICT_ASV_TO_REGION:
             print('Eliminating points outside op region.')
             if op_poly is not None:
@@ -117,75 +120,38 @@ class PathPlan(object):
             if pre_len == 0:
                 return next_path_pts
 
+        if DEBUG_PLOTS:
+            xy_path0 = zip(*next_path_pts)
+            plt.plot(xy_path0[0], xy_path0[1], 'go-', label='Before Intersect', markersize=8)
 
-        # Check for overlapping paths
-        # brute force this for now as a solution to adjacent paths
+        # ---------- Intersections -----------
         print('Eliminating path intersects itself.')
-        # These arrays will never be longer than next_path_pts, could be faster to pre-allocate
-        # and then delete unused ones at the end since a new array is created each
-        # time np.append runs
-        intersect_pts = []
-        non_intersect_idx = np.array([], dtype=np.int64)
-        i = 0
-        while i < (len(next_path_pts) - 3):
-            seg_pts = []
-            non_intersect_idx = np.append(non_intersect_idx, i)
-            this_seg_a = next_path_pts[i]
-            this_seg_b = next_path_pts[i+1]
-            # Check all following segments
-            for j in range(i + 2, len(next_path_pts)-1):
-                check_seg_a = next_path_pts[j]
-                check_seg_b = next_path_pts[j+1]
-                if self.intersect(this_seg_a, this_seg_b, check_seg_a, check_seg_b):
-                    seg_pts.append(j+1)
-            if len(seg_pts) > 0:
-                # Store the last one it intersects with, want to remove indexes btwn these
-                intersect_pts.append((i+1, seg_pts[-1]))
-                i = seg_pts[-1] + 1
-            else:
-                i = i + 1
-
-        # Add the last segment as long as it was not overlapping
-        if i < len(next_path_pts):
-            # Normal end, have three points left
-            non_intersect_idx = np.append(non_intersect_idx, np.arange(i, len(next_path_pts)))
-        else:
-            non_intersect_idx = np.append(non_intersect_idx, len(next_path_pts) - 1)
-
         next_path_pts = np.array(next_path_pts)
-        next_path_pts = next_path_pts[non_intersect_idx]
+        next_path_pts = self.remove_all(self.remove_intersects, next_path_pts)
 
         print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
         pre_len = len(next_path_pts)
 
-        # Check for drastic angles between segments
-        # Note that this goes to the last point being checked
-        # There has got to be a more efficient way to do this
+        if DEBUG_PLOTS:
+            xy_path = zip(*next_path_pts)
+            plt.plot(xy_path[0], xy_path[1], 'bs-', label='Before Bends', markersize=6)
+            plt.axis('equal')
+
+        # ---------- Bends -----------
         print('Eliminating dramatic bends.')
-        non_bend_idx = np.array([], dtype=np.int64)
-        i = 0
-        while i < (len(next_path_pts) - 2):
-            non_bend_idx = np.append(non_bend_idx, i)
-            this_vec = next_path_pts[i+1] - next_path_pts[i]
-            next_vec = next_path_pts[i+2] - next_path_pts[i+1]
-            # Angle between this and following
-            if self.vector_angle(this_vec, next_vec) > MAX_BEND_ANGLE:
-                j = i + 2
-                # If too large, have to find the next point that makes it small enough
-                while j < len(next_path_pts):
-                    next_vec = next_path_pts[j] - next_path_pts[i+1]
-                    if self.vector_angle(this_vec, next_vec) < MAX_BEND_ANGLE:
-                        break
-                    j = j + 1
-                i = j
-            else:
-                i = i + 1
-        non_bend_idx = np.append(non_bend_idx, np.arange(i, len(next_path_pts)))
-        next_path_pts = next_path_pts[non_bend_idx]
+        next_path_pts = self.remove_all(self.remove_bends, next_path_pts)
 
         print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
         pre_len = len(next_path_pts)
 
+        if DEBUG_PLOTS:
+            xy_path2 = zip(*next_path_pts)
+            plt.plot(xy_path2[0], xy_path2[1], 'r^-', label='After Bends', markersize=6)
+            plt.legend(loc='best')
+            plt.show()
+
+
+        # ---------- Extend -----------
         print('Extending ends of path to edge of region.')
         next_path_pts_extend = np.array(next_path_pts, copy=True)
         # Extend end points to edge of op region
@@ -206,6 +172,103 @@ class PathPlan(object):
         print('Added {0} points.\n'.format(len(next_path_pts) - pre_len))
 
         return next_path_pts
+
+    @staticmethod 
+    def remove_all(process, path_pts):
+        """Repeats a process until it makes no more changes to the path
+        Currently does not make a copy of the passed input, may want to reconsider this
+        """
+        pre_len = len(path_pts)
+        path_pts = process(path_pts)
+        # keep repeating until no more changes
+        while len(path_pts) < pre_len:
+            pre_len = len(path_pts)
+            path_pts = process(path_pts)
+
+        return path_pts
+
+    @staticmethod
+    def remove_intersects(path_pts):
+        """Check for overlapping paths
+        # brute force this for now as a solution to adjacent paths
+
+        # These arrays will never be longer than path_pts, could be faster to pre-allocate
+        # and then delete unused ones at the end since a new array is created each
+        # time np.append runs
+        """
+        intersect_pts = []
+        non_intersect_idx = np.array([], dtype=np.int64)
+        i = 0
+        while i < (len(path_pts) - 3):
+            seg_pts = []
+            non_intersect_idx = np.append(non_intersect_idx, i)
+            this_seg_a = path_pts[i]
+            this_seg_b = path_pts[i+1]
+            # Check all following segments
+            for j in range(i + 2, len(path_pts)-1):
+                check_seg_a = path_pts[j]
+                check_seg_b = path_pts[j+1]
+                if PathPlan.intersect(this_seg_a, this_seg_b, check_seg_a, check_seg_b):
+                    seg_pts.append(j+1)
+            if len(seg_pts) > 0:
+                # Store the last one it intersects with, want to remove indexes btwn these
+                intersect_pts.append((i+1, seg_pts[-1]))
+                i = seg_pts[-1]
+            else:
+                i = i + 1
+
+        # Add the last segment as long as it was not overlapping
+        if i < len(path_pts):
+            # Normal end, have three points left
+            non_intersect_idx = np.append(non_intersect_idx, np.arange(i, len(path_pts)))
+        else:
+            non_intersect_idx = np.append(non_intersect_idx, len(path_pts) - 1)
+
+        return path_pts[non_intersect_idx]
+
+    @staticmethod
+    def remove_bends(path_pts):
+        """Check for drastic angles between segments
+        # Note that this goes to the last point being checked
+        # There has got to be a more efficient way to do this
+        """
+        # Maybe should process in both directions
+        non_bend_idx = np.array([], dtype=np.int64)
+        this_seg = np.array([0, 1])
+        next_seg = np.array([1, 2])
+        
+        while next_seg[1] < (len(path_pts) - 1):
+            this_vec = path_pts[this_seg[1]] - path_pts[this_seg[0]]
+            next_vec = path_pts[next_seg[1]] - path_pts[next_seg[0]]
+            # pdb.set_trace()
+            non_bend_idx = np.append(non_bend_idx, this_seg) 
+            # Angle between this and following
+            if PathPlan.vector_angle(this_vec, next_vec) > MAX_BEND_ANGLE:
+                next_seg = next_seg + [0, 1]
+                # j = i + 2
+                # If too large, have to find the next point that makes it small enough
+                while next_seg[1] < len(path_pts) - 1:
+                    next_vec = path_pts[next_seg[1]] - path_pts[next_seg[0]]
+                    if PathPlan.vector_angle(this_vec, next_vec) < MAX_BEND_ANGLE:
+                        break
+                    next_seg = next_seg + [0, 1]
+                    # j = j + 1
+                # Make the new vector to check next
+                this_seg = next_seg
+                next_seg = np.array([next_seg[1], next_seg[1]+1])
+                # this_vec = path_pts[j] - path_pts[i+1]
+                # next_vec = path_pts[j+1] - path_pts[j]
+                # i = j - 1
+            else:
+                this_seg = next_seg
+                next_seg = next_seg + 1
+                # i = i + 1
+                # this_vec = path_pts[i+1] - path_pts[i]
+                # next_vec = path_pts[i+2] - path_pts[i+1]
+
+        non_bend_idx = np.append(non_bend_idx, np.arange(this_seg[1], len(path_pts)))
+        non_bend_idx = np.unique(non_bend_idx)
+        return path_pts[non_bend_idx]
 
     # TODO: All these methods need to be moved to a geometry utilities library
     @staticmethod

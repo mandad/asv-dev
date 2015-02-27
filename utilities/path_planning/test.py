@@ -2,12 +2,28 @@ import beamtrace
 import followpath
 import simulator
 import gridgen
+import pathplan
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
 import pdb
 
 swath_angle = 65
+
+def test_path_bend(scenario=0):
+    path_points = [(90, 120), (105, 140), (112, 160), (160, 180), (130, 110), \
+        (112, 150), (107, 155), (115, 185), (120, 190), (125, 215), (170, 275)]
+    xy_pts = zip(*path_points)
+    path_points = np.array(path_points)
+
+    #process
+    path_points = pathplan.PathPlan.remove_all(pathplan.PathPlan.remove_bends, path_points)
+    xy_pts2 = zip(*path_points)
+
+    plt.plot(xy_pts[0], xy_pts[1], 'bo-')
+    plt.plot(xy_pts2[0], xy_pts2[1], 'rs-', markersize=2)
+    plt.axis('equal')
+    plt.show()
 
 def test_beam_trace(x0, y0, hdg_x, hdg_y):
     bg = gridgen.BathyGrid(100, 100, 1)
@@ -69,16 +85,16 @@ def test_swath_sim(gtype='slope', num_lines=5):
 def test_swath_sim_import(terrain='flat', num_lines=2):
     if terrain == 'flat':
         filename = 'terrain/Flat_Region.tif'
-        sim = simulator.Simulator(359555.0, 4761967.0, 0.5, 'file', 10, filename)
-        sim.add_waypoints([(359555, 4761967), (359778, 4762369)])
-        sim.set_operation_polygon([(359555, 4761967), (359778, 4762369), \
+        sim = simulator.Simulator(359535.0, 4761987.0, 0.5, 'file', 10, filename)
+        sim.add_waypoints([(359535, 4761987), (359758, 4762349)])
+        sim.set_operation_polygon([(359535, 4761987), (359758, 4762349), \
             (359568, 4762486), (359491, 4762666), (359188, 4762833), \
             (358943, 4762316)])
     elif terrain == 'complex':
         filename = 'terrain/Complex_Region.tif'
-        sim = simulator.Simulator(359800.0, 4762440.0, 0.5, 'file', 10, filename)
-        sim.add_waypoints([(359800.0, 4762440.0), (360265, 4763290)])
-        sim.set_operation_polygon([(359800.0, 4762440.0), (360265, 4763290), \
+        sim = simulator.Simulator(359780.0, 4762460.0, 0.5, 'file', 10, filename)
+        sim.add_waypoints([(359780.0, 4762460.0), (360245, 4763270)])
+        sim.set_operation_polygon([(359780.0, 4762460.0), (360245, 4763270), \
             (359617, 4763633), (359133, 4762800)])
 
     if sim.run_simulation(num_lines):
