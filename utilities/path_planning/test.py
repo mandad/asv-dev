@@ -92,10 +92,12 @@ def test_swath_sim_import(terrain='flat', num_lines=2):
             (358943, 4762316)])
     elif terrain == 'complex':
         filename = 'terrain/Complex_Region.tif'
-        sim = simulator.Simulator(359780.0, 4762460.0, 0.5, 'file', 10, filename)
-        sim.add_waypoints([(359780.0, 4762460.0), (360245, 4763270)])
-        sim.set_operation_polygon([(359780.0, 4762460.0), (360245, 4763270), \
-            (359617, 4763633), (359133, 4762800)])
+        #359650.0, 4762540.0
+        op_poly = [(359813.0, 4762520.0), (360270, 4763310), \
+            (359617, 4763633), (359147, 4762830)]
+        sim = simulator.Simulator(op_poly[0][0], op_poly[0][1], 0.5, 'file', 10, filename)
+        sim.add_waypoints(op_poly[0:2])
+        sim.set_operation_polygon(op_poly)
 
     if sim.run_simulation(num_lines):
         # use plot_sim(False) to not show swaths

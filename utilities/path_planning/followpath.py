@@ -201,8 +201,8 @@ class RecordSwath(object):
 
         full_swath = shapely.ops.unary_union(step_polygons)
         # Remove small polygons
-        full_swath = full_swath.buffer(0.01, 1, join_style=JOIN_STYLE.mitre).buffer(
-            -0.01, 1, join_style=JOIN_STYLE.mitre)
+        full_swath = full_swath.buffer(0.1, 1, join_style=JOIN_STYLE.mitre).buffer(
+            -0.1, 1, join_style=JOIN_STYLE.mitre)
         self.coverage = full_swath
         return full_swath
 

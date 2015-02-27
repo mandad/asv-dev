@@ -34,7 +34,7 @@ class BathyGrid(object):
             y_dir = geo_transform[5]
             x_dir = geo_transform[1]
         else:
-            self.geo_transform = [0, 1, 0, 0, 0, 1]
+            self.geo_transform = [0, res, 0, 0, 0, res]
             start_x = 0
             start_y = 0
             y_dir = 1
@@ -49,7 +49,7 @@ class BathyGrid(object):
         # to get pixels, mx, my are in map units
         dimensions = grid_file.shape
         resolution = round(max(grid_file.res))
-        config_cls = cls(dimensions[0], dimensions[1], resolution, grid_file.get_transform())
+        config_cls = cls(dimensions[1], dimensions[0], resolution, grid_file.get_transform())
         config_cls.pregenerated_grid(grid_file.read_band(1), depth_pos)
         grid_file.close()
         return config_cls
@@ -180,20 +180,39 @@ class BathyGrid(object):
             0, self.size_y - 1)
 
         # Could interpolate or something if wanted to get fancy
-        depth_val = self.grid[x_idx, y_idx]
+        if self.imported:
+            depth_val = self.grid[y_idx, x_idx]
+            if depth_val is np.ma.masked:
+                depth_val = self.grid_mean
+        else:
+            depth_val = self.grid[x_idx, y_idx]
+
         # pdb.set_trace()
-        if self.imported and depth_val is np.ma.masked:
-            #if we end up doing this a lot, should be cached
-            depth_val = self.grid_mean
         return depth_val
 
     def get_extents(self):
-        """Return extents in [left, right, bottom, top]"""
+        """Return extents in [left, right, bottom, top]
+        minx = gt[0]
+        miny = gt[3] + width*gt[4] + height*gt[5] 
+        maxx = gt[0] + width*gt[1] + height*gt[2]
+        maxy = gt[3]
+
+        Corner Coordinates:
+        Upper Left  (  359078.849, 4763674.826) ( 70d43'45.31"W, 43d 0'45.68"N)
+        Lower Left  (  359078.849, 4762415.826) ( 70d43'44.17"W, 43d 0' 4.89"N)
+        Upper Right (  360396.849, 4763674.826) ( 70d42'47.12"W, 43d 0'46.56"N)
+        Lower Right (  360396.849, 4762415.826) ( 70d42'45.98"W, 43d 0' 5.76"N)
+        Center      (  359737.849, 4763045.326) ( 70d43'15.65"W, 43d 0'25.72"N)
+
+        output from this:
+        [359078.84858129267, 360337.84858129267, 4762356.826454721, 4763674.826454721]
+        [359078.84858129267, 360396.84858129267, 4762415.826454721, 4763674.826454721]
+        """
         left = self.geo_transform[0]
-        right = self.geo_transform[0] + self.size_x * self.resolution * self.geo_transform[1]
+        right = self.geo_transform[0] + self.size_x *  self.geo_transform[1]
         if self.imported:
             top = self.geo_transform[3]
-            bottom = self.geo_transform[3] + self.size_y * self.resolution * self.geo_transform[5]
+            bottom = self.geo_transform[3] + self.size_y * self.geo_transform[5]
         else:
             bottom = self.geo_transform[3]
             top = self.geo_transform[3] + self.size_y * self.resolution * self.geo_transform[5]

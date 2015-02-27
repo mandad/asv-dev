@@ -16,7 +16,7 @@ RESTRICT_ASV_TO_REGION = True
 # from lsi import lsi
 np.set_printoptions(suppress=True)
 MAX_BEND_ANGLE = 70 # degrees
-DEBUG_PLOTS = True
+DEBUG_PLOTS = False
 
 def unit_vector(vector):
     """
@@ -144,11 +144,11 @@ class PathPlan(object):
         print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
         pre_len = len(next_path_pts)
 
-        if DEBUG_PLOTS:
+        if DEBUG_PLOTS and pre_len > 0:
             xy_path2 = zip(*next_path_pts)
             plt.plot(xy_path2[0], xy_path2[1], 'r^-', label='After Bends', markersize=6)
             plt.legend(loc='best')
-            plt.show()
+        plt.show()
 
 
         # ---------- Extend -----------
@@ -232,7 +232,11 @@ class PathPlan(object):
         # Note that this goes to the last point being checked
         # There has got to be a more efficient way to do this
         """
-        # Maybe should process in both directions
+        # TODO: think through the recursive logic a bit more 
+        # if len(path_pts) < 4:
+        #     return path_pts
+
+        # Maybe should process in both directions, remove pts common to both
         non_bend_idx = np.array([], dtype=np.int64)
         this_seg = np.array([0, 1])
         next_seg = np.array([1, 2])
@@ -268,7 +272,13 @@ class PathPlan(object):
 
         non_bend_idx = np.append(non_bend_idx, np.arange(this_seg[1], len(path_pts)))
         non_bend_idx = np.unique(non_bend_idx)
-        return path_pts[non_bend_idx]
+
+        #if only have first seg + last point
+        if non_bend_idx.size == 3:
+            # Try again eliminating the first segment
+            return PathPlan.remove_bends(path_pts[1:])
+        else:
+            return path_pts[non_bend_idx]
 
     # TODO: All these methods need to be moved to a geometry utilities library
     @staticmethod
