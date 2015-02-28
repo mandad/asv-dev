@@ -17,7 +17,8 @@ RESTRICT_ASV_TO_REGION = True
 # from lsi import lsi
 np.set_printoptions(suppress=True)
 MAX_BEND_ANGLE = 70 # degrees
-DEBUG_PLOTS = True
+DEBUG_PLOTS = False
+SUPER_DEBUG = False
 
 def unit_vector(vector):
     """
@@ -66,6 +67,9 @@ class PathPlan(object):
             if pre_len == 0:
                 return next_path_pts
 
+        if len(edge_pts) < 2:
+            return next_path_pts
+
         # ---------- Generate Path -----------
         # so this isn't very pythonic, but I need before and after...
         for i in range(len(edge_pts)):
@@ -75,7 +79,7 @@ class PathPlan(object):
             if i > 0:
                 back_vec = np.array([edge_pts[i][0] - edge_pts[i-1][0], \
                  edge_pts[i][1] - edge_pts[i-1][1]], dtype=np.float)
-            if i < len(edge_pts)-2:
+            if i < len(edge_pts)-1:
                 forward_vec = np.array([edge_pts[i+1][0] - edge_pts[i][0], \
                  edge_pts[i+1][1] - edge_pts[i][1]], dtype=np.float)
             else:
@@ -323,8 +327,19 @@ class PathPlan(object):
             if non_bend_idx[-1] != this_seg[0]:
                 non_bend_idx.append(this_seg[0])
 
-        # Extend to the end of the path
-        non_bend_idx.extend(range(this_seg[1], len(path_pts)))
+        if this_seg[1] == len(path_pts) - 1:
+            # Looped to the end, this indicates a large skip, otherwise we don't
+            # get to the last index for this_seg, so remove the test point which
+            # could be causing the problem
+            all_ind = range(len(path_pts))
+            #this might also work with this_seg[0]+1
+            all_ind.remove(this_seg[0]) 
+            # might want to put this recursion path at the end
+            return PathPlan.remove_bends(path_pts[all_ind])
+        else:
+            # Extend to the end of the path
+            non_bend_idx.extend(range(this_seg[1], len(path_pts)))
+
         # Remove the end if it causes a bend
         while len(non_bend_idx) > 2:
             end_angle = PathPlan.vector_angle(PathPlan.vec_from_seg(path_pts, \
@@ -339,7 +354,7 @@ class PathPlan(object):
         non_bend_idx = np.unique(non_bend_idx)
 
         #if only have first seg + last point
-        if non_bend_idx.size == 3:
+        if non_bend_idx.size <= 3 and len(path_pts) > 5:
             # Try again eliminating the first segment
             return PathPlan.remove_bends(path_pts[1:])
         else:
