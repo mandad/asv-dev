@@ -34,7 +34,8 @@ def process_path(path_pts):
 
     # ---------- Bends -----------
     print('Eliminating dramatic bends.')
-    next_path_pts = pathplan.PathPlan.remove_all(pathplan.PathPlan.remove_bends, next_path_pts)
+    # next_path_pts = pathplan.PathPlan.remove_all(pathplan.PathPlan.remove_bends, next_path_pts)
+    next_path_pts = pathplan.PathPlan.remove_bends(next_path_pts)
 
     print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
     pre_len = len(next_path_pts)

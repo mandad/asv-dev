@@ -255,38 +255,87 @@ class PathPlan(object):
         #     return path_pts
 
         # Maybe should process in both directions, remove pts common to both
-        non_bend_idx = np.array([0], dtype=np.int64)
+        non_bend_idx = [0]
         this_seg = np.array([0, 1])
         next_seg = np.array([1, 2])
         
-        while next_seg[1] < len(path_pts):
+        while next_seg[1] < len(path_pts) - 1:
             this_vec = path_pts[this_seg[1]] - path_pts[this_seg[0]]
             next_vec = path_pts[next_seg[1]] - path_pts[next_seg[0]]
-            pprint.pprint(non_bend_idx)
+            # pprint.pprint(non_bend_idx)
             # Angle between this and following
             if PathPlan.vector_angle(this_vec, next_vec) > MAX_BEND_ANGLE:
-                test_seg = next_seg + [0, 1]
                 # If too large, have to find the next point that makes it small enough
+                # -- Method 1: Points from end of current --
+                test_seg = next_seg + [0, 1]
                 while test_seg[1] < len(path_pts) - 1:
                     test_vec = path_pts[test_seg[1]] - path_pts[test_seg[0]]
-                    if PathPlan.vector_angle(this_vec, test_vec) < MAX_BEND_ANGLE:
+                    angle1 = PathPlan.vector_angle(this_vec, test_vec)
+                    if angle1 < MAX_BEND_ANGLE:
                         break
                     test_seg = test_seg + [0, 1]
+                pts_elim1 = test_seg[1] - test_seg[0]
 
+                # -- Method 2: Points from beginning of current --
                 # check if it would be better to remove the end of "this_vec"
-                # test2_seg1 = 
+                if len(non_bend_idx) > 1:
+                    test2_vec1 = PathPlan.vec_from_seg(path_pts, \
+                        np.array([non_bend_idx[-2], this_seg[0]]))
+                    test2_seg2 = np.array([this_seg[0], next_seg[1]])
+                    while test2_seg2[1] < len(path_pts) - 1:
+                        test2_vec2 = PathPlan.vec_from_seg(path_pts, test2_seg2)
+                        angle2 = PathPlan.vector_angle(test2_vec1, test2_vec2)
+                        if angle2 < MAX_BEND_ANGLE:
+                            break
+                        test2_seg2 = test2_seg2 + [0, 1]
+                    pts_elim2 = test2_seg2[1] - test2_seg2[0]
+
+                    # Check if one method angle is better
+                    # may need to refine this threshold or only use angle
+                    # really needs to be total points removed in region that would
+                    # have been affected by the other method, but this requires additional
+                    # loops to know
+                    if pts_elim1 > pts_elim2 and pts_elim1 < (pts_elim2 * 2) and angle1 < angle2:
+                        print(('Bend Fudging - pts_elim1: {0}, pts_elim2: {1}\n' + \
+                            '\tangle1: {2:.2f}, angle2: {3:.2f}').format(pts_elim1, \
+                            pts_elim2, angle1, angle2))
+                        pts_elim2 = pts_elim1 + 1
+                    elif pts_elim2 >= pts_elim1 and pts_elim2 < (pts_elim1 * 2) and angle2 < angle1:
+                        print(('Bend Fudging - pts_elim1: {0}, pts_elim2: {1}\n' + \
+                            '\tangle1: {2:.2f}, angle2: {3:.2f}').format(pts_elim1, \
+                            pts_elim2, angle1, angle2))
+                        pts_elim1 = pts_elim2 + 1
+                else:
+                    # force it to not choose this method
+                    pts_elim2 = pts_elim1 + 1
 
                 # Make the new vector to check next
-                this_seg = test_seg
-                non_bend_idx = np.append(non_bend_idx, this_seg[0])
-                next_seg = np.array([test_seg[1], test_seg[1]+1])
+                if pts_elim1 <= pts_elim2:
+                    this_seg = test_seg
+                    next_seg = np.array([test_seg[1], test_seg[1]+1])
+                else:
+                    this_seg = test2_seg2
+                    next_seg = np.array([test2_seg2[1], test2_seg2[1]+1])
             else:
                 this_seg = next_seg
-                non_bend_idx = np.append(non_bend_idx, this_seg[0])
                 next_seg = next_seg + 1
+            # don't re-add an existing index
+            if non_bend_idx[-1] != this_seg[0]:
+                non_bend_idx.append(this_seg[0])
 
-        non_bend_idx = np.append(non_bend_idx, np.arange(this_seg[1], len(path_pts)))
-        pprint.pprint(non_bend_idx)
+        # Extend to the end of the path
+        non_bend_idx.extend(range(this_seg[1], len(path_pts)))
+        # Remove the end if it causes a bend
+        while len(non_bend_idx) > 2:
+            end_angle = PathPlan.vector_angle(PathPlan.vec_from_seg(path_pts, \
+                [non_bend_idx[-3], non_bend_idx[-2]]), PathPlan.vec_from_seg( \
+                path_pts, [non_bend_idx[-2], non_bend_idx[-1]]))
+            if end_angle > MAX_BEND_ANGLE:
+                non_bend_idx.pop()
+            else:
+                break
+
+        # pprint.pprint(non_bend_idx)
         non_bend_idx = np.unique(non_bend_idx)
 
         #if only have first seg + last point
@@ -295,6 +344,15 @@ class PathPlan(object):
             return PathPlan.remove_bends(path_pts[1:])
         else:
             return path_pts[non_bend_idx]
+
+    @staticmethod
+    def vec_from_seg(points, segment):
+        try:
+            vector = points[segment[1]] - points[segment[0]]
+        # Index out of bounds
+        except Exception:
+            vector = None
+        return vector
 
     # TODO: All these methods need to be moved to a geometry utilities library
     @staticmethod
