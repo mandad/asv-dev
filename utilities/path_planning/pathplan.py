@@ -16,7 +16,7 @@ RESTRICT_ASV_TO_REGION = True
 # from lsi import lsi
 np.set_printoptions(suppress=True)
 MAX_BEND_ANGLE = 70 # degrees
-DEBUG_PLOTS = False
+DEBUG_PLOTS = True
 
 def unit_vector(vector):
     """
@@ -108,6 +108,8 @@ class PathPlan(object):
         # Note that the meaning of pre_len switches here
         pre_len = len(next_path_pts)
 
+        orig_pts = next_path_pts[:]
+
         # ---------- Restrict to Region -----------
         if RESTRICT_ASV_TO_REGION:
             print('Eliminating points outside op region.')
@@ -148,7 +150,8 @@ class PathPlan(object):
             xy_path2 = zip(*next_path_pts)
             plt.plot(xy_path2[0], xy_path2[1], 'r^-', label='After Bends', markersize=6)
             plt.legend(loc='best')
-        plt.show()
+            plt.show()
+            pdb.set_trace()
 
 
         # ---------- Extend -----------
