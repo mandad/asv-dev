@@ -255,40 +255,38 @@ class PathPlan(object):
         #     return path_pts
 
         # Maybe should process in both directions, remove pts common to both
-        non_bend_idx = np.array([], dtype=np.int64)
+        non_bend_idx = np.array([0], dtype=np.int64)
         this_seg = np.array([0, 1])
         next_seg = np.array([1, 2])
         
-        while next_seg[1] < (len(path_pts) - 1):
+        while next_seg[1] < len(path_pts):
             this_vec = path_pts[this_seg[1]] - path_pts[this_seg[0]]
             next_vec = path_pts[next_seg[1]] - path_pts[next_seg[0]]
-            # pdb.set_trace()
-            non_bend_idx = np.append(non_bend_idx, this_seg) 
+            pprint.pprint(non_bend_idx)
             # Angle between this and following
             if PathPlan.vector_angle(this_vec, next_vec) > MAX_BEND_ANGLE:
-                next_seg = next_seg + [0, 1]
-                # j = i + 2
+                test_seg = next_seg + [0, 1]
                 # If too large, have to find the next point that makes it small enough
-                while next_seg[1] < len(path_pts) - 1:
-                    next_vec = path_pts[next_seg[1]] - path_pts[next_seg[0]]
-                    if PathPlan.vector_angle(this_vec, next_vec) < MAX_BEND_ANGLE:
+                while test_seg[1] < len(path_pts) - 1:
+                    test_vec = path_pts[test_seg[1]] - path_pts[test_seg[0]]
+                    if PathPlan.vector_angle(this_vec, test_vec) < MAX_BEND_ANGLE:
                         break
-                    next_seg = next_seg + [0, 1]
-                    # j = j + 1
+                    test_seg = test_seg + [0, 1]
+
+                # check if it would be better to remove the end of "this_vec"
+                # test2_seg1 = 
+
                 # Make the new vector to check next
-                this_seg = next_seg
-                next_seg = np.array([next_seg[1], next_seg[1]+1])
-                # this_vec = path_pts[j] - path_pts[i+1]
-                # next_vec = path_pts[j+1] - path_pts[j]
-                # i = j - 1
+                this_seg = test_seg
+                non_bend_idx = np.append(non_bend_idx, this_seg[0])
+                next_seg = np.array([test_seg[1], test_seg[1]+1])
             else:
                 this_seg = next_seg
+                non_bend_idx = np.append(non_bend_idx, this_seg[0])
                 next_seg = next_seg + 1
-                # i = i + 1
-                # this_vec = path_pts[i+1] - path_pts[i]
-                # next_vec = path_pts[i+2] - path_pts[i+1]
 
         non_bend_idx = np.append(non_bend_idx, np.arange(this_seg[1], len(path_pts)))
+        pprint.pprint(non_bend_idx)
         non_bend_idx = np.unique(non_bend_idx)
 
         #if only have first seg + last point
