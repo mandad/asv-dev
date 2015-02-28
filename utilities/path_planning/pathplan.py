@@ -10,6 +10,7 @@ import numpy as np
 import beamtrace
 import pdb
 import matplotlib.pyplot as plt
+import pprint
 
 RESTRICT_ASV_TO_REGION = True
 
@@ -228,6 +229,20 @@ class PathPlan(object):
             non_intersect_idx = np.append(non_intersect_idx, len(path_pts) - 1)
 
         return path_pts[non_intersect_idx]
+
+    @staticmethod 
+    def remove_bends_gradient(path_pts):
+        # sec_grad = np.gradient(np.gradient(path_pts)[0])[0]
+        # sec_grad_sum = np.sum(sec_grad,1)
+        # non_bend_idx = np.abs(sec_grad_sum - np.average(sec_grad_sum)) < (np.std(sec_grad_sum) * 1.5)
+        # pprint.pprint(sec_grad_sum)
+        grad = np.gradient(path_pts)[0]
+        slope = grad[:,1]/grad[:,0]
+        pprint.pprint(slope)
+        del_slp = np.gradient(slope)
+        pprint.pprint(del_slp)
+        non_bend_idx = del_slp < 2
+        return path_pts[non_bend_idx]
 
     @staticmethod
     def remove_bends(path_pts):

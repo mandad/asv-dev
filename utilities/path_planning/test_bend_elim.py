@@ -13,7 +13,7 @@ long_elim2 = long_elim2[58:97]
 
 # path_bend = np.array(path_bend)
 
-__all__ = [process_path, path_bend1, path_bend2, long_elim1, long_elim2]
+# __all__ = ['process_path', 'path_bend1', 'path_bend2', 'long_elim1', 'long_elim2']
 
 def process_path(path_pts):
     next_path_pts = np.array(path_pts)
@@ -35,6 +35,39 @@ def process_path(path_pts):
     # ---------- Bends -----------
     print('Eliminating dramatic bends.')
     next_path_pts = pathplan.PathPlan.remove_all(pathplan.PathPlan.remove_bends, next_path_pts)
+
+    print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
+    pre_len = len(next_path_pts)
+
+    plt.plot(next_path_pts[:,0], next_path_pts[:,1], 'r^-', label='After Bends', markersize=6)
+    plt.legend(loc='best')
+    plt.show()
+    
+    # pdb.set_trace()
+
+    return next_path_pts
+
+def process_path_grad(path_pts):
+    next_path_pts = np.array(path_pts)
+    pre_len = len(next_path_pts)
+
+    plt.plot(next_path_pts[:,0], next_path_pts[:,1], 'go-', label='Before Intersect', markersize=8)
+
+    # ---------- Intersections -----------
+    print('Eliminating path intersects itself.')
+    next_path_pts = np.array(next_path_pts)
+    next_path_pts = pathplan.PathPlan.remove_all(pathplan.PathPlan.remove_intersects, next_path_pts)
+
+    print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
+    pre_len = len(next_path_pts)
+
+    plt.plot(next_path_pts[:,0], next_path_pts[:,1], 'bs-', label='Before Bends', markersize=6)
+    plt.axis('equal')
+
+    # ---------- Bends -----------
+    print('Eliminating dramatic bends.')
+    #run once for now because of std
+    next_path_pts = pathplan.PathPlan.remove_bends_gradient(next_path_pts)
 
     print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
     pre_len = len(next_path_pts)
