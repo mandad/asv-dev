@@ -1,3 +1,11 @@
+""""
+Tests path bend elimination on example paths that have a variety of cases
+that cause previous versions to fail.
+
+Damian Manda
+damian.manda@noaa.gov
+27 Feb 2015
+"""
 import pathplan
 import numpy as np
 import matplotlib.pyplot as plt
@@ -54,6 +62,7 @@ def process_path(path_pts):
     return next_path_pts
 
 def process_path_grad(path_pts):
+    """Test for example method of removing using line gradient"""
     next_path_pts = np.array(path_pts)
     pre_len = len(next_path_pts)
 

@@ -181,8 +181,14 @@ class Simulator(object):
                 # Shouldn't run this the final time, it erases the swath record
                 if i < num_lines - 1:
                     # Plan a new path on the starboard side
+                    # if i >= 9:
+                    #     pathplan.DEBUG_PLOTS = True
+                    # else:
+                    #     pathplan.DEBUG_PLOTS = False
+
                     path_planner = pathplan.PathPlan(self.swath_record[NEXT_PATH_SIDE[i % 2]], \
                         NEXT_PATH_SIDE[i % 2], SWATH_OVERLAP)
+
                     next_path = path_planner.generate_next_path(self.op_poly)
                     new_len = len(next_path)
                     print('New Path Length: {0}'.format(new_len))
@@ -206,8 +212,15 @@ class Simulator(object):
             
             # Holiday determination
             try:
-                int_polys = [shapely.geometry.polygon.asPolygon(int_ring) \
-                    for int_ring in self.coverage.interiors]
+                if type(self.coverage) is MultiPolygon:
+                    int_polys = []
+                    for polygon in self.coverage:
+                        if type(polygon) is Polygon:
+                            int_polys.extend([shapely.geometry.polygon.asPolygon(int_ring) \
+                            for int_ring in polygon])
+                else:
+                    int_polys = [shapely.geometry.polygon.asPolygon(int_ring) \
+                        for int_ring in self.coverage.interiors]
                 if len(int_polys) > 0: 
                     int_areas = np.array([poly.area for poly in int_polys])
                     holidays = np.argwhere(int_areas > 3)
@@ -274,7 +287,7 @@ class Simulator(object):
         if len(holiday_cent_x) > 0:
             plt.plot(holiday_cent_x, holiday_cent_y, 'm*', label='Holidays')
 
-        # plt.legend()
+        # plt.legend(loc='best')
         plt.axis('equal')
         self.bathy_grid.disp_grid(False, True)
 

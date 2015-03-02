@@ -164,6 +164,19 @@ class BathyGrid(object):
         else:
             raise Exception('No grid has been generated')
 
+    def avg_aspect(self):
+        """http://blog.perrygeo.net/2012/03/18/average-aspect/
+        http://geoexamples.blogspot.com/2014/03/shaded-relief-images-using-gdal-python.html
+        """
+        x, y = np.gradient(self.grid)
+        hyp = np.sqrt(x**2 + y**2)
+        return np.degrees(np.arctan2(np.sum(y/hyp), np.sum(-x/hyp)))
+
+    def avg_slope(self):
+        x, y = np.gradient(self.grid)
+        slope = np.pi/2. - np.arctan(np.sqrt(x**2 + y**2))
+        return np.average(slope)
+
     def get_depth(self, x, y):
         """Get the depth from the grid at a specified x,y point which does not
         necessarily correspond to the size of the grid"""

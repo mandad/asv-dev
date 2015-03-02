@@ -10,7 +10,12 @@ import numpy as np
 import beamtrace
 import pdb
 import matplotlib.pyplot as plt
+import matplotlib.path as mplPath
 import pprint
+import shapely.geometry as sg
+from descartes.patch import PolygonPatch
+BLUE = '#6699cc'
+GRAY = '#999999'
 
 RESTRICT_ASV_TO_REGION = True
 
@@ -46,6 +51,9 @@ class PathPlan(object):
         self.margin = margin
 
     def generate_next_path(self, op_poly=None):
+        """Generates a new path based on the previous swath, and restricts operation
+        to the passed region.
+        """
         print('\n======== Generating Next Path ========')
         edge_pts = self.swath_record.get_swath_outer_pts(self.side)
         next_path_pts = []
@@ -115,18 +123,6 @@ class PathPlan(object):
 
         orig_pts = next_path_pts[:]
 
-        # ---------- Restrict to Region -----------
-        if RESTRICT_ASV_TO_REGION:
-            print('Eliminating points outside op region.')
-            if op_poly is not None:
-                next_path_pts = [pt for pt in next_path_pts if self.point_in_poly(pt[0], pt[1], op_poly)]
-            print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
-            pre_len = len(next_path_pts)
-
-            # Done with op region (in nieve case)
-            if pre_len == 0:
-                return next_path_pts
-
         if DEBUG_PLOTS:
             xy_path0 = zip(*next_path_pts)
             plt.plot(xy_path0[0], xy_path0[1], 'go-', label='Before Intersect', markersize=8)
@@ -154,10 +150,25 @@ class PathPlan(object):
         if DEBUG_PLOTS and pre_len > 0:
             xy_path2 = zip(*next_path_pts)
             plt.plot(xy_path2[0], xy_path2[1], 'r^-', label='After Bends', markersize=6)
+
+        # ---------- Restrict to Region -----------
+        if RESTRICT_ASV_TO_REGION:
+            print('Eliminating points outside op region.')
+            if op_poly is not None:
+                next_path_pts = [pt for pt in next_path_pts if self.point_in_poly(pt[0], pt[1], op_poly)]
+            print('Removed {0} points.\n'.format(pre_len - len(next_path_pts)))
+            pre_len = len(next_path_pts)
+
+            # Done with op region (in nieve case)
+            if pre_len <= 1:
+                return next_path_pts
+
+        if DEBUG_PLOTS and pre_len > 0:
+            xy_path3 = zip(*next_path_pts)
+            plt.plot(xy_path3[0], xy_path3[1], 'k+-', label='After Op Region', markersize=6)
             plt.legend(loc='best')
             plt.show()
             pdb.set_trace()
-
 
         # ---------- Extend -----------
         print('Extending ends of path to edge of region.')
@@ -412,8 +423,8 @@ class PathPlan(object):
             return None
         else:
             t = np.cross(seg_start - start_pt, seg_vector) / rxs
-            # u = np.cross(seg_start - start_pt, ray_vector) / rxs
-            if t > 0:
+            u = np.cross(seg_start - start_pt, ray_vector) / rxs
+            if t >= 0 and u >= 0 and u <= 1:
                 return start_pt + t * ray_vector
             else:
                 return None
@@ -425,17 +436,48 @@ class PathPlan(object):
         x, y -- x and y coordinates of point
         a list of tuples [(x, y), (x, y), ...]
         """
-        num = len(poly)
-        i = 0
-        j = num - 1
-        c = False
-        for i in range(num):
-            if  ((poly[i][1] > y) != (poly[j][1] > y)) and \
-                    (x < (poly[j][0] - poly[i][0]) * (y - poly[i][1]) / \
-                        (poly[j][1] - poly[i][1]) + poly[i][0]):
-                c = not c
-            j = i
-        return c
+        # pdb.set_trace()
+
+        sh_poly = sg.Polygon(poly)
+        # plt.figure()
+        # plt.gca().add_patch(PolygonPatch(sh_poly, facecolor=BLUE, edgecolor=GRAY, alpha=0.7, zorder=2))
+        # plt.show()
+        # pdb.set_trace()
+        return sh_poly.contains(sg.Point(x,y))
+
+        # bb_path = mplPath.Path(np.array(poly), closed=True)
+        # return bb_path.contains_point((x, y))
+
+        # num = len(poly)
+        # i = 0
+        # j = num - 1
+        # c = False
+        # for i in range(num):
+        #     if  ((poly[i][1] > y) != (poly[j][1] > y)) and \
+        #             (x < (poly[j][0] - poly[i][0]) * (y - poly[i][1]) / \
+        #                 (poly[j][1] - poly[i][1]) + poly[i][0]):
+        #         c = not c
+        #     j = i
+        # return c
+
+    @staticmethod
+    def point_inside_polygon(x,y,poly):
+        n = len(poly)
+        inside = False
+
+        p1x,p1y = poly[0]
+        for i in range(n+1):
+            p2x,p2y = poly[i % n]
+            if y > min(p1y,p2y):
+                if y <= max(p1y,p2y):
+                    if x <= max(p1x,p2x):
+                        if p1y != p2y:
+                            xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x,p1y = p2x,p2y
+
+        return inside
 
     @staticmethod
     def ccw(A, B, C):
