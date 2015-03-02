@@ -217,7 +217,7 @@ class Simulator(object):
                     for polygon in self.coverage:
                         if type(polygon) is Polygon:
                             int_polys.extend([shapely.geometry.polygon.asPolygon(int_ring) \
-                            for int_ring in polygon])
+                            for int_ring in polygon.interiors])
                 else:
                     int_polys = [shapely.geometry.polygon.asPolygon(int_ring) \
                         for int_ring in self.coverage.interiors]
@@ -290,9 +290,17 @@ class Simulator(object):
         # plt.legend(loc='best')
         plt.axis('equal')
         self.bathy_grid.disp_grid(False, True)
+        # if self.op_poly is not None:
+        #     op_coords = np.array(sim.op_poly)
+        #     max_ext = np.max(op_coords, 0)
+        #     min_ext = np.min(op_coords, 0)
+        extents = self.bathy_grid.get_extents()
+        extent_inc = max(extents[1] - extents[0], extents[3] - extents[2]) * 0.05
+        # plt.ylim([extents[2] - extent_inc, extents[1] + extent_inc])
 
         # For saving output
         # plt.ylim([-100, 1100])
+
         plt.savefig('path_output.png', dpi=600, transparent=True)
 
         plt.show()

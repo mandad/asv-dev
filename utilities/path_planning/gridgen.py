@@ -158,7 +158,8 @@ class BathyGrid(object):
                 else:
                     plt.imshow(-np.transpose(self.grid), cmap='jet', zorder=0, \
                         extent=self.get_extents())
-                plt.colorbar()
+                cbar = plt.colorbar()
+                cbar.set_label('Depth [m]')
                 if not existing_fig:
                     plt.show()
         else:

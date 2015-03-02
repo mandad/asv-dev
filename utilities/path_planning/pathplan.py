@@ -21,9 +21,8 @@ RESTRICT_ASV_TO_REGION = True
 
 # from lsi import lsi
 np.set_printoptions(suppress=True)
-MAX_BEND_ANGLE = 70 # degrees
-DEBUG_PLOTS = False
-SUPER_DEBUG = False
+MAX_BEND_ANGLE = 60 # degrees
+DEBUG_PLOTS = True
 
 def unit_vector(vector):
     """
@@ -438,46 +437,27 @@ class PathPlan(object):
         """
         # pdb.set_trace()
 
-        sh_poly = sg.Polygon(poly)
+        # sh_poly = sg.Polygon(poly)
         # plt.figure()
         # plt.gca().add_patch(PolygonPatch(sh_poly, facecolor=BLUE, edgecolor=GRAY, alpha=0.7, zorder=2))
         # plt.show()
         # pdb.set_trace()
-        return sh_poly.contains(sg.Point(x,y))
+        # return sh_poly.contains(sg.Point(x,y))
 
         # bb_path = mplPath.Path(np.array(poly), closed=True)
         # return bb_path.contains_point((x, y))
 
-        # num = len(poly)
-        # i = 0
-        # j = num - 1
-        # c = False
-        # for i in range(num):
-        #     if  ((poly[i][1] > y) != (poly[j][1] > y)) and \
-        #             (x < (poly[j][0] - poly[i][0]) * (y - poly[i][1]) / \
-        #                 (poly[j][1] - poly[i][1]) + poly[i][0]):
-        #         c = not c
-        #     j = i
-        # return c
-
-    @staticmethod
-    def point_inside_polygon(x,y,poly):
-        n = len(poly)
-        inside = False
-
-        p1x,p1y = poly[0]
-        for i in range(n+1):
-            p2x,p2y = poly[i % n]
-            if y > min(p1y,p2y):
-                if y <= max(p1y,p2y):
-                    if x <= max(p1x,p2x):
-                        if p1y != p2y:
-                            xinters = (y-p1y)*(p2x-p1x)/(p2y-p1y)+p1x
-                        if p1x == p2x or x <= xinters:
-                            inside = not inside
-            p1x,p1y = p2x,p2y
-
-        return inside
+        num = len(poly)
+        i = 0
+        j = num - 1
+        c = False
+        for i in range(num):
+            if  ((poly[i][1] > y) != (poly[j][1] > y)) and \
+                    (x < (poly[j][0] - poly[i][0]) * (y - poly[i][1]) / \
+                        (poly[j][1] - poly[i][1]) + poly[i][0]):
+                c = not c
+            j = i
+        return c
 
     @staticmethod
     def ccw(A, B, C):
