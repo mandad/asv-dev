@@ -1,13 +1,14 @@
 /* 
 Servo position sweeps unless overridden by radio input
 
- modified on 27 Oct 2014
- by Damian Manda
+ modified on 10 Mar 2015
+ Damian Manda
+ damian.manda@noaa.gov
  */
 
 #include <Servo.h> 
 
-//#define _DEBUG
+#define _DEBUG
  
 Servo throttle;
 Servo rudder;
@@ -63,7 +64,7 @@ void setup()
   pinMode(13, OUTPUT);
   digitalWrite(13, LOW);
   
-  //Serial.begin(9600);
+  Serial.begin(115200);
 } 
  
 void loop() 
@@ -84,6 +85,7 @@ void loop()
       mode_change = true;
     }
     
+    // Sweep the position of the servo
     if (pos < 180 && pos > 0) {
       pos += dir;
     } else {
@@ -92,9 +94,12 @@ void loop()
     }
     throttle.write(pos);
     rudder.write(pos);
-    
     //have to delay or else it increments faster than the servos turn
     delayMicroseconds(15000);
+    
+     //Write values from MOOS to servos
+//     throttle.write(map(desired_thrust, 0, 100, 0, 180));
+//     rudder.write(map(desired_rudder, -90, 90, 0, 180));
   } else {
     //Trying to eliminate jitter due to switching modes
     if (val_mode < 1500) {
@@ -124,6 +129,7 @@ void loop()
     #endif
   }
   
+  //Toggle the LED to show mode status
   if (mode_change) {
     digitalWrite(13, HIGH);  
   } else {
