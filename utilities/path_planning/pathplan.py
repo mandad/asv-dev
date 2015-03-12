@@ -22,7 +22,7 @@ RESTRICT_ASV_TO_REGION = True
 # from lsi import lsi
 np.set_printoptions(suppress=True)
 MAX_BEND_ANGLE = 60 # degrees
-DEBUG_PLOTS = True
+DEBUG_PLOTS = False
 
 def unit_vector(vector):
     """

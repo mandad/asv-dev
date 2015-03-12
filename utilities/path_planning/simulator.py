@@ -69,7 +69,7 @@ class Simulator(object):
         if gtype == 'hump':
             self.bathy_grid.generate_hump(20, 15, 'y')
         elif gtype == 'dip':
-            self.bathy_grid.generate_dip(25, 20, 'x')
+            self.bathy_grid.generate_dip(40, 15, 'x', 5)
         elif gtype == 'flat':
             self.bathy_grid.generate_flat(25)
         elif gtype == 'slope':
@@ -233,7 +233,7 @@ class Simulator(object):
             return False
         return True
 
-    def plot_sim(self, show_swath=True):
+    def plot_sim(self, show_swath=True, show_coverage=True):
         # Plot the operation region
         if self.op_poly is not None:
             plot_poly = list(self.op_poly)
@@ -268,14 +268,15 @@ class Simulator(object):
 
         # pdb.set_trace()
         # Plot the coverage recorded
-        if type(self.coverage) is Polygon:
-            plt.gca().add_patch(PolygonPatch(self.coverage, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2))
-        else:
-            ax = plt.gca()
-            for polygon in self.coverage:
-                if type(polygon) is Polygon:
-                    patch = PolygonPatch(polygon, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2)
-                    ax.add_patch(patch)
+        if show_coverage:
+            if type(self.coverage) is Polygon:
+                plt.gca().add_patch(PolygonPatch(self.coverage, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2))
+            else:
+                ax = plt.gca()
+                for polygon in self.coverage:
+                    if type(polygon) is Polygon:
+                        patch = PolygonPatch(polygon, facecolor=BLUE, edgecolor=GRAY, alpha=0.5, zorder=2)
+                        ax.add_patch(patch)
 
         # Plot Holiday centroids
         holiday_cent_x = []
@@ -295,8 +296,8 @@ class Simulator(object):
         #     max_ext = np.max(op_coords, 0)
         #     min_ext = np.min(op_coords, 0)
         extents = self.bathy_grid.get_extents()
-        extent_inc = max(extents[1] - extents[0], extents[3] - extents[2]) * 0.05
-        # plt.ylim([extents[2] - extent_inc, extents[1] + extent_inc])
+        extent_inc = (extents[3] - extents[2]) * 0.05
+        plt.ylim([extents[2] - extent_inc, extents[1] + extent_inc])
 
         # For saving output
         # plt.ylim([-100, 1100])

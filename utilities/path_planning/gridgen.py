@@ -65,13 +65,13 @@ class BathyGrid(object):
     def generate_flat(self, depth):
         self.grid = np.full((self.size_x, self.size_y), depth)
 
-    def generate_hump(self, deep, shallow, direction='y'):
-        self.generate_linear_bump(deep, shallow, 'up', direction)
+    def generate_hump(self, deep, shallow, direction='y', sigma_scale=10):
+        self.generate_linear_bump(deep, shallow, 'up', direction, sigma_scale)
 
-    def generate_dip(self, deep, shallow, direction='y'):
-        self.generate_linear_bump(shallow, deep, 'up', direction)
+    def generate_dip(self, deep, shallow, direction='y', sigma_scale=10):
+        self.generate_linear_bump(shallow, deep, 'up', direction, sigma_scale)
 
-    def generate_linear_bump(self, deep, shallow, vert_dir='up', orientation='y'):
+    def generate_linear_bump(self, deep, shallow, vert_dir='up', orientation='y', sigma_scale=10):
         # Create a gaussian in the desired direction
         if orientation == 'y':
             axis_size = self.size_y
@@ -79,7 +79,7 @@ class BathyGrid(object):
             axis_size = self.size_x
         v_pts = np.arange(axis_size, dtype=np.float)
         mu = axis_size / 2
-        sigma = axis_size / 10
+        sigma = axis_size / sigma_scale
         v_comp = 1/(sigma * np.sqrt(2 * np.pi)) * np.exp(-(v_pts - mu)**2 / (2 * sigma**2))
 
         # compensate to desired depths
