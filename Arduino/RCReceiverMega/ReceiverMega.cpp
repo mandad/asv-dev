@@ -26,8 +26,8 @@
 
 #define RISING_EDGE 1
 #define FALLING_EDGE 0
-#define MINONWIDTH 950
-#define MAXONWIDTH 2075
+#define MINONWIDTH 920
+#define MAXONWIDTH 2100
 #define MINOFFWIDTH 12000
 #define MAXOFFWIDTH 24000
 
@@ -102,7 +102,6 @@ SIGNAL(PCINT2_vect) {
 }
 
 ReceiverMega::ReceiverMega() {
-
     //initializeReceiverParam(nbChannel);
 
     // Set data direction (input)
@@ -124,7 +123,7 @@ ReceiverMega::ReceiverMega() {
       _pinData[channel].edge = FALLING_EDGE;
 }
 
-uint16_t RecieverMega::getChannelValue(uint8_t channel) {
+uint16_t ReceiverMega::getChannelValue(uint8_t channel) {
     // Limit channel to valid value
     uint8_t _channel = channel;
     if(_channel > NUM_INPUTS)
@@ -153,23 +152,23 @@ uint16_t RecieverMega::getChannelValue(uint8_t channel) {
 // ------------------------------------------------------------------------------
 // PPM READ - INTERRUPT SAFE PPM SERVO CHANNEL READ
 // ------------------------------------------------------------------------------
-uint16_t ppm_read_channel( uint8_t channel )
-{
-    // Limit channel to valid value
-    uint8_t _channel = channel;
-    if( _channel == 0 ) _channel = 1;
-    if( _channel > SERVO_CHANNELS ) _channel = SERVO_CHANNELS;
+// uint16_t ppm_read_channel( uint8_t channel )
+// {
+//     // Limit channel to valid value
+//     uint8_t _channel = channel;
+//     if( _channel == 0 ) _channel = 1;
+//     if( _channel > SERVO_CHANNELS ) _channel = SERVO_CHANNELS;
 
-    // Calculate ppm[..] position
-    uint8_t ppm_index = ( _channel << 1 ) + 1;
+//     // Calculate ppm[..] position
+//     uint8_t ppm_index = ( _channel << 1 ) + 1;
     
-    // Read ppm[..] in a non blocking interrupt safe manner
-    uint16_t ppm_tmp = ppm[ ppm_index ];
-    while( ppm_tmp != ppm[ ppm_index ] ) ppm_tmp = ppm[ ppm_index ];
+//     // Read ppm[..] in a non blocking interrupt safe manner
+//     uint16_t ppm_tmp = ppm[ ppm_index ];
+//     while( ppm_tmp != ppm[ ppm_index ] ) ppm_tmp = ppm[ ppm_index ];
 
-    // Return as normal servo value
-    return ppm_tmp + PPM_PRE_PULSE;    
-}
+//     // Return as normal servo value
+//     return ppm_tmp + PPM_PRE_PULSE;    
+// }
 // ------------------------------------------------------------------------------
 
 #endif
