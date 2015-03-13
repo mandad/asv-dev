@@ -3,6 +3,7 @@
     www.AeroQuad.com
     Copyright (c) 2012 Ted Carancho.
     Some code ideas also from ArduCopter/APM and 
+    https://github.com/lestofante/arduinoSketch/blob/master/ClassPPM/InputPin.cpp
 
     Modified for standalone operation on an Arduino Mega
     Damian Manda
@@ -24,6 +25,10 @@
     p99 - Input Pin registers
 */
 
+#include "ReceiverMega.h"
+#include <Arduino.h>
+// #include <util/atomic.h>
+
 #define RISING_EDGE 1
 #define FALLING_EDGE 0
 #define MINONWIDTH 920
@@ -33,10 +38,6 @@
 
 #define START_REGISTER 4    //the position of the first interrupt in the vector
 #define NUM_INPUTS 4
-
-//#include "pins_arduino.h"
-//#include <AQMath.h>
-//#include "GlobalDefined.h"
 
 volatile uint8_t *port_to_pcmask[] = {
     &PCMSK0,
@@ -49,8 +50,7 @@ volatile static tPinTimingData _pinData[NUM_INPUTS];
 // Currently only uses index zero
 volatile static uint8_t PCintLast[3];
 
-
-static void RecieverMega::MegaPcIntISR() {
+ISR(PCINT2_vect) {
     uint8_t bit;
     uint8_t curr;
     uint8_t changed;
@@ -60,7 +60,7 @@ static void RecieverMega::MegaPcIntISR() {
 
     //http://garretlab.web.fc2.com/en/arduino/inside/arduino/Arduino.h/portInputRegister.html
     //curr = *portInputRegister(11);
-    curr = PINK
+    curr = PINK;
     changed = curr ^ PCintLast[0];
     PCintLast[0] = curr;
 
@@ -97,10 +97,6 @@ static void RecieverMega::MegaPcIntISR() {
     }
 }
 
-SIGNAL(PCINT2_vect) {
-    Reciever_Mega::MegaPcIntISR();
-}
-
 ReceiverMega::ReceiverMega() {
     //initializeReceiverParam(nbChannel);
 
@@ -119,6 +115,8 @@ ReceiverMega::ReceiverMega() {
     // Enable interrupts on PCINT23:16 (Datasheet p112)
     PCICR |= 0x1 << PCIE2;
 
+    // Initialize state variables
+    PCintLast[0] = 0;
     for (uint8_t channel = 0; channel < NUM_INPUTS; channel++)
       _pinData[channel].edge = FALLING_EDGE;
 }
@@ -130,11 +128,12 @@ uint16_t ReceiverMega::getChannelValue(uint8_t channel) {
         _channel = NUM_INPUTS;
 
     // Read in a non blocking interrupt safe manner
+    // Possibly use ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {}
     uint16_t ppm_tmp = _pinData[_channel].lastGoodWidth;
     while( ppm_tmp != _pinData[_channel].lastGoodWidth)
         ppm_tmp = _pinData[_channel].lastGoodWidth;
     
-    return ppm_tmp
+    return ppm_tmp;
 }
 
 // Orig version
@@ -170,6 +169,3 @@ uint16_t ReceiverMega::getChannelValue(uint8_t channel) {
 //     return ppm_tmp + PPM_PRE_PULSE;    
 // }
 // ------------------------------------------------------------------------------
-
-#endif
-

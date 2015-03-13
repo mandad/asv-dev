@@ -22,7 +22,7 @@
 #ifndef _RECEIVER_MEGA_H_
 #define _RECEIVER_MEGA_H_
 
-#include "Ardunio.h"
+#include <Arduino.h>
 //#include "Receiver.h"
 
 // Channel data
@@ -39,8 +39,8 @@ class ReceiverMega
     public:
         ReceiverMega();
         uint16_t getChannelValue(uint8_t channel);
-    private:
         static void MegaPcIntISR();
+    private:
 };
 
 #endif
