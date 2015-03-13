@@ -26,8 +26,8 @@ ReceiverMega RCReceiver;
 
 //Pin definitions 
 //Positions in Receive Array
-#define radio_throttle 0  //Analog 12
-#define radio_rudder 1    //Analog 13
+#define radio_rudder 0    //Analog 12
+#define radio_throttle 1  //Analog 13
 #define radio_mode 2      //Analog 14
 #define radio_starter 4   //Analog 15
 //PWM Output
@@ -76,6 +76,8 @@ double nav_speed = 0;
 double desired_thrust = 0;
 double desired_rudder = 0;
 
+int missing_moos_comms = 0;
+
  
 void setup() 
 { 
@@ -88,14 +90,12 @@ void setup()
   
   //Serial is output to USB
   //Serial2 is comms with MOOS over Pins
-  Serial.begin(11500);
-  Serial2.begin(115200);
+  Serial.begin(115200);
+  //Serial2.begin(115200);
 } 
  
 void loop() 
 {
-  //Read Serial Input from MOOS
-  readInput();
   
   //Get latest values from RC Input
   for (byte i = 0; i < num_channels; i++)
@@ -118,10 +118,25 @@ void loop()
 //    rudder.write(pos);
     //have to delay or else it increments faster than the servos turn
     //delayMicroseconds(15000);
-
-      //Write values from MOOS to servos
-      throttle.write(map(desired_thrust, 0, 100, 0, 180));
-      rudder.write(map(desired_rudder, -90, 90, 0, 180));
+    
+      //Read Serial Input from MOOS
+      bool moos_status = readInput();
+      if (moos_status) {
+        //Write values from MOOS to servos
+        throttle.write(map(desired_thrust, 0, 100, 0, 180));
+        rudder.write(map(desired_rudder, -90, 90, 0, 180));
+        missing_moos_comms = 0;
+      } else if (missing_moos_comms < 5000) {
+         throttle.write(map(desired_thrust, 0, 100, 0, 180));
+         rudder.write(map(desired_rudder, -90, 90, 0, 180));
+      } else {
+        //Go in slow circles
+        throttle.write(15);
+        rudder.write(115);
+      }
+      if (!moos_status)
+        missing_moos_comms++;
+        
   } else {
     //Trying to eliminate jitter due to switching modes
     if (pulse[radio_mode] < 1500) {
@@ -135,8 +150,7 @@ void loop()
     }
 
     //Pass through the values from the RC Input
-    throttle.writeMicroseconds(pulse[radio_throttle]);
-    rudder.writeMicroseconds(pulse[radio_rudder]);
+    passThroughRC();
     
     //Print value to serial
     #ifdef _DEBUG
@@ -149,6 +163,12 @@ void loop()
 //  Serial.println(mode_change_count);
 
 }
+
+void passThroughRC()
+{
+    throttle.writeMicroseconds(pulse[radio_throttle]);
+    rudder.writeMicroseconds(pulse[radio_rudder]);
+}
  
 //========================
 //  MOOS Related Comms
@@ -160,13 +180,13 @@ bool readInput()
   bool ret = false;
   
   // Check if there's incoming serial data.
-  while (Serial2.available() > 0) // Need to adjust this so we don't starve out the rest of the loop if there is a lot of data to read
+  while (Serial.available() > 0) // Need to adjust this so we don't starve out the rest of the loop if there is a lot of data to read
   {
     char buf[bufLen];
     int nBytes;
 
     // Read bytes from the serial buffer
-    nBytes = Serial2.readBytesUntil(delimiter, buf, bufLen);
+    nBytes = Serial.readBytesUntil(delimiter, buf, bufLen);
 
     // Check that data was actually read
     if (nBytes > 0)
