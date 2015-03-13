@@ -4,6 +4,7 @@
 ReceiverMega RCReceiver;
 
 #define NUM_PORTS 4
+// These pins don't have any other function
 static byte output_pins[] = {6, 7, 8, 9};
 Servo output_servo[4];
 

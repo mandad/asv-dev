@@ -13,7 +13,12 @@ def main(argv):
         parameters = argv[1:]
         interface = GP9SerialInterface.GP9SerialInterface('/dev/ttyO2')
         
-        write_packet = GP9Config.PacketConstructor(data=)
+        data_enc = GP9DataFormat.data_encoder(address)
+        if data_enc is not None:
+            data_enc(data_values=parameters)
+            write_packet = GP9Config.PacketConstructor(data=data_enc)
+        else:
+            print('Invalid Register Address')
 
 if __name__ == '__main__':
     # Remove the filename argument

@@ -2,7 +2,9 @@ import struct
 
 def data_encoder(address, data_values):
     data = None
-    class_names = {0: Config0, 1: Config1, 2: Config2, 3: Config3}
+    class_names = {0: Config0, 1: Config1, 2: Config2, 3: Config3, 4: Config4, \
+        5: Config5, 6: Config6, 7: Config7, 8: Config8, 9: Config9, 10: Config10 \
+        11: Config11}
     if address in class_names.keys():
         data = class_names[address]
     return data
@@ -166,8 +168,6 @@ class Config0(DataFormat):
         raise NotImplementedError()
 
     def encode(self):
-        if len(self.data_values) != len(self.field_names):
-            raise Exception('Incorrect number of data values')
         # Note that this cannot be run multiple times, perhaps test for this?
         self.encode_values[0] = self.encode_values[0] << 4
         self.encode_values[3] = self.encode_values[3] << 4
@@ -304,7 +304,7 @@ class Config7(DataFormat):
         super(Config7, self).encode()
 
 class Config8(DataFormat):
-    """Handles the CREG_COM_RATES8 data register.
+    """Handles the CREG_FILTER_SETTINGS data register.
 
     Input Tuple
     -----------
@@ -329,6 +329,45 @@ class Config8(DataFormat):
         self.encode_values.pop(1)
         self.encode_values.pop(1)
         super(Config8, self).encode()
+
+class Config9(DataFormat):
+     """Handles the CREG_HOME_NORTH data register.
+
+    Input Tuple
+    -----------
+    Latitude of Home Position in Decimal Degrees
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('LatHome')
+        self.field_formats = ('f')
+        self.address = 9
+        super(Config9, self).__init__(raw_data, data_values, False, 0)
+
+class Config10(DataFormat):
+     """Handles the CREG_HOME_EAST data register.
+
+    Input Tuple
+    -----------
+    Longitude of Home Position in Decimal Degrees
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('LonHome')
+        self.field_formats = ('f')
+        self.address = 10
+        super(Config10, self).__init__(raw_data, data_values, False, 0)
+
+class Config11(DataFormat):
+     """Handles the CREG_HOME_UP data register.
+
+    Input Tuple
+    -----------
+    Elevation of Home Position in meters
+    """
+    def __init__(self, raw_data=None, data_values=None):
+        self.field_names = ('ElevHome')
+        self.field_formats = ('f')
+        self.address = 11
+        super(Config11, self).__init__(raw_data, data_values, False, 0)
 
 class DataXX(DataFormat):
     """Handles the XX data register

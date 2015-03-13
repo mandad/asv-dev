@@ -132,6 +132,12 @@ class DataDecoder(object):
                     data = GP9DataFormat.Config5(packet.raw_data)
                 elif packet.address == 6:
                     data = GP9DataFormat.Config6(packet.raw_data)
+                elif packet.address == 9:
+                    data = GP9DataFormat.Config9(packet.raw_data)
+                elif packet.address == 10:
+                    data = GP9DataFormat.Config10(packet.raw_data)
+                elif packet.address == 11:
+                    data = GP9DataFormat.Config11(packet.raw_data)
                 else:
                     data = None
                     print('Unrecognized packet type.')
