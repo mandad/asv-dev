@@ -29,7 +29,7 @@ ReceiverMega RCReceiver;
 #define radio_rudder 0    //Analog 12
 #define radio_throttle 1  //Analog 13
 #define radio_mode 2      //Analog 14
-#define radio_starter 4   //Analog 15
+#define radio_starter 3   //Analog 15
 //PWM Output
 #define servo_throttle 9
 #define servo_rudder 8
@@ -43,7 +43,8 @@ int pos = 1;  //servo position
 byte dir = 1;
 
 // mode change: true = interrupts disabled
-boolean mode_change = true;
+boolean mode_change = false;
+boolean first_time = true;
 byte mode_change_count = 0;
 
 //Input RC Pulses
@@ -80,17 +81,26 @@ int missing_moos_comms = 0;
 
  
 void setup() 
-{ 
+{
+  Serial.end()
+  
   throttle.attach(servo_throttle);  // attaches the servo on pin 9 to the servo object
   rudder.attach(servo_rudder);
   
   //this is the blinker LED for status
-  pinMode(13, OUTPUT);
-  digitalWrite(13, LOW);
+  pinMode(mode_status, OUTPUT);
+  digitalWrite(mode_status, LOW);
+  
+  //Make sure stuff is initialized
+  for (byte i = 0; i < num_channels; i++)
+    pulse[i] = 0;
+  mode_change = false;
+  first_time = true;
+  mode_change_count = 0;
   
   //Serial is output to USB
   //Serial2 is comms with MOOS over Pins
-  Serial.begin(115200);
+  //Serial.begin(115200);
   //Serial2.begin(115200);
 } 
  
@@ -103,11 +113,13 @@ void loop()
    
   //Check if mode switch is engaged 
   if (mode_change_count > 10 && pulse[radio_mode] < 1500) {
-    if (!mode_change) {
+    if (!mode_change | first_time) {
       digitalWrite(mode_status, HIGH);
+      Serial.begin(115200);
       mode_change = true;
+      first_time = false;
     }
-    
+  
 //    if (pos < 180 && pos > 0) {
 //      pos += dir;
 //    } else {
@@ -134,7 +146,7 @@ void loop()
         throttle.write(15);
         rudder.write(115);
       }
-      if (!moos_status)
+      if (!moos_status && missing_moos_comms < 5000)
         missing_moos_comms++;
         
   } else {
@@ -144,9 +156,11 @@ void loop()
     } else {
       mode_change_count = 0;
     }
-    if (mode_change) {
+    if (mode_change | first_time) {
       digitalWrite(mode_status, LOW);
+      Serial.end();
       mode_change = false;
+      first_time = false;
     }
 
     //Pass through the values from the RC Input
@@ -180,7 +194,7 @@ bool readInput()
   bool ret = false;
   
   // Check if there's incoming serial data.
-  while (Serial.available() > 0) // Need to adjust this so we don't starve out the rest of the loop if there is a lot of data to read
+  while (Serial.available() > 14) // Need to adjust this so we don't starve out the rest of the loop if there is a lot of data to read
   {
     char buf[bufLen];
     int nBytes;
@@ -196,6 +210,7 @@ bool readInput()
 
       buf[nBytes] = '\0';
       sBuf = String(buf);
+      
       ret = true;
 
       // Parse the received data for different key-value pairs
@@ -218,9 +233,6 @@ bool readInput()
         Serial.println(desired_rudder);
         #endif
       }
-
-      else
-        continue;
     }
   }
 
