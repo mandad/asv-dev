@@ -1,6 +1,5 @@
 /*
     Adaped from AeroQuad v3.0.1
-    www.AeroQuad.com
     Copyright (c) 2012 Ted Carancho.
     Some code ideas also from ArduCopter/APM and 
     https://github.com/lestofante/arduinoSketch/blob/master/ClassPPM/InputPin.cpp
@@ -31,10 +30,11 @@
 
 #define RISING_EDGE 1
 #define FALLING_EDGE 0
+// These are specific to the Futaba S-FHSS
 #define MINONWIDTH 920
 #define MAXONWIDTH 2100
-#define MINOFFWIDTH 12000
-#define MAXOFFWIDTH 24000
+#define MINOFFWIDTH 11530
+#define MAXOFFWIDTH 12710
 
 #define START_REGISTER 4    //the position of the first interrupt in the vector
 #define NUM_INPUTS 4
@@ -109,7 +109,7 @@ ReceiverMega::ReceiverMega() {
         PCINT20 = ADC12 = PK4
         PCINT21 = ADC13 = PK5
         PCINT22 = ADC14 = PK6
-        PCINT23 = ADC15 = PK6
+        PCINT23 = ADC15 = PK7
     */
     PCMSK2 = (1 << PCINT23) | (1 << PCINT22) | (1 << PCINT21) | (1 << PCINT20);
     // Enable interrupts on PCINT23:16 (Datasheet p112)
@@ -122,6 +122,12 @@ ReceiverMega::ReceiverMega() {
 }
 
 uint16_t ReceiverMega::getChannelValue(uint8_t channel) {
+    /*  Channel Indexes are as follows:
+        0 -> PCINT20 = Analog 12
+        1 -> PCINT21 = Analog 13
+        2 -> PCINT22 = Analog 14
+        3 -> PCINT23 = Analog 15
+    */
     // Limit channel to valid value
     uint8_t _channel = channel;
     if(_channel > NUM_INPUTS)

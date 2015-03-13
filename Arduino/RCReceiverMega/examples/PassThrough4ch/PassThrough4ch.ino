@@ -11,13 +11,16 @@ Servo output_servo[4];
 void setup() {
   for (byte i = 0; i < NUM_PORTS; i++) {
     output_servo[i].attach(output_pins[i]);
-    pinMode(output_pins[i], OUTPUT);
+    //pinMode(output_pins[i], OUTPUT);
   }
+  Serial.begin(115200);
 }
 
 void loop() {
   for (byte i = 0; i < NUM_PORTS; i++) {
-    output_servo[0].write(RCReceiver.getChannelValue(0));
+    output_servo[i].writeMicroseconds(RCReceiver.getChannelValue(i));
   }
-  
+  delayMicroseconds(10000);
+  Serial.print("ADC12: ");
+  Serial.println(RCReceiver.getChannelValue(0));
 }
