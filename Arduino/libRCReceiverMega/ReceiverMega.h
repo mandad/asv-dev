@@ -23,17 +23,24 @@
 #define _RECEIVER_MEGA_H_
 
 #include "Ardunio.h"
-#include "Receiver.h"
+//#include "Receiver.h"
 
-class Receiver_Mega
+// Channel data
+typedef struct {
+    byte edge;
+    unsigned long riseTime;
+    unsigned long fallTime;
+    unsigned int lastGoodWidth;
+} tPinTimingData;
+
+
+class ReceiverMega
 {
     public:
-        Receiver_Mega();
-        int getRawChannelValue(byte channel);
-
+        ReceiverMega();
+        uint16_t getChannelValue(uint8_t channel);
     private:
-
-
-}
+        static void MegaPcIntISR();
+};
 
 #endif

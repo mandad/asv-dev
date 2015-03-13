@@ -1,0 +1,3 @@
+ReceiverMega	KEYWORD1
+getChannelValue	KEYWORD2
+MegaPcIntISR	KEYWORD2

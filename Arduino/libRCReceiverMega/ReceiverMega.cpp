@@ -1,0 +1,176 @@
+/*
+    Adaped from AeroQuad v3.0.1
+    www.AeroQuad.com
+    Copyright (c) 2012 Ted Carancho.
+    Some code ideas also from ArduCopter/APM and 
+
+    Modified for standalone operation on an Arduino Mega
+    Damian Manda
+    12 March 2015
+   
+    This program is free software: you can redistribute it and/or modify 
+    it under the terms of the GNU General Public License as published by 
+    the Free Software Foundation, either version 3 of the License, or 
+    (at your option) any later version. 
+    This program is distributed in the hope that it will be useful, 
+    but WITHOUT ANY WARRANTY; without even the implied warranty of 
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
+    GNU General Public License for more details. 
+    You should have received a copy of the GNU General Public License 
+    along with this program. If not, see <http://www.gnu.org/licenses/>.
+
+    p399 Datasheet - Register summary 
+    p69 - Input/Output Config
+    p99 - Input Pin registers
+*/
+
+#define RISING_EDGE 1
+#define FALLING_EDGE 0
+#define MINONWIDTH 950
+#define MAXONWIDTH 2075
+#define MINOFFWIDTH 12000
+#define MAXOFFWIDTH 24000
+
+#define START_REGISTER 4    //the position of the first interrupt in the vector
+#define NUM_INPUTS 4
+
+//#include "pins_arduino.h"
+//#include <AQMath.h>
+//#include "GlobalDefined.h"
+
+volatile uint8_t *port_to_pcmask[] = {
+    &PCMSK0,
+    &PCMSK1,
+    &PCMSK2
+};
+volatile static tPinTimingData _pinData[NUM_INPUTS];
+
+// I think this was made a vector to enable using all interrupts if needed
+// Currently only uses index zero
+volatile static uint8_t PCintLast[3];
+
+
+static void RecieverMega::MegaPcIntISR() {
+    uint8_t bit;
+    uint8_t curr;
+    uint8_t changed;
+    uint8_t pin;
+    uint32_t currentTime;
+    uint32_t delTime;
+
+    //http://garretlab.web.fc2.com/en/arduino/inside/arduino/Arduino.h/portInputRegister.html
+    //curr = *portInputRegister(11);
+    curr = PINK
+    changed = curr ^ PCintLast[0];
+    PCintLast[0] = curr;
+
+    // changed is pins that have changed. screen out non pcint pins.
+    if ((changed &= PCMSK2) == 0) {
+        return;
+    }
+
+    currentTime = micros();
+
+    // changed is pcint pins that have changed.
+    for (uint8_t i = START_REGISTER; i < START_REGISTER + NUM_INPUTS; i++) {
+        bit = 0x01 << i;
+        if (bit & changed) {
+            pin = i - START_REGISTER;
+            // for each pin changed, record time of change
+            if (bit & curr) {
+                delTime = currentTime - _pinData[pin].fallTime;
+                _pinData[pin].riseTime = currentTime;
+                if ((delTime >= MINOFFWIDTH) && (delTime <= MAXOFFWIDTH))
+                    _pinData[pin].edge = RISING_EDGE;
+                else
+                    _pinData[pin].edge = FALLING_EDGE; // invalid rising edge detected
+            }
+            else {
+                delTime = currentTime - _pinData[pin].riseTime;
+                _pinData[pin].fallTime = currentTime;
+                if ((delTime >= MINONWIDTH) && (delTime <= MAXONWIDTH) && (_pinData[pin].edge == RISING_EDGE)) {
+                    _pinData[pin].lastGoodWidth = delTime;
+                    _pinData[pin].edge = FALLING_EDGE;
+                }
+            }
+        }
+    }
+}
+
+SIGNAL(PCINT2_vect) {
+    Reciever_Mega::MegaPcIntISR();
+}
+
+ReceiverMega::ReceiverMega() {
+
+    //initializeReceiverParam(nbChannel);
+
+    // Set data direction (input)
+    DDRK = 0;
+    // Set all data registers (pull up) to off
+    PORTK = 0;
+    //PCMSK2 |=(1<<lastReceiverChannel)-1;
+    /* Handle 4 channels
+        PCINT20 = ADC12 = PK4
+        PCINT21 = ADC13 = PK5
+        PCINT22 = ADC14 = PK6
+        PCINT23 = ADC15 = PK6
+    */
+    PCMSK2 = (1 << PCINT23) | (1 << PCINT22) | (1 << PCINT21) | (1 << PCINT20);
+    // Enable interrupts on PCINT23:16 (Datasheet p112)
+    PCICR |= 0x1 << PCIE2;
+
+    for (uint8_t channel = 0; channel < NUM_INPUTS; channel++)
+      _pinData[channel].edge = FALLING_EDGE;
+}
+
+uint16_t RecieverMega::getChannelValue(uint8_t channel) {
+    // Limit channel to valid value
+    uint8_t _channel = channel;
+    if(_channel > NUM_INPUTS)
+        _channel = NUM_INPUTS;
+
+    // Read in a non blocking interrupt safe manner
+    uint16_t ppm_tmp = _pinData[_channel].lastGoodWidth;
+    while( ppm_tmp != _pinData[_channel].lastGoodWidth)
+        ppm_tmp = _pinData[_channel].lastGoodWidth;
+    
+    return ppm_tmp
+}
+
+// Orig version
+// uint16_t getChannelValue(uint8_t channel) {
+//     uint8_t pin = receiverPin[channel];
+//     uint8_t oldSREG = SREG;
+//     cli();
+//     // Get receiver value read by pin change interrupt handler
+//     uint16_t receiverRawValue = _pinData[pin].lastGoodWidth;
+//     SREG = oldSREG;
+    
+//     return receiverRawValue;
+// }
+
+// ------------------------------------------------------------------------------
+// PPM READ - INTERRUPT SAFE PPM SERVO CHANNEL READ
+// ------------------------------------------------------------------------------
+uint16_t ppm_read_channel( uint8_t channel )
+{
+    // Limit channel to valid value
+    uint8_t _channel = channel;
+    if( _channel == 0 ) _channel = 1;
+    if( _channel > SERVO_CHANNELS ) _channel = SERVO_CHANNELS;
+
+    // Calculate ppm[..] position
+    uint8_t ppm_index = ( _channel << 1 ) + 1;
+    
+    // Read ppm[..] in a non blocking interrupt safe manner
+    uint16_t ppm_tmp = ppm[ ppm_index ];
+    while( ppm_tmp != ppm[ ppm_index ] ) ppm_tmp = ppm[ ppm_index ];
+
+    // Return as normal servo value
+    return ppm_tmp + PPM_PRE_PULSE;    
+}
+// ------------------------------------------------------------------------------
+
+#endif
+
