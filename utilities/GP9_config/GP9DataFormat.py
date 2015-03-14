@@ -3,7 +3,7 @@ import struct
 def data_encoder(address, data_values):
     data = None
     class_names = {0: Config0, 1: Config1, 2: Config2, 3: Config3, 4: Config4, \
-        5: Config5, 6: Config6, 7: Config7, 8: Config8, 9: Config9, 10: Config10 \
+        5: Config5, 6: Config6, 7: Config7, 8: Config8, 9: Config9, 10: Config10, \
         11: Config11}
     if address in class_names.keys():
         data = class_names[address]
@@ -331,7 +331,7 @@ class Config8(DataFormat):
         super(Config8, self).encode()
 
 class Config9(DataFormat):
-     """Handles the CREG_HOME_NORTH data register.
+    """Handles the CREG_HOME_NORTH data register.
 
     Input Tuple
     -----------
@@ -344,7 +344,7 @@ class Config9(DataFormat):
         super(Config9, self).__init__(raw_data, data_values, False, 0)
 
 class Config10(DataFormat):
-     """Handles the CREG_HOME_EAST data register.
+    """Handles the CREG_HOME_EAST data register.
 
     Input Tuple
     -----------
@@ -357,7 +357,7 @@ class Config10(DataFormat):
         super(Config10, self).__init__(raw_data, data_values, False, 0)
 
 class Config11(DataFormat):
-     """Handles the CREG_HOME_UP data register.
+    """Handles the CREG_HOME_UP data register.
 
     Input Tuple
     -----------

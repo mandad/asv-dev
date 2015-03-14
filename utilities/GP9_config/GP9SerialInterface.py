@@ -6,7 +6,7 @@ class GP9SerialInterface(object):
     """Reads data from a CHRobotics GP9
     Has ability to read continuously or one packet at a time
     """
-    def __init__(self, serial_port='/dev/ttyO2', baudrate=115200):
+    def __init__(self, serial_port='/dev/ttyO1', baudrate=115200):
         super(GP9SerialInterface, self).__init__()
         self.serial_port = serial_port
         self.baudrate = baudrate
