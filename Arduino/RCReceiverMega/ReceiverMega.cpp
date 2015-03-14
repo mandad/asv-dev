@@ -117,8 +117,11 @@ ReceiverMega::ReceiverMega() {
 
     // Initialize state variables
     PCintLast[0] = 0;
-    for (uint8_t channel = 0; channel < NUM_INPUTS; channel++)
+    for (uint8_t channel = 0; channel < NUM_INPUTS; channel++) {
       _pinData[channel].edge = FALLING_EDGE;
+      //Initialize to larger signal that we will ever get (max uint16)
+      _pinData[channel].lastGoodWidth = 65535;
+  }
 }
 
 uint16_t ReceiverMega::getChannelValue(uint8_t channel) {

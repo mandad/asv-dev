@@ -46,6 +46,7 @@ byte dir = 1;
 boolean mode_change = false;
 boolean first_time = true;
 byte mode_change_count = 0;
+unsigned int flash_count = 0;
 
 //Input RC Pulses
 unsigned int pulse[num_channels];
@@ -82,7 +83,7 @@ int missing_moos_comms = 0;
  
 void setup() 
 {
-  Serial.end()
+  Serial.end();
   
   throttle.attach(servo_throttle);  // attaches the servo on pin 9 to the servo object
   rudder.attach(servo_rudder);
@@ -149,6 +150,19 @@ void loop()
       if (!moos_status && missing_moos_comms < 5000)
         missing_moos_comms++;
         
+  } else if (pulse[radio_mode] == 65535) {
+    //No RC Radio contact, center everything
+    throttle.write(0);
+    rudder.write(90);
+    
+    //Flash the LED to indicate this status
+    if (flash_count++ == 0) {
+      digitalWrite(mode_status, LOW);
+    } else if (flash_count == 1000) {
+      digitalWrite(mode_status, HIGH);
+    } else if (flash_count > 2000) {
+      flash_count = 0;
+    }   
   } else {
     //Trying to eliminate jitter due to switching modes
     if (pulse[radio_mode] < 1500) {
