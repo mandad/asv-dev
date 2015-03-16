@@ -1,0 +1,44 @@
+#!/bin/sh
+#
+#
+
+### BEGIN INIT INFO
+# Provides:          wlan0-restart
+# Required-Start:    $network
+# Required-Stop:     $network
+# Should-Start:
+# Should-Stop:
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Restarts wlan0 interface
+# Description:       Restarts wlan0 interface to fix problem with static address in WiFi AP
+# X-Start-Before:    hostapd isc-dhcp-server
+### END INIT INFO
+
+PATH=/sbin:/usr/sbin:$PATH
+
+do_start() {
+  ifdown wlan0
+  ifup wlan0
+  ifconfig wlan0 192.168.42.1
+}
+
+case "$1" in
+  start)
+    log_daemon_msg "Restarting wlan0" "wlan0-restart"
+    do_start
+    ;;
+  restart|reload|force-reload)
+    echo "Error: argument '$1' not supported" >&2
+    exit 3
+    ;;
+  stop)
+    ;;
+  status)
+    ;;
+  *)
+    echo "Usage: $0 start|stop" >&2
+    exit 3
+    ;;
+esac
+exit 0
