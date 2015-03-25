@@ -156,25 +156,3 @@ uint16_t ReceiverMega::getChannelValue(uint8_t channel) {
     
 //     return receiverRawValue;
 // }
-
-// ------------------------------------------------------------------------------
-// PPM READ - INTERRUPT SAFE PPM SERVO CHANNEL READ
-// ------------------------------------------------------------------------------
-// uint16_t ppm_read_channel( uint8_t channel )
-// {
-//     // Limit channel to valid value
-//     uint8_t _channel = channel;
-//     if( _channel == 0 ) _channel = 1;
-//     if( _channel > SERVO_CHANNELS ) _channel = SERVO_CHANNELS;
-
-//     // Calculate ppm[..] position
-//     uint8_t ppm_index = ( _channel << 1 ) + 1;
-    
-//     // Read ppm[..] in a non blocking interrupt safe manner
-//     uint16_t ppm_tmp = ppm[ ppm_index ];
-//     while( ppm_tmp != ppm[ ppm_index ] ) ppm_tmp = ppm[ ppm_index ];
-
-//     // Return as normal servo value
-//     return ppm_tmp + PPM_PRE_PULSE;    
-// }
-// ------------------------------------------------------------------------------
