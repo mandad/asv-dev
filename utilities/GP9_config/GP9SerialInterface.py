@@ -45,11 +45,17 @@ class GP9SerialInterface(object):
 
         if this_packet.has_data:
             data = self.ser.read(this_packet.data_length)
-        this_packet.set_data(data)
+            this_packet.set_data(data)
         checksum = self.ser.read(2)
         this_packet.set_checksum(checksum)
 
         return this_packet
+
+    def read_specific_packet(self, address):
+        read_packet = read_one_packet()
+        while read_packet.address != address:
+            read_packet = read_one_packet()
+        return read_packet
 
     def read_loop(self):
         counter = 0

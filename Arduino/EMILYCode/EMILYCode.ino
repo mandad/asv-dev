@@ -206,9 +206,12 @@ void passThroughRC()
 bool readInput()
 {
   bool ret = false;
+  bool got_rudder = false;
+  bool got_thrust = false;
   
   // Check if there's incoming serial data.
-  while (Serial.available() > 14) // Need to adjust this so we don't starve out the rest of the loop if there is a lot of data to read
+  // Need to adjust this so we don't starve out the rest of the loop if there is a lot of data to read
+  while (Serial.available() > 14 && (!got_thrust || !got_rudder))
   {
     char buf[bufLen];
     int nBytes;
@@ -232,6 +235,7 @@ bool readInput()
       { // Got speed value
         //writeOutput("DEBUG", buf);
         desired_thrust = val;
+        got_thrust = true;
         #ifdef _DEBUG
         Serial.print("Throttle = ");
         Serial.println(desired_thrust);
@@ -242,6 +246,7 @@ bool readInput()
       { // Got heading value
         //writeOutput("DEBUG", buf);
         desired_rudder = val;
+        got_rudder = true;
         #ifdef _DEBUG
         Serial.print("Rudder = ");
         Serial.println(desired_rudder);
@@ -249,7 +254,10 @@ bool readInput()
       }
     }
   }
-
+  
+  //clear the incoming buffer
+  Serial.flushRX();
+  
   return ret;
 } /* readInput */
 
