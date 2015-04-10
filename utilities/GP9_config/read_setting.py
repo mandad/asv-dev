@@ -12,7 +12,7 @@ def main(argv):
     """
     if len(argv) > 0:
         address = int(argv[0])
-        interface = GP9SerialInterface.GP9SerialInterface('/dev/ttyO2')
+        interface = GP9SerialInterface.GP9SerialInterface('/dev/ttyO1')
         write_packet = GP9Config.PacketConstructor(read=address)
         if write_packet.ready_to_send:
             interface.open_port()

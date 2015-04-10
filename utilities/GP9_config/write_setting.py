@@ -14,7 +14,7 @@ def main(argv):
     if len(argv) > 1:
         address = int(argv[0])
         parameters = argv[1:]
-        interface = GP9SerialInterface.GP9SerialInterface('/dev/ttyO2')
+        interface = GP9SerialInterface.GP9SerialInterface('/dev/ttyO1')
         
         data_enc = GP9DataFormat.data_encoder(address)
         if data_enc is not None:

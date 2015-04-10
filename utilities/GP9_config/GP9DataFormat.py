@@ -359,7 +359,7 @@ class Config10(DataFormat):
         super(Config10, self).__init__(raw_data, data_values, False, 0)
 
 class Config11(DataFormat):
-     """Handles the CREG_HOME_UP data register.
+    """Handles the CREG_HOME_UP data register.
 
     Input Tuple
     -----------
