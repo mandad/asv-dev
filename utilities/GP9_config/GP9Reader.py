@@ -132,6 +132,10 @@ class DataDecoder(object):
                     data = GP9DataFormat.Config5(packet.raw_data)
                 elif packet.address == 6:
                     data = GP9DataFormat.Config6(packet.raw_data)
+                elif packet.address == 7:
+                    data = GP9DataFormat.Config7(packet.raw_data)
+                elif packet.address == 8:
+                    data = GP9DataFormat.Config8(packet.raw_data)
                 elif packet.address == 9:
                     data = GP9DataFormat.Config9(packet.raw_data)
                 elif packet.address == 10:

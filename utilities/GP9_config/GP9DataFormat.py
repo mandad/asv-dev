@@ -1,9 +1,10 @@
 import struct
+import pdb
 
 def data_encoder(address, data_values):
     data = None
     class_names = {0: Config0, 1: Config1, 2: Config2, 3: Config3, 4: Config4, \
-        5: Config5, 6: Config6, 7: Config7, 8: Config8, 9: Config9, 10: Config10 \
+        5: Config5, 6: Config6, 7: Config7, 8: Config8, 9: Config9, 10: Config10, \
         11: Config11}
     if address in class_names.keys():
         data = class_names[address]
@@ -72,8 +73,9 @@ class DataFormat(object):
         if self.data != None:
             # Note that this is not the same as all the self.field_names because
             # blank fields may have been removed
+            pdb.set_trace()
             for field in self.data:
-                 print('{0}: {1:.2f}'.format(field, self.data[field]))
+                 print('{0s}: {1:.2f}'.format(field, self.data[field]))
         else:
             print('No Decoded Data')
 
@@ -331,7 +333,7 @@ class Config8(DataFormat):
         super(Config8, self).encode()
 
 class Config9(DataFormat):
-     """Handles the CREG_HOME_NORTH data register.
+    """Handles the CREG_HOME_NORTH data register.
 
     Input Tuple
     -----------
@@ -344,7 +346,7 @@ class Config9(DataFormat):
         super(Config9, self).__init__(raw_data, data_values, False, 0)
 
 class Config10(DataFormat):
-     """Handles the CREG_HOME_EAST data register.
+    """Handles the CREG_HOME_EAST data register.
 
     Input Tuple
     -----------
