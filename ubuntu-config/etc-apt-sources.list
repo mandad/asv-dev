@@ -1,0 +1,14 @@
+deb http://ports.ubuntu.com/ubuntu-ports/ trusty main universe multiverse restricted
+#deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty main universe multiverse
+
+deb http://ports.ubuntu.com/ubuntu-ports/ trusty-updates main universe multiverse restricted
+#deb-src http://ports.ubuntu.com/ubuntu-ports/ trusty-updates main universe multiverse
+
+#Kernel source (repos.rcn-ee.net) : https://github.com/RobertCNelson/linux-stable-rcn-ee
+#
+#git clone https://github.com/RobertCNelson/linux-stable-rcn-ee
+#cd ./linux-stable-rcn-ee
+#git fetch --tags
+#git checkout `uname -r` -b tmp
+#
+deb [arch=armhf] http://repos.rcn-ee.net/ubuntu/ trusty main universe multiverse restricted
