@@ -80,13 +80,30 @@ double desired_rudder = 0;
 
 int missing_moos_comms = 0;
 
- 
+//---------------------------------
+// Definitions for Physical System
+//---------------------------------
+#define RUDDER_FULL_RIGHT 1000
+#define RUDDER_FULL_LEFT  2000
+#define RUDDER_AMIDSHIPS  1500
+
+#define THROTTLE_OFF      1000
+#define THROTTLE_LOW_ON   1200    //Lowest with engine still running
+#define THROTTLE_MAX      2000
+
+#define starter_signal    22
+#define inhibit_signal    23
+
 void setup() 
 {
   Serial.end();
   
   throttle.attach(servo_throttle);  // attaches the servo on pin 9 to the servo object
   rudder.attach(servo_rudder);
+  pinMode(starter_signal, OUTPUT);
+  digitalWrite(starter_signal, LOW);
+  pinMode(inhibit_signal, OUTPUT);
+  digitalWrite(inhibit_signal, HIGH);  //Require an RC signal before allowing start
   
   //this is the blinker LED for status
   pinMode(mode_status, OUTPUT);
@@ -120,32 +137,23 @@ void loop()
       mode_change = true;
       first_time = false;
     }
-  
-//    if (pos < 180 && pos > 0) {
-//      pos += dir;
-//    } else {
-//      pos -= dir;
-//      dir = dir * -1;
-//    }
-//    throttle.write(pos);
-//    rudder.write(pos);
-    //have to delay or else it increments faster than the servos turn
-    //delayMicroseconds(15000);
+    digitalWrite(starter_signal, LOW);
+    digitalWrite(inhibit_signal, LOW);
     
       //Read Serial Input from MOOS
       bool moos_status = readInput();
       if (moos_status) {
         //Write values from MOOS to servos
-        throttle.write(map(desired_thrust, 0, 100, 0, 180));
-        rudder.write(map(desired_rudder, -90, 90, 0, 180));
+        throttle.writeMicroseconds(scaleThrottle(desired_thrust));
+        rudder.writeMicroseconds(scaleRudder(desired_rudder));
         missing_moos_comms = 0;
       } else if (missing_moos_comms < 5000) {
-         throttle.write(map(desired_thrust, 0, 100, 0, 180));
-         rudder.write(map(desired_rudder, -90, 90, 0, 180));
+         throttle.writeMicroseconds(scaleThrottle(desired_thrust));
+         rudder.writeMicroseconds(scaleRudder(desired_rudder));
       } else {
         //Go in slow circles
-        throttle.write(15);
-        rudder.write(115);
+        throttle.writeMicroseconds(THROTTLE_LOW_ON);
+        rudder.writeMicroseconds(RUDDER_AMIDSHIPS);
       }
       if (!moos_status && missing_moos_comms < 5000)
         missing_moos_comms++;
@@ -154,6 +162,8 @@ void loop()
     //No RC Radio contact, center everything
     throttle.write(0);
     rudder.write(90);
+    digitalWrite(starter_signal, LOW);
+    digitalWrite(inhibit_signal, HIGH);
     
     //Flash the LED to indicate this status
     if (flash_count++ == 0) {
@@ -176,9 +186,11 @@ void loop()
       mode_change = false;
       first_time = false;
     }
-
+    
     //Pass through the values from the RC Input
     passThroughRC();
+    
+    manageEngine();
     
     //Print value to serial
     #ifdef _DEBUG
@@ -192,10 +204,42 @@ void loop()
 
 }
 
+void manageEngine() {
+      //TODO: test these limits
+    if (pulse[radio_starter]  > 1850) {
+      //Run the starter motor
+      digitalWrite(starter_signal, HIGH);
+      digitalWrite(inhibit_signal, LOW);
+    } else if (pulse[radio_starter] > 1200) {
+      //Don't run starter but don't kill either (normal ops)
+      digitalWrite(starter_signal, LOW);
+      digitalWrite(inhibit_signal, LOW);
+    } else {
+      //Don't run starter, kill the engine
+      digitalWrite(starter_signal, LOW);
+      digitalWrite(inhibit_signal, HIGH);
+      // Note that this will override pass through value
+      throttle.writeMicroseconds(THROTTLE_OFF);
+    }
+}
+
 void passThroughRC()
 {
-    throttle.writeMicroseconds(pulse[radio_throttle]);
-    rudder.writeMicroseconds(pulse[radio_rudder]);
+    throttle.writeMicroseconds(scaleThrottle(map(pulse[radio_throttle], 1900, 1100, 0, 100)));
+    rudder.writeMicroseconds(scaleRudder(map(pulse[radio_rudder], 1100, 1900, -45, 45)));
+}
+
+unsigned int scaleThrottle(unsigned int input) 
+{
+  unsigned int th_out = map(input, 0, 100, THROTTLE_LOW_ON, THROTTLE_MAX);
+  return constrain(th_out, THROTTLE_LOW_ON, THROTTLE_MAX);
+}
+ 
+unsigned int scaleRudder(unsigned int input)
+{
+  // May need to be more complex if not linear
+  unsigned int rud_out =  map(input, -45, 45, RUDDER_FULL_LEFT, RUDDER_FULL_RIGHT);
+  return constrain(rud_out, RUDDER_FULL_LEFT, RUDDER_FULL_RIGHT);
 }
  
 //========================
