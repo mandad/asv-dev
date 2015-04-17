@@ -83,13 +83,13 @@ int missing_moos_comms = 0;
 //---------------------------------
 // Definitions for Physical System
 //---------------------------------
-#define RUDDER_FULL_RIGHT 1000
-#define RUDDER_FULL_LEFT  2000
-#define RUDDER_AMIDSHIPS  1500
+#define RUDDER_FULL_RIGHT 1996
+#define RUDDER_FULL_LEFT  1036
+#define RUDDER_AMIDSHIPS  1495
 
-#define THROTTLE_OFF      1000
+#define THROTTLE_OFF      1124
 #define THROTTLE_LOW_ON   1200    //Lowest with engine still running
-#define THROTTLE_MAX      2000
+#define THROTTLE_MAX      1584
 
 #define starter_signal    22
 #define inhibit_signal    23
@@ -144,11 +144,11 @@ void loop()
       bool moos_status = readInput();
       if (moos_status) {
         //Write values from MOOS to servos
-        throttle.writeMicroseconds(scaleThrottle(desired_thrust));
+        throttle.writeMicroseconds(scaleThrottle(map(desired_thrust, 0, 10, 0, 100)));
         rudder.writeMicroseconds(scaleRudder(desired_rudder));
         missing_moos_comms = 0;
       } else if (missing_moos_comms < 5000) {
-         throttle.writeMicroseconds(scaleThrottle(desired_thrust));
+         throttle.writeMicroseconds(scaleThrottle(map(desired_thrust, 0, 10, 0, 100)));
          rudder.writeMicroseconds(scaleRudder(desired_rudder));
       } else {
         //Go in slow circles
@@ -187,8 +187,7 @@ void loop()
       first_time = false;
     }
     
-    //Pass through the values from the RC Input
-    passThroughRC();
+
     
     manageEngine();
     
@@ -210,23 +209,27 @@ void manageEngine() {
       //Run the starter motor
       digitalWrite(starter_signal, HIGH);
       digitalWrite(inhibit_signal, LOW);
+      //Pass through the values from the RC Input
+      passThroughRC();
     } else if (pulse[radio_starter] > 1200) {
       //Don't run starter but don't kill either (normal ops)
       digitalWrite(starter_signal, LOW);
       digitalWrite(inhibit_signal, LOW);
+      passThroughRC();
     } else {
       //Don't run starter, kill the engine
       digitalWrite(starter_signal, LOW);
       digitalWrite(inhibit_signal, HIGH);
       // Note that this will override pass through value
       throttle.writeMicroseconds(THROTTLE_OFF);
+      rudder.writeMicroseconds(RUDDER_AMIDSHIPS);
     }
 }
 
 void passThroughRC()
 {
-    throttle.writeMicroseconds(scaleThrottle(map(pulse[radio_throttle], 1900, 1100, 0, 100)));
-    rudder.writeMicroseconds(scaleRudder(map(pulse[radio_rudder], 1100, 1900, -45, 45)));
+    throttle.writeMicroseconds(scaleThrottle(map(pulse[radio_throttle], 900, 2100, 0, 100)));
+    rudder.writeMicroseconds(scaleRudder(map(pulse[radio_rudder], 900, 2100, -45, 45)));
 }
 
 unsigned int scaleThrottle(unsigned int input) 
@@ -235,10 +238,16 @@ unsigned int scaleThrottle(unsigned int input)
   return constrain(th_out, THROTTLE_LOW_ON, THROTTLE_MAX);
 }
  
-unsigned int scaleRudder(unsigned int input)
+unsigned int scaleRudder(signed int input)
 {
-  // May need to be more complex if not linear
-  unsigned int rud_out =  map(input, -45, 45, RUDDER_FULL_LEFT, RUDDER_FULL_RIGHT);
+  unsigned int rud_out;
+  //Account for possible non-centered middle servo value
+  if (input < 0)
+  {
+    rud_out =  map(input, -45, 0, RUDDER_FULL_LEFT, RUDDER_AMIDSHIPS);
+  } else {
+    rud_out = map(input, 0, 45, RUDDER_AMIDSHIPS, RUDDER_FULL_RIGHT);
+  }
   return constrain(rud_out, RUDDER_FULL_LEFT, RUDDER_FULL_RIGHT);
 }
  
@@ -300,7 +309,7 @@ bool readInput()
   }
   
   //clear the incoming buffer
-  Serial.flushRX();
+  //Serial.flushRX();
   
   return ret;
 } /* readInput */
