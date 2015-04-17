@@ -64,6 +64,7 @@ class DataFormat(object):
         for bit_format in self.field_formats:
             concat_format = concat_format + bit_format
         try:
+            pdb.set_trace()
             decoded_data = list(struct.unpack(concat_format, self.raw_data))
             self.data = dict(zip(self.field_names, decoded_data))
         except Exception, e:
@@ -75,7 +76,7 @@ class DataFormat(object):
             # blank fields may have been removed
             pdb.set_trace()
             for field in self.data:
-                 print('{0s}: {1:.2f}'.format(field, self.data[field]))
+                 print('{0}: {1:.2f}'.format(field, self.data[field]))
         else:
             print('No Decoded Data')
 
@@ -106,6 +107,7 @@ class Data120(DataFormat):
         #decoded_data.pop(3)
         # Convert the angles to degrees
         for field in self.field_names[0:3]:
+            pdb.set_trace()
             self.data[field] = self.convert_to_rad(self.data[field])
 
         # Remove unused field
@@ -340,7 +342,7 @@ class Config9(DataFormat):
     Latitude of Home Position in Decimal Degrees
     """
     def __init__(self, raw_data=None, data_values=None):
-        self.field_names = ('LatHome')
+        self.field_names = ('LatHome',)
         self.field_formats = ('f')
         self.address = 9
         super(Config9, self).__init__(raw_data, data_values, False, 0)
@@ -353,7 +355,7 @@ class Config10(DataFormat):
     Longitude of Home Position in Decimal Degrees
     """
     def __init__(self, raw_data=None, data_values=None):
-        self.field_names = ('LonHome')
+        self.field_names = ('LonHome',)
         self.field_formats = ('f')
         self.address = 10
         super(Config10, self).__init__(raw_data, data_values, False, 0)
@@ -366,7 +368,7 @@ class Config11(DataFormat):
     Elevation of Home Position in meters
     """
     def __init__(self, raw_data=None, data_values=None):
-        self.field_names = ('ElevHome')
+        self.field_names = ('ElevHome',)
         self.field_formats = ('f')
         self.address = 11
         super(Config11, self).__init__(raw_data, data_values, False, 0)
