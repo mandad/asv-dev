@@ -88,7 +88,7 @@ int missing_moos_comms = 0;
 #define RUDDER_AMIDSHIPS  1495
 
 #define THROTTLE_OFF      1124
-#define THROTTLE_LOW_ON   1200    //Lowest with engine still running
+#define THROTTLE_LOW_ON   1150    //Lowest with engine still running
 #define THROTTLE_MAX      1584
 
 #define starter_signal    22
@@ -103,7 +103,7 @@ void setup()
   pinMode(starter_signal, OUTPUT);
   digitalWrite(starter_signal, LOW);
   pinMode(inhibit_signal, OUTPUT);
-  digitalWrite(inhibit_signal, HIGH);  //Require an RC signal before allowing start
+  digitalWrite(inhibit_signal, LOW);  //Require an RC signal before allowing start
   
   //this is the blinker LED for status
   pinMode(mode_status, OUTPUT);
@@ -131,6 +131,7 @@ void loop()
    
   //Check if mode switch is engaged 
   if (mode_change_count > 10 && pulse[radio_mode] < 1500) {
+    //This is the MOOS Command mode
     if (!mode_change | first_time) {
       digitalWrite(mode_status, HIGH);
       Serial.begin(115200);
@@ -138,7 +139,7 @@ void loop()
       first_time = false;
     }
     digitalWrite(starter_signal, LOW);
-    digitalWrite(inhibit_signal, LOW);
+    digitalWrite(inhibit_signal, HIGH);
     
       //Read Serial Input from MOOS
       bool moos_status = readInput();
@@ -163,7 +164,7 @@ void loop()
     throttle.write(0);
     rudder.write(90);
     digitalWrite(starter_signal, LOW);
-    digitalWrite(inhibit_signal, HIGH);
+    digitalWrite(inhibit_signal, LOW);
     
     //Flash the LED to indicate this status
     if (flash_count++ == 0) {
@@ -208,18 +209,18 @@ void manageEngine() {
     if (pulse[radio_starter]  > 1850) {
       //Run the starter motor
       digitalWrite(starter_signal, HIGH);
-      digitalWrite(inhibit_signal, LOW);
+      digitalWrite(inhibit_signal, HIGH);
       //Pass through the values from the RC Input
       passThroughRC();
     } else if (pulse[radio_starter] > 1200) {
       //Don't run starter but don't kill either (normal ops)
       digitalWrite(starter_signal, LOW);
-      digitalWrite(inhibit_signal, LOW);
+      digitalWrite(inhibit_signal, HIGH);
       passThroughRC();
     } else {
       //Don't run starter, kill the engine
       digitalWrite(starter_signal, LOW);
-      digitalWrite(inhibit_signal, HIGH);
+      digitalWrite(inhibit_signal, LOW);
       // Note that this will override pass through value
       throttle.writeMicroseconds(THROTTLE_OFF);
       rudder.writeMicroseconds(RUDDER_AMIDSHIPS);
