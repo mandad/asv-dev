@@ -4,12 +4,100 @@
 		"selected_items":
 		[
 			[
-				"ba",
-				"batch_length"
+				"decod",
+				"decoded_resp"
+			],
+			[
+				"read",
+				"read_packet"
+			],
+			[
+				"wri",
+				"write_packet"
+			],
+			[
+				"class",
+				"class_names"
+			],
+			[
+				"cla",
+				"class_names"
+			],
+			[
+				"Confi",
+				"Config1"
+			],
+			[
+				"data",
+				"data_values"
+			],
+			[
+				"GP",
+				"GP9Reader"
+			],
+			[
+				"rad",
+				"read_packet"
+			],
+			[
+				"pack",
+				"packet"
+			],
+			[
+				"GP9",
+				"GP9SerialInterface"
+			],
+			[
+				"gen",
+				"gen_read_request"
+			],
+			[
+				"Dat",
+				"data_format"
+			],
+			[
+				"packe",
+				"packet_start"
+			],
+			[
+				"en",
+				"encode_values"
+			],
+			[
+				"da",
+				"data_values"
+			],
+			[
+				"bat",
+				"batch_len"
+			],
+			[
+				"is",
+				"is_batch"
 			],
 			[
 				"batch",
-				"batch_length"
+				"batch_len"
+			],
+			[
+				"ba",
+				"batch_len"
+			],
+			[
+				"enc",
+				"encode_values"
+			],
+			[
+				"enco",
+				"encode_values"
+			],
+			[
+				"Not",
+				"NotImplementedError"
+			],
+			[
+				"de",
+				"defs	Method"
 			],
 			[
 				"two",
@@ -24,24 +112,12 @@
 				"Data86"
 			],
 			[
-				"data",
-				"data_values"
-			],
-			[
 				"port",
 				"port_open"
 			],
 			[
-				"GP9",
-				"GP9_packet"
-			],
-			[
 				"che",
 				"checksum_good"
-			],
-			[
-				"decod",
-				"decoded_data"
 			],
 			[
 				"try",
@@ -76,24 +152,12 @@
 				"set_checksum"
 			],
 			[
-				"read",
-				"read_one_packet"
-			],
-			[
 				"ch",
 				"checksum_good"
 			],
 			[
 				"header",
 				"header_bytes"
-			],
-			[
-				"GP",
-				"GP9_packet"
-			],
-			[
-				"bat",
-				"is_batch"
 			],
 			[
 				"MOOS",
@@ -104,10 +168,26 @@
 	"buffers":
 	[
 		{
+			"file": "read_setting.py",
+			"settings":
+			{
+				"buffer_size": 1144,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "write_setting.py",
+			"settings":
+			{
+				"buffer_size": 1211,
+				"line_ending": "Unix"
+			}
+		},
+		{
 			"file": "GP9SerialInterface.py",
 			"settings":
 			{
-				"buffer_size": 2399,
+				"buffer_size": 2894,
 				"line_ending": "Unix"
 			}
 		},
@@ -115,7 +195,7 @@
 			"file": "GP9Reader.py",
 			"settings":
 			{
-				"buffer_size": 3587,
+				"buffer_size": 5250,
 				"line_ending": "Unix"
 			}
 		},
@@ -123,7 +203,7 @@
 			"file": "GP9Config.py",
 			"settings":
 			{
-				"buffer_size": 81,
+				"buffer_size": 1737,
 				"line_ending": "Unix"
 			}
 		},
@@ -131,24 +211,20 @@
 			"file": "GP9DataFormat.py",
 			"settings":
 			{
-				"buffer_size": 3683,
+				"buffer_size": 12326,
 				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "GP9_test.py",
-			"settings":
-			{
-				"buffer_size": 961,
-				"line_ending": "Unix",
-				"name": "import struct"
 			}
 		}
 	],
 	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
 	"command_palette":
 	{
 		"height": 247.0,
+		"last_filter": ":w",
 		"selected_items":
 		[
 			[
@@ -176,6 +252,9 @@
 	},
 	"file_history":
 	[
+		"/Users/damian/Documents/Code/moosdev/python-moos/pyMOOS.cpp",
+		"/Users/damian/Documents/Code/asv-dev/utilities/GP9_config/write_setting.py",
+		"/Users/damian/Documents/Code/asv-dev/utilities/GP9_config/GP9_test.py",
 		"/Users/damian/Documents/Code/asv-dev/utilities/GP9_config/GP9_single_packet.py",
 		"/Users/damian/Documents/Code/asv-dev/utilities/GP9_config/GP9DataFormat",
 		"/Users/damian/Documents/Code/asv-dev/utilities/GP9_config/GP9_data.py",
@@ -263,6 +342,10 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"CommandResponse",
+			"pt",
+			"packet",
+			"GP9_",
 			"data_fields",
 			"struct.",
 			"this",
@@ -285,6 +368,8 @@
 		"regex": false,
 		"replace_history":
 		[
+			"packet_type",
+			"self.packet",
 			"self"
 		],
 		"reverse": false,
@@ -301,19 +386,49 @@
 			[
 				{
 					"buffer": 0,
-					"file": "GP9SerialInterface.py",
+					"file": "read_setting.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 2399,
+						"buffer_size": 1144,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2228,
-								2228
+								898,
+								909
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "write_setting.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1211,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								306,
+								306
 							]
 						],
 						"settings":
@@ -330,20 +445,20 @@
 					"type": "text"
 				},
 				{
-					"buffer": 1,
-					"file": "GP9Reader.py",
+					"buffer": 2,
+					"file": "GP9SerialInterface.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 3587,
+						"buffer_size": 2894,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								1814,
+								1814
 							]
 						],
 						"settings":
@@ -353,32 +468,64 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1184.0,
+						"translation.y": 381.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 3,
+					"stack_index": 1,
 					"type": "text"
 				},
 				{
-					"buffer": 2,
-					"file": "GP9Config.py",
+					"buffer": 3,
+					"file": "GP9Reader.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 81,
+						"buffer_size": 5250,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								3948,
+								3948
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/Python/Python.tmLanguage"
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1603.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "GP9Config.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1737,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								408,
+								408
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Python/Python.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
@@ -388,20 +535,20 @@
 					"type": "text"
 				},
 				{
-					"buffer": 3,
+					"buffer": 5,
 					"file": "GP9DataFormat.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 3683,
+						"buffer_size": 12326,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								3891,
+								3891
 							]
 						],
 						"settings":
@@ -411,39 +558,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 652.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "GP9_test.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 961,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								565,
-								565
-							]
-						],
-						"settings":
-						{
-							"auto_name": "import struct",
-							"syntax": "Packages/Python/Python.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
+					"stack_index": 5,
 					"type": "text"
 				}
 			]
@@ -484,6 +602,7 @@
 	{
 		"height": 0.0
 	},
+	"pinned_build_system": "",
 	"project": "GP9_python.sublime-project",
 	"replace":
 	{
@@ -493,6 +612,7 @@
 	"select_file":
 	{
 		"height": 0.0,
+		"last_filter": "",
 		"selected_items":
 		[
 		],
@@ -501,6 +621,7 @@
 	"select_project":
 	{
 		"height": 0.0,
+		"last_filter": "",
 		"selected_items":
 		[
 		],
@@ -509,6 +630,7 @@
 	"select_symbol":
 	{
 		"height": 0.0,
+		"last_filter": "",
 		"selected_items":
 		[
 		],
