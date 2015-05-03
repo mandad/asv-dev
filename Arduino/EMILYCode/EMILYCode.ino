@@ -154,7 +154,7 @@ void loop()
       } else {
         //Go in slow circles
         throttle.writeMicroseconds(THROTTLE_LOW_ON);
-        rudder.writeMicroseconds(RUDDER_AMIDSHIPS);
+        rudder.writeMicroseconds(RUDDER_FULL_RIGHT - 150);
       }
       if (!moos_status && missing_moos_comms < 5000)
         missing_moos_comms++;
