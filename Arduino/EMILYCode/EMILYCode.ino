@@ -88,7 +88,7 @@ int missing_moos_comms = 0;
 #define RUDDER_AMIDSHIPS  1495
 
 #define THROTTLE_OFF      1124
-#define THROTTLE_LOW_ON   1150    //Lowest with engine still running
+#define THROTTLE_LOW_ON   1200    //Lowest with engine still running
 #define THROTTLE_MAX      1584
 
 #define starter_signal    22
@@ -154,7 +154,7 @@ void loop()
       } else {
         //Go in slow circles
         throttle.writeMicroseconds(THROTTLE_LOW_ON);
-        rudder.writeMicroseconds(RUDDER_FULL_RIGHT - 150);
+        rudder.writeMicroseconds(RUDDER_FULL_RIGHT - 25);
       }
       if (!moos_status && missing_moos_comms < 5000)
         missing_moos_comms++;
