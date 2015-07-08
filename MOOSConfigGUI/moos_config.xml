@@ -1,0 +1,58 @@
+<moosapps>
+	<moosapp name="pMarinePID">
+		<config name="AppTick" type="Integer" default="4" required="true" />
+		<config name="CommsTick" type="Integer" default="4" required="true" />
+		<config name="speed_factor" type="Double" default="20" minimum="0" maximum="Inf" required="false" />
+		<config name="sim_instability" type="Double" default="0" minimum="0" maximum="Inf" required="false" />
+		<config name="tardy_helm_threshold" type="Double" default="2.0" required="false" />
+		<config name="tardy_nav_threshold" type="Double" default="2.0" required="false" />
+		<config name="active_start" type="Boolean" default="false" required="false" />
+		<config name="verbose" type="Option" default="1" minimum="" maximum="" required="">
+			<option>Terse</option>
+			<option>Verbose</option>
+			<option>Quiet</option>
+		</config>
+		<config name="yaw_pid_kp" type="Double" default="0.5" minimum="0" maximum="Inf" required="true" />
+		<config name="yaw_pid_kd" type="Double" default="0.1" minimum="0" maximum="Inf" required="true" />
+		<config name="yaw_pid_ki" type="Double" default="0.012" minimum="0" maximum="Inf" required="true" />
+		<config name="yaw_pid_integral_limit" type="Double" default="0.07" minimum="0" maximum="Inf" required="true" />
+		<config name="yaw_pid_ki_limit" type="Double" default="0.2" minimum="0" maximum="Inf" required="true" />
+		<config name="maxrudder" type="Double" default="100" minimum="0" maximum="Inf" required="true" />
+		<config name="speed_pid_kp" type="Double" default="0.8" minimum="0" maximum="Inf" required="true" />
+		<config name="speed_pid_kd" type="Double" default="0.1" minimum="0" maximum="Inf" required="true" />
+		<config name="speed_pid_ki" type="Double" default="0.11" minimum="0" maximum="Inf" required="true" />
+		<config name="speed_pid_ki_limit" type="Double" default="0.07" minimum="0" maximum="Inf" required="true" />
+		<config name="maxthrust" type="Double" default="100" minimum="0" maximum="Inf" required="true" />
+		<!-- Left out the info on Z control -->
+	</moosapp>
+	<moosapp name="pLogger">
+		<config name="AppTick" type="Integer" default="4" required="true" />
+		<config name="CommsTick" type="Integer" default="4" required="true" />
+		<config name="File" type="Text" required="false" />
+		<config name="Path" type="Text" required="false" />
+		<config name="AsyncLog" type="Boolean" default="true" required="true" />
+		<config name="WildCardLogging" type="Boolean" default="true" required="true" />
+		<config name="LogAuxSrc" type="Boolean" default="true" required="false" />
+		<config name="Log" type="Text" default="IVPHELM_LIFE_EVENT @ 0 NOSYNC" required="false" repeat="true" />
+		<config name="WildCardOmitPattern" type="Text" default="*_STATUS" required="false" repeat="true">
+			<repeat_default>DB_VARSUMMARY</repeat_default>
+			<repeat_default>DB_RWSUMMARY</repeat_default>
+		</config>	
+		<config name="WildCardExclusionLog" type="Boolean" default="true" required="false" />
+	</moosapp>
+	<moosapp name="uSimMarine">
+		<config name="AppTick" type="Integer" default="4" required="true" />
+		<config name="CommsTick" type="Integer" default="4" required="true" />
+		<config name="buoyancy_rate" type="Double" default="0" minimum="0" maximum="Inf" required="false" />
+		<config name="current_field" type="Text" required="false" />
+		<config name="current_field_active" type="Boolean" required="false" />
+		<config name="default_water_depth" type="Double" default="0" required="false" />
+		<config name="start_x" type="Double" default="0" required="true" />
+		<config name="start_y" type="Double" default="0" required="true" />
+		<config name="start_heading" type="Double" default="0" required="true" />
+		<config name="start_speed" type="Double" default="0" required="true" />
+		<config name="prefix" type="Text" default="USM" required="true" />
+		<config name="turn_rate" type="Double" default="40" required="true" />
+		<config name="thrust_map" type="Text" default="0:0, 20:2, 40:4, 60:6, 80:8, 100:10" required="true" />
+	</moosapp>
+	<!--	<config name="" type="" default="" minimum="" maximum="" required="" /> -->
