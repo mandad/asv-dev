@@ -55,4 +55,5 @@
 		<config name="turn_rate" type="Double" default="40" required="true" />
 		<config name="thrust_map" type="Text" default="0:0, 20:2, 40:4, 60:6, 80:8, 100:10" required="true" />
 	</moosapp>
+</moosapps>
 	<!--	<config name="" type="" default="" minimum="" maximum="" required="" /> -->

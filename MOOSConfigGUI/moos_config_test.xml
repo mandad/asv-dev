@@ -1,0 +1,21 @@
+<moosapps>
+	<moosapp name="pMarinePID">
+		<config name="AppTick" type="Integer" default="4" required="true" />
+		<config name="CommsTick" type="Integer" default="4" required="true" />
+		<config name="speed_factor" type="Double" default="20" minimum="0" maximum="Inf" required="false" />
+		<config name="sim_instability" type="Double" default="0" minimum="0" maximum="Inf" required="false" />
+	</moosapp>
+	<moosapp name="pLogger">
+		<config name="AppTick" type="Integer" default="4" required="true" />
+		<config name="CommsTick" type="Integer" default="4" required="true" />
+		<config name="File" type="Text" required="false" />
+		<config name="Path" type="Text" required="false" />
+	</moosapp>
+	<moosapp name="uSimMarine">
+		<config name="AppTick" type="Integer" default="4" required="true" />
+		<config name="CommsTick" type="Integer" default="4" required="true" />
+		<config name="buoyancy_rate" type="Double" default="0" minimum="0" maximum="Inf" required="false" />
+		<config name="current_field" type="Text" required="false" />
+	</moosapp>
+</moosapps>
+	<!--	<config name="" type="" default="" minimum="" maximum="" required="" /> -->
