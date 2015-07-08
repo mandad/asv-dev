@@ -10,13 +10,14 @@ class MOOSConfigGUI(QtGui.QWidget):
     
     def __init__(self):
         super(MOOSConfigGUI, self).__init__()
-        self.controls = ControlCreator.ControlCreator('moos_config_test.xml')
+        self.controls = ControlCreator.ControlCreator('moos_config.xml')
         
         self.initUI()
         
     def initUI(self):
         self.controls.create_controls()
 
+        addButton = QtGui.QPushButton('Add Config Section')
         saveButton = QtGui.QPushButton("Save .moos")
         cancelButton = QtGui.QPushButton("Close")
 
@@ -25,7 +26,7 @@ class MOOSConfigGUI(QtGui.QWidget):
         hbox.addWidget(saveButton)
         hbox.addWidget(cancelButton)
 
-        vbox = self.controls.main_vbox
+        vbox = QtGui.QVBoxLayout()
 
         # #--------------------
         
@@ -55,9 +56,9 @@ class MOOSConfigGUI(QtGui.QWidget):
         # # self.setLayout(grid)
         # vbox.addLayout(grid)
 
-
-
-        vbox.addStretch(1)
+        vbox.addWidget(addButton)
+        vbox.addWidget(self.controls.main_scroll)
+        # vbox.addStretch(1)
         vbox.addLayout(hbox)
 
         self.setLayout(vbox) 

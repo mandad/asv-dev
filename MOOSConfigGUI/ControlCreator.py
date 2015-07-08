@@ -18,13 +18,18 @@ class ControlCreator(object):
             print 'Problem reading xml file.' + e
 
     def create_controls(self):
-        self.main_vbox = QtGui.QVBoxLayout()
+        central = QtGui.QWidget();
+        self.main_scroll = QtGui.QScrollArea();
+        vbox = QtGui.QVBoxLayout(central)
+        self.main_scroll.setWidget(central);
+        self.main_scroll.setWidgetResizable(True);
 
         self.root = self.xml_file.getroot()
         # Loop through the apps
         for moosapp in self.root:
             self.app_groups.append(QtGui.QGroupBox(moosapp.attrib['name']))
-            # self.app_groups[-1].addLayout()
+            self.app_groups[-1].setCheckable(True)
+            self.app_groups[-1].setChecked(True)
             config_list = list();
             print moosapp.attrib['name']
 
@@ -36,4 +41,4 @@ class ControlCreator(object):
                 this_grid.addWidget(QtGui.QLineEdit(), i, 1)
             self.app_groups[-1].setLayout(this_grid)
                 # config_list.
-            self.main_vbox.addWidget(self.app_groups[-1])       
+            vbox.addWidget(self.app_groups[-1])       
