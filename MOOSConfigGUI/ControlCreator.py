@@ -18,6 +18,7 @@ class ControlCreator(object):
             print 'Problem reading xml file.' + e
 
     def create_controls(self):
+        #Create the scrolling box
         central = QtGui.QWidget();
         self.main_scroll = QtGui.QScrollArea();
         vbox = QtGui.QVBoxLayout(central)
@@ -38,7 +39,11 @@ class ControlCreator(object):
             this_grid = QtGui.QGridLayout()
             for i, config in enumerate(moosapp):
                 this_grid.addWidget(QtGui.QLabel(config.attrib['name']), i, 0)
-                this_grid.addWidget(QtGui.QLineEdit(), i, 1)
+                if config.attrib.has_key('default'):
+                    default_val = config.attrib['default']
+                else:
+                    default_val = ''
+                this_grid.addWidget(QtGui.QLineEdit(default_val), i, 1)
             self.app_groups[-1].setLayout(this_grid)
                 # config_list.
             vbox.addWidget(self.app_groups[-1])       
