@@ -7,7 +7,7 @@
 		<config name="tardy_helm_threshold" type="Double" default="2.0" required="false" />
 		<config name="tardy_nav_threshold" type="Double" default="2.0" required="false" />
 		<config name="active_start" type="Boolean" default="false" required="false" />
-		<config name="verbose" type="Option" default="1" minimum="" maximum="" required="">
+		<config name="verbose" type="Option" default="1" minimum="" maximum="" required="false">
 			<option>Terse</option>
 			<option>Verbose</option>
 			<option>Quiet</option>

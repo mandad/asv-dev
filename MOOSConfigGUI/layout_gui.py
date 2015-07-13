@@ -1,9 +1,8 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 import sys
 from PyQt4 import QtGui
 import ControlCreator
+import AddAppDialog
+import pdb
 
 
 class MOOSConfigGUI(QtGui.QWidget):
@@ -15,11 +14,14 @@ class MOOSConfigGUI(QtGui.QWidget):
         self.initUI()
         
     def initUI(self):
-        self.controls.create_controls()
+        self.controls.create_main_entry()
 
         addButton = QtGui.QPushButton('Add Config Section')
         saveButton = QtGui.QPushButton("Save .moos")
         cancelButton = QtGui.QPushButton("Close")
+
+        # Event Handlers
+        addButton.clicked.connect(self.onClickAddButton)
 
         hbox = QtGui.QHBoxLayout()
         hbox.addStretch(1)
@@ -67,6 +69,13 @@ class MOOSConfigGUI(QtGui.QWidget):
         self.setGeometry(150, 150, 900, 768)
         self.setWindowTitle('MOOS Mission Configuration')    
         self.show()
+
+    def onClickAddButton(self):
+        # add_gui = AddAppDialog.AddAppDialog(self.controls.get_apps())
+        # add_gui.exec_()
+        selected_apps, ok = AddAppDialog.AddAppDialog.getNewApps(self.controls.get_apps())
+        print 'GUI Shown'
+        print selected_apps
         
 def main():
     app = QtGui.QApplication(sys.argv)
