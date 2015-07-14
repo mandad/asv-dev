@@ -9,7 +9,7 @@ class MOOSConfigGUI(QtGui.QWidget):
     
     def __init__(self):
         super(MOOSConfigGUI, self).__init__()
-        self.controls = ControlCreator.ControlCreator('moos_config.xml')
+        self.controls = ControlCreator.ControlCreator('moos_config.xml', self)
         
         self.initUI()
         
@@ -22,6 +22,7 @@ class MOOSConfigGUI(QtGui.QWidget):
 
         # Event Handlers
         addButton.clicked.connect(self.onClickAddButton)
+        saveButton.clicked.connect(self.onClickSaveButton)
 
         hbox = QtGui.QHBoxLayout()
         hbox.addStretch(1)
@@ -76,6 +77,10 @@ class MOOSConfigGUI(QtGui.QWidget):
         selected_apps, ok = AddAppDialog.AddAppDialog.getNewApps(self.controls.get_apps())
         print 'GUI Shown'
         print selected_apps
+        self.controls.create_controls(selected_apps)
+
+    def onClickSaveButton(self):
+        print self.controls.get_form_info()
         
 def main():
     app = QtGui.QApplication(sys.argv)

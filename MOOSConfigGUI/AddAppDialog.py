@@ -20,7 +20,7 @@ class AddAppDialog(QtGui.QDialog):
 
         # Create the list
         self.disp_list = QtGui.QListView()
-        self.disp_list.selectionMode = QtGui.QAbstractItemView.ExtendedSelection
+        self.disp_list.setSelectionMode(QtGui.QAbstractItemView.ExtendedSelection)
         self.disp_list.setAutoScroll(True)
         model = QtGui.QStandardItemModel(self.disp_list)
         for app in self.app_list:
