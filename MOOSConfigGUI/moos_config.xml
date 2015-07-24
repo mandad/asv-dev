@@ -55,5 +55,23 @@
 		<config name="turn_rate" type="Double" default="40" required="true" />
 		<config name="thrust_map" type="Text" default="0:0, 20:2, 40:4, 60:6, 80:8, 100:10" required="true" />
 	</moosapp>
+	<moosapp name="pHelmIvP">
+		<config name="AppTick" type="Integer" default="4" required="true" />
+		<config name="CommsTick" type="Integer" default="4" required="true" />
+	</moosapp>
+	<moosapp name="iGP9">
+		<config name="AppTick" type="Integer" default="20" required="true" />
+		<config name="CommsTick" type="Integer" default="5" required="true" />
+		<config name="SerialPort" type="Text" default="/dev/tty01" required="true" />
+		<config name="BaudRate" type="Integer" default="115200" required="true" />
+		<config name="Covariance" type="Text" default="&quot;0 0 0 0 0 0 0 0 0&quot;" required="false"/>
+	</moosapp>
+	<moosapp name='iMOOSArduino'>
+		<config name="AppTick" type="Integer" default="4" required="true" />
+		<config name="CommsTick" type="Integer" default="4" required="true" />
+		<config name="CommType" type="Text" default="&quot;ARDUINO&quot;" required="true" />
+		<config name="SerialPort" type="Text" default="&quot;/dev/ttyACM0&quot;" required="true" />
+		<config name="BaudRate" type="Integer" default="115200" required="true" />
+	</moosapp>
 </moosapps>
 	<!--	<config name="" type="" default="" minimum="" maximum="" required="" /> -->

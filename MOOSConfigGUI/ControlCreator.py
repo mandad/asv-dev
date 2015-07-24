@@ -73,11 +73,15 @@ class ControlCreator(object):
             self.parent_window.sender().hide()
 
     def get_form_info(self):
+        """Prints the info from the configurations to .moos file format"""
         file_text = ''
+        antler_text = 'ProcessConfig = ANTLER\n{\n\tMSBetweenLaunches = 400\n' \
+            + '\tRun = MOOSDB\t@ NewConsole = false\n'
         for app in self.app_groups:
             if app.isChecked():
                 count = 0
                 file_text += 'ProcessConfig = ' + str(app.title()) + '\n{\n'
+                antler_text += '\tRun = ' + str(app.title()) + '\t@ NewConsole = false\n' 
                 grid = app.layout()
                 items = (grid.itemAt(i) for i in range(grid.count()))
                 # print "Configs:"
@@ -92,8 +96,9 @@ class ControlCreator(object):
                     else:
                         file_text += ' = '
                 file_text += '}\n\n'
+        antler_text += '}\n\n'
 
-        return file_text
+        return antler_text + file_text
 
 
 

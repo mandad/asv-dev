@@ -80,6 +80,18 @@ class MOOSConfigGUI(QtGui.QWidget):
         self.controls.create_controls(selected_apps)
 
     def onClickSaveButton(self):
+        print """ServerHost = localhost
+ServerPort = 9000
+Community  = emily
+
+MOOSTimeWarp = 1
+TERM_REPORTING = true
+
+// [TODO] Please Set These
+LatOrigin  = 
+LongOrigin = 
+"""
+
         print self.controls.get_form_info()
         
 def main():
