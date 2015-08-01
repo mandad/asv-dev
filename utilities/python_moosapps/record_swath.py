@@ -24,6 +24,7 @@ class RecordSwath(object):
         self.messages['NAV_Y'] = 0
         self.messages['NAV_HEADING'] = 0
         self.messages['LINE_END'] = 0
+        self.messages['LINE_BEGIN'] = 0
         self.messages['NEXT_SWATH_SIDE'] = 'port'
         self.swath_side = 'port'
         self.next_swath_side = 0
@@ -35,6 +36,7 @@ class RecordSwath(object):
         result = result and self.comms.register('NAV_Y', 0)
         result = result and self.comms.register('NAV_HEADING', 0)
         result = result and self.comms.register('LINE_END', 0)
+        result = result and self.comms.register('LINE_BEGIN', 0)
         result = result and self.comms.register('NEXT_SWATH_SIDE', 0)
 
         return result
@@ -50,6 +52,7 @@ class RecordSwath(object):
             if msg.is_name('SWATH_WIDTH'):
                 # Message in the format "port=52;stbd=37"
                 for split_msg in self.messages['SWATH_WIDTH'].split(';'):
+                    print "Received Swath Width {0}".format(split_msg)
                     widths = split_msg.split('=')
                     self.swath_record[widths[0]].record(widths[1], \
                         self.messages['NAV_X'], self.messages['NAV_Y'], \
@@ -57,9 +60,6 @@ class RecordSwath(object):
 
             if msg.is_name('LINE_END'):
                 print 'End of Line, outputting swath points'
-                # path_planner = pathplan.PathPlan(self.swath_record[NEXT_PATH_SIDE[i % 2]], \
-                        # NEXT_PATH_SIDE[i % 2], SWATH_OVERLAP)
-                # next_path = path_planner.generate_next_path(self.op_poly)
 
                 # Publish swath generation side, and trigger pPathPlan
                 self.next_swath_side += 1
