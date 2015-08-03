@@ -41,8 +41,11 @@ class PathPlan(object):
     side - whether to plan on the port or stbd side of the last path
     margin - the amount of overlap desired between swaths
     """
-    def __init__(self, swath_record, side, margin=0.2):
-        self.swath_record = swath_record
+    def __init__(self, swath_record, side, margin=0.2, edge_pts = None):
+        if swath_record is None:
+            self.edge_pts_input = edge_pts
+        else:
+            self.swath_record = swath_record
         if side == 'port' or side == 'stbd':
             self.side = side
         else:

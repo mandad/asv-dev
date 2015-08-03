@@ -6,7 +6,6 @@ import pdb
 
 SWATH_INTERVAL = 10 #meters
 NEXT_PATH_SIDE = ['port', 'stbd']
-SWATH_OVERLAP = 0.2
 
 class RecordSwath(object):
     def __init__(self):
