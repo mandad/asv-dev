@@ -2,6 +2,7 @@ import pymoos
 import time
 import followpath
 import pathplan
+import pdb
 
 SWATH_INTERVAL = 10 #meters
 NEXT_PATH_SIDE = ['port', 'stbd']
@@ -28,6 +29,8 @@ class RecordSwath(object):
         self.messages['NEXT_SWATH_SIDE'] = 'port'
         self.swath_side = 'port'
         self.next_swath_side = 0
+        self.post_ready = False
+        self.recording = False  # this gets set when the line starts
 
     def connect_callback(self):
         result = True
@@ -42,46 +45,61 @@ class RecordSwath(object):
         return result
 
     def message_received(self):
-        for msg in self.comms.fetch():
-            # Shouldn't ever be binary message
-            if msg.is_double():
-                self.messages[msg.name()] = msg.double()
-            else:
-                self.messages[msg.name()] = msg.string()
+        try:
+            for msg in self.comms.fetch():
+                # Shouldn't ever be binary message
+                if msg.is_double():
+                    self.messages[msg.name()] = msg.double()
+                else:
+                    self.messages[msg.name()] = msg.string()
 
-            if msg.is_name('SWATH_WIDTH'):
-                # Message in the format "port=52;stbd=37"
-                for split_msg in self.messages['SWATH_WIDTH'].split(';'):
-                    print "Received Swath Width {0}".format(split_msg)
-                    widths = split_msg.split('=')
-                    self.swath_record[widths[0]].record(widths[1], \
-                        self.messages['NAV_X'], self.messages['NAV_Y'], \
-                        self.messages['NAV_HEADING'])
+                if msg.is_name('SWATH_WIDTH') and self.recording:
+                    # Message in the format "port=52;stbd=37"
+                    for split_msg in self.messages['SWATH_WIDTH'].split(';'):
+                        print "Received Swath Width {0}".format(split_msg)
+                        widths = split_msg.split('=')
+                        self.swath_record[widths[0]].record(float(widths[1]), \
+                            self.messages['NAV_X'], self.messages['NAV_Y'], \
+                            self.messages['NAV_HEADING'])
 
-            if msg.is_name('LINE_END'):
-                print 'End of Line, outputting swath points'
+                if msg.is_name('LINE_BEGIN'):
+                    print "Line beginning, starting to record swath"
+                    self.recording = True
 
-                # Publish swath generation side, and trigger pPathPlan
-                self.next_swath_side += 1
-                self.swath_side = NEXT_PATH_SIDE[self.next_swath_side % 2]
+                if msg.is_name('LINE_END'):
+                    print 'End of Line, outputting swath points'
+                    self.recording = False
+                    # Publish swath generation side, and trigger pPathPlan
+                    self.next_swath_side += 1
+                    self.swath_side = NEXT_PATH_SIDE[self.next_swath_side % 2]
 
-                # Record the last point
-                self.swath_record[self.swath_side].min_interval()
-                outer_points = self.swath_record[self.swath_side].get_swath_outer_pts( \
-                    self.swath_side)
-                outer_message = ''
-                for pt in outer_points:
-                    outer_message += 'x=' + pt[0] + ',y=' + pt[1] + ';'
-                comms.notify('SWATH_EDGE', outer_message, pymoos.time())
-                comms.notify('NEXT_SWATH_SIDE', \
+                    # Record the last point
+                    self.swath_record[self.swath_side].min_interval()
+                    outer_points = self.swath_record[self.swath_side].get_swath_outer_pts( \
+                        self.swath_side)
+                    self.outer_message = ''
+                    for pt in outer_points:
+                        self.outer_message += 'x=' + str(pt[0]) + ',y=' + str(pt[1]) + ';'
+                    self.post_ready = True
+            return True
+        except Exception, e:
+            print str(e)
+            raise e
+        return False
+
+    def run(self):
+        while True:
+            time.sleep(1)
+            if self.post_ready:
+                self.comms.notify('SWATH_EDGE', self.outer_message, pymoos.time())
+                self.comms.notify('NEXT_SWATH_SIDE', \
                     self.swath_side, pymoos.time())
+                self.post_ready = False
 
-        return True
 
 def main():
     this_record = RecordSwath()
-    while True:
-        pass
+    this_record.run()
         
 if __name__ == "__main__":
     main()

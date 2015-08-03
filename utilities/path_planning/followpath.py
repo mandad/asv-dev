@@ -145,7 +145,11 @@ class RecordSwath(object):
         self.last_y = loc_y
 
     def min_interval(self):
-        idx = self.interval_swath.argmin()
+        if len(self.interval_swath) == 0:
+            idx = self.interval_swath.argmin()
+        else:
+            idx = 0
+
         # Add the first point if this is the first interval
         if len(self.min_record) == 0 and idx != 0:
             self.min_record.append(self.interval_record[0])
