@@ -145,17 +145,23 @@ class RecordSwath(object):
         self.last_y = loc_y
 
     def min_interval(self):
-        if len(self.interval_swath) == 0:
+        idx = 0
+        if len(self.interval_swath) != 0:
             idx = self.interval_swath.argmin()
-        else:
-            idx = 0
 
         # Add the first point if this is the first interval
-        if len(self.min_record) == 0 and idx != 0:
-            self.min_record.append(self.interval_record[0])
-        self.min_record.append(self.interval_record[idx])
+        if len(self.interval_record) > 0:
+            if len(self.min_record) == 0 and idx != 0:
+                self.min_record.append(self.interval_record[0])
+            self.min_record.append(self.interval_record[idx])
         self.interval_record = []
         self.interval_swath = np.array([])
+
+    def save_last(self):
+        last_min = self.min_record[-1]
+        last_rec = self.full_record[-1]
+        if last_min[0] != last_rec[0] and last_min[1] != last_rec[1]:
+            self.min_record.append(last_rec)
 
     def reset_line(self):
         self.interval_record = []
@@ -219,6 +225,9 @@ class RecordSwath(object):
 
     def get_swath_width(self, index):
         return self.min_record[index][3]
+
+    def get_all_swath_widths(self):
+        return [record[3] for record in self.min_record]
 
     def get_swath_location(self, index):
         return (self.min_record[index][0], self.min_record[index][1])

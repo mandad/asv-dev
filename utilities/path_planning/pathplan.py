@@ -41,11 +41,16 @@ class PathPlan(object):
     side - whether to plan on the port or stbd side of the last path
     margin - the amount of overlap desired between swaths
     """
-    def __init__(self, swath_record, side, margin=0.2, edge_pts = None):
+    def __init__(self, swath_record, side, margin=0.2, edge_pts = None, swath_widths = None):
         if swath_record is None:
             self.edge_pts_input = edge_pts
+            self.swath_record = None
         else:
             self.swath_record = swath_record
+            self.edge_pts_input = None
+
+        self.swath_widths = swath_widths
+
         if side == 'port' or side == 'stbd':
             self.side = side
         else:
@@ -57,7 +62,10 @@ class PathPlan(object):
         to the passed region.
         """
         print('\n======== Generating Next Path ========')
-        edge_pts = self.swath_record.get_swath_outer_pts(self.side)
+        if self.edge_pts_input is None:
+            edge_pts = self.swath_record.get_swath_outer_pts(self.side)
+        else:
+            edge_pts = self.edge_pts_input
         next_path_pts = []
 
         print ('Basis Points: {0}'.format(len(edge_pts)))
@@ -107,7 +115,10 @@ class PathPlan(object):
 
             # Get the offset vector
             offset_dx, offset_dy = beamtrace.hdg_to_beam(avg_vec[0], avg_vec[1], self.side)
-            swath_width = self.swath_record.get_swath_width(i)
+            if self.swath_widths is None:
+                swath_width = self.swath_record.get_swath_width(i)
+            else:
+                swath_width = self.swath_widths[i]
             offset_vector = np.array([offset_dx * swath_width, \
                 offset_dy * swath_width])
             offset_vector = offset_vector * (1 - self.margin)
@@ -182,7 +193,11 @@ class PathPlan(object):
                 starting_pt = next_path_pts[segments[1]]
                 intersection = self.find_nearest_intersect(extend_vec, starting_pt, op_poly)
                 # Make sure we aren't extending too far
-                if intersection[0] < (15 * self.swath_record.interval):
+                if self.swath_record is None:
+                    extend_max = 100
+                else:
+                    extend_max = 15 * self.swath_record.interval
+                if intersection[0] < extend_max:
                     # First or last point
                     if i == 0:
                         next_path_pts_extend = np.insert(next_path_pts_extend, 0, intersection[1], 0)

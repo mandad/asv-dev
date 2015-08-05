@@ -16,6 +16,7 @@ class SonarSimulator(object):
         self.messages['NAV_X'] = 0
         self.messages['NAV_Y'] = 0
         self.messages['NAV_HEADING'] = 0
+        self.post_ready = False
 
     def connect_callback(self):
         result = True
@@ -42,7 +43,7 @@ class SonarSimulator(object):
                     self.post_ready = True
                     self.post_message = 'port=15;stbd=20'
         except Exception, e:
-            print 'Error'
+            print 'Error: ' + str(e)
             raise e
 
         return True

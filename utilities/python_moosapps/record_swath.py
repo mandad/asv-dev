@@ -66,19 +66,33 @@ class RecordSwath(object):
                     self.recording = True
 
                 if msg.is_name('LINE_END'):
-                    print 'End of Line, outputting swath points'
                     self.recording = False
                     # Publish swath generation side, and trigger pPathPlan
                     self.next_swath_side += 1
                     self.swath_side = NEXT_PATH_SIDE[self.next_swath_side % 2]
+                    print 'End of Line, outputting swath points on ' + self.swath_side + ' side.'
 
                     # Record the last point
-                    self.swath_record[self.swath_side].min_interval()
+                    # pdb.set_trace()
+                    # self.swath_record[self.swath_side].min_interval()
+                    self.swath_record[self.swath_side].save_last()
+                    # Build the message with outer points
                     outer_points = self.swath_record[self.swath_side].get_swath_outer_pts( \
                         self.swath_side)
                     self.outer_message = ''
                     for pt in outer_points:
                         self.outer_message += 'x=' + str(pt[0]) + ',y=' + str(pt[1]) + ';'
+                    self.outer_message = self.outer_message[:-1]
+
+                    # Build the message with swath widths
+                    swath_widths = self.swath_record[self.swath_side].get_all_swath_widths()
+                    width_message = [str(width) + ';' for width in swath_widths]
+                    self.swath_record_message = ''.join(width_message)
+                    self.swath_record_message = self.swath_record_message[:-1]
+
+                    self.swath_record['stbd'].reset_line()
+                    self.swath_record['port'].reset_line()
+
                     self.post_ready = True
             return True
         except Exception, e:
@@ -91,6 +105,8 @@ class RecordSwath(object):
             time.sleep(1)
             if self.post_ready:
                 self.comms.notify('SWATH_EDGE', self.outer_message, pymoos.time())
+                self.comms.notify('SWATH_WIDTH_RECORD', self.swath_record_message, \
+                    pymoos.time())
                 self.comms.notify('NEXT_SWATH_SIDE', \
                     self.swath_side, pymoos.time())
                 self.post_ready = False
