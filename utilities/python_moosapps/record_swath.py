@@ -3,6 +3,9 @@ import time
 import followpath
 import pathplan
 import pdb
+from shapely.geometry import Polygon, MultiPoint, Point, MultiPolygon
+import shapely.geometry
+from shapely.prepared import prep
 
 SWATH_INTERVAL = 10 #meters
 NEXT_PATH_SIDE = ['port', 'stbd']
@@ -16,6 +19,7 @@ class RecordSwath(object):
         self.swath_record = dict()
         self.swath_record['port'] = followpath.RecordSwath(SWATH_INTERVAL)
         self.swath_record['stbd'] = followpath.RecordSwath(SWATH_INTERVAL)
+        self.coverage = Polygon()
 
         # Initialize stored variables
         self.messages = dict()
@@ -26,9 +30,14 @@ class RecordSwath(object):
         self.messages['LINE_END'] = 0
         self.messages['LINE_BEGIN'] = 0
         self.messages['NEXT_SWATH_SIDE'] = 'port'
+        self.messages['NEW_PATH'] = ''
         self.swath_side = 'port'
         self.next_swath_side = 0
         self.post_ready = False
+        self.path_ready = False
+        self.path_message = ''
+        self.outer_message = ''
+        self.swath_record_message = ''
         self.recording = False  # this gets set when the line starts
 
     def connect_callback(self):
@@ -40,6 +49,7 @@ class RecordSwath(object):
         result = result and self.comms.register('LINE_END', 0)
         result = result and self.comms.register('LINE_BEGIN', 0)
         result = result and self.comms.register('NEXT_SWATH_SIDE', 0)
+        result = result and self.comms.register('NEW_PATH', 0)
 
         return result
 
@@ -74,26 +84,50 @@ class RecordSwath(object):
 
                     # Record the last point
                     # pdb.set_trace()
-                    # self.swath_record[self.swath_side].min_interval()
-                    self.swath_record[self.swath_side].save_last()
-                    # Build the message with outer points
-                    outer_points = self.swath_record[self.swath_side].get_swath_outer_pts( \
-                        self.swath_side)
-                    self.outer_message = ''
-                    for pt in outer_points:
-                        self.outer_message += 'x=' + str(pt[0]) + ',y=' + str(pt[1]) + ';'
-                    self.outer_message = self.outer_message[:-1]
+                    # Make sure there is a record
+                    if self.swath_record[self.swath_side].save_last():
+                        # Build the message with outer points
+                        outer_points = self.swath_record[self.swath_side].get_swath_outer_pts( \
+                            self.swath_side)
+                        self.outer_message = ''
+                        for pt in outer_points:
+                            self.outer_message += 'x=' + str(pt[0]) + ',y=' + str(pt[1]) + ';'
+                        self.outer_message = self.outer_message[:-1]
 
-                    # Build the message with swath widths
-                    swath_widths = self.swath_record[self.swath_side].get_all_swath_widths()
-                    width_message = [str(width) + ';' for width in swath_widths]
-                    self.swath_record_message = ''.join(width_message)
-                    self.swath_record_message = self.swath_record_message[:-1]
+                        # Build the message with swath widths
+                        swath_widths = self.swath_record[self.swath_side].get_all_swath_widths()
+                        width_message = [str(width) + ';' for width in swath_widths]
+                        self.swath_record_message = ''.join(width_message)
+                        self.swath_record_message = self.swath_record_message[:-1]
 
-                    self.swath_record['stbd'].reset_line()
-                    self.swath_record['port'].reset_line()
+                        # Build full coverage model
+                        new_coverage = self.swath_record['stbd'].get_swath_coverage('stbd')
+                        new_coverage = new_coverage.union(self.swath_record['port'].get_swath_coverage('port'))
+                        self.coverage = self.coverage.union(new_coverage)
 
-                    self.post_ready = True
+                        self.swath_record['stbd'].reset_line()
+                        self.swath_record['port'].reset_line()
+
+                        self.post_ready = True
+                if msg.is_name('NEW_PATH'):
+                    print('Eliminating Points In Existing Coverage')
+                    next_path_pts = self.messages['NEW_PATH'].split(':')
+                    if len(next_path_pts) > 0:
+                        # for pt in next_path_pts:
+                        #     next_path
+                        next_path = [(float(pt.split(',')[0]), float(pt.split(',')[1])) \
+                            for pt in next_path_pts]
+                        new_len = len(next_path)
+                        prepared_coverage = prep(self.coverage)
+                        next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(pt))]
+                        print('Removed {0} points'.format(new_len - len(next_path)))
+
+                        point_list = [str(pt[0]) + ',' + str(pt[1]) + ':' for pt in next_path]
+                        points_message = ''.join(point_list)
+                        self.path_message = 'points=' + points_message[:-1]
+                        self.path_ready = True
+                    else:
+                        print('No path points received')
             return True
         except Exception, e:
             print str(e)
@@ -102,7 +136,7 @@ class RecordSwath(object):
 
     def run(self):
         while True:
-            time.sleep(1)
+            time.sleep(0.5)
             if self.post_ready:
                 self.comms.notify('SWATH_EDGE', self.outer_message, pymoos.time())
                 self.comms.notify('SWATH_WIDTH_RECORD', self.swath_record_message, \
@@ -110,6 +144,9 @@ class RecordSwath(object):
                 self.comms.notify('NEXT_SWATH_SIDE', \
                     self.swath_side, pymoos.time())
                 self.post_ready = False
+            if self.path_ready:
+                self.comms.notify('SURVEY_UPDATE', self.path_message, pymoos.time())
+                self.path_ready = False
 
 
 def main():

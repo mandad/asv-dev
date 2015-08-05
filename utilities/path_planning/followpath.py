@@ -158,10 +158,14 @@ class RecordSwath(object):
         self.interval_swath = np.array([])
 
     def save_last(self):
-        last_min = self.min_record[-1]
-        last_rec = self.full_record[-1]
-        if last_min[0] != last_rec[0] and last_min[1] != last_rec[1]:
-            self.min_record.append(last_rec)
+        if len(self.min_record) > 0:
+            last_min = self.min_record[-1]
+            last_rec = self.full_record[-1]
+            if last_min[0] != last_rec[0] and last_min[1] != last_rec[1]:
+                self.min_record.append(last_rec)
+            return  True
+        else:
+            return False
 
     def reset_line(self):
         self.interval_record = []

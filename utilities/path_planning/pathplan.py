@@ -301,8 +301,8 @@ class PathPlan(object):
                 # -- Method 1: Points from end of current --
                 test_seg = next_seg + [0, 1]
                 # TODO: Added this in response to an error, not sure if correct sln
-                if test_seg[1] > len(path_pts) - 1:
-                    break
+                angle1 = 500
+                angle2 = 500
                 while test_seg[1] < len(path_pts) - 1:
                     test_vec = path_pts[test_seg[1]] - path_pts[test_seg[0]]
                     angle1 = PathPlan.vector_angle(this_vec, test_vec)
@@ -332,16 +332,20 @@ class PathPlan(object):
                     # really needs to be total points removed in region that would
                     # have been affected by the other method, but this requires additional
                     # loops to know
-                    if pts_elim1 > pts_elim2 and pts_elim1 < (pts_elim2 * 2) and angle1 < angle2:
-                        print(('Bend Fudging - pts_elim1: {0}, pts_elim2: {1}\n' + \
-                            '\tangle1: {2:.2f}, angle2: {3:.2f}').format(pts_elim1, \
-                            pts_elim2, angle1, angle2))
-                        pts_elim2 = pts_elim1 + 1
-                    elif pts_elim2 >= pts_elim1 and pts_elim2 < (pts_elim1 * 2) and angle2 < angle1:
-                        print(('Bend Fudging - pts_elim1: {0}, pts_elim2: {1}\n' + \
-                            '\tangle1: {2:.2f}, angle2: {3:.2f}').format(pts_elim1, \
-                            pts_elim2, angle1, angle2))
-                        pts_elim1 = pts_elim2 + 1
+                    if angle1 == 500 or angle2 == 500:
+                        print "Encountered default angle state, this is not good."
+                        pdb.set_trace()
+                    else:
+                        if pts_elim1 > pts_elim2 and pts_elim1 < (pts_elim2 * 2) and angle1 < angle2:
+                            print(('Bend Fudging - pts_elim1: {0}, pts_elim2: {1}\n' + \
+                                '\tangle1: {2:.2f}, angle2: {3:.2f}').format(pts_elim1, \
+                                pts_elim2, angle1, angle2))
+                            pts_elim2 = pts_elim1 + 1
+                        elif pts_elim2 >= pts_elim1 and pts_elim2 < (pts_elim1 * 2) and angle2 < angle1:
+                            print(('Bend Fudging - pts_elim1: {0}, pts_elim2: {1}\n' + \
+                                '\tangle1: {2:.2f}, angle2: {3:.2f}').format(pts_elim1, \
+                                pts_elim2, angle1, angle2))
+                            pts_elim1 = pts_elim2 + 1
                 else:
                     # force it to not choose this method
                     pts_elim2 = pts_elim1 + 1

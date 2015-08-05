@@ -11,7 +11,7 @@ class PathPlan(object):
         self.comms = pymoos.comms()
         self.comms.set_on_connect_callback(self.connect_callback)
         self.comms.set_on_mail_callback(self.message_received)
-        self.comms.run('localhost', 9000, 'uPathPlan')
+        self.comms.run('localhost', 9000, 'pPathPlan')
 
         # Initialize stored variables
         self.messages = dict()
@@ -107,7 +107,8 @@ class PathPlan(object):
                                 points_message = ''.join(point_list)
 
                                 # Message in the format "points=x1,y1:x2,y2 ..."
-                                self.post_message = 'points=' + points_message[:-1]
+                                # self.post_message = 'points=' + points_message[:-1]
+                                self.post_message = points_message[:-1]
 
                                 end_heading = (next_pts[-1][0] - next_pts[-2][0], \
                                     next_pts[-1][1] - next_pts[-2][1])
@@ -147,7 +148,7 @@ class PathPlan(object):
             time.sleep(1)
             if self.post_ready:
                 print 'Notifying MOOSDB with new path'
-                self.comms.notify('WPT_UPDATE', self.get_post_message(), \
+                self.comms.notify('NEW_PATH', self.get_post_message(), \
                     pymoos.time())
                 self.comms.notify('START_UPDATE', self.start_line_message, pymoos.time())
             if self.post_next_turn:
