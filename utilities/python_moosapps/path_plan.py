@@ -118,8 +118,8 @@ class PathPlan(object):
                                 start_heading = pathplan.unit_vector(start_heading)
 
                                 self.turn_pt_message = 'point=' + \
-                                    str(next_pts[-1][0] + end_heading[0] * 25) + ',' \
-                                    + str(next_pts[-1][1] + end_heading[1] * 25)
+                                    str(next_pts[-1][0] + end_heading[0] * 30) + ',' \
+                                    + str(next_pts[-1][1] + end_heading[1] * 30)
                                 self.start_line_message = 'points=' + \
                                     str(next_pts[0][0] + start_heading[0] * 20) + ',' \
                                     + str(next_pts[0][1] + start_heading[1] * 20) + \

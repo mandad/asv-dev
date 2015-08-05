@@ -300,6 +300,9 @@ class PathPlan(object):
                 # If too large, have to find the next point that makes it small enough
                 # -- Method 1: Points from end of current --
                 test_seg = next_seg + [0, 1]
+                # TODO: Added this in response to an error, not sure if correct sln
+                if test_seg[1] > len(path_pts) - 1:
+                    break
                 while test_seg[1] < len(path_pts) - 1:
                     test_vec = path_pts[test_seg[1]] - path_pts[test_seg[0]]
                     angle1 = PathPlan.vector_angle(this_vec, test_vec)
@@ -314,6 +317,8 @@ class PathPlan(object):
                     test2_vec1 = PathPlan.vec_from_seg(path_pts, \
                         np.array([non_bend_idx[-2], this_seg[0]]))
                     test2_seg2 = np.array([this_seg[0], next_seg[1]])
+                    if test2_seg2[1] > len(path_pts) - 1:
+                        break
                     while test2_seg2[1] < len(path_pts) - 1:
                         test2_vec2 = PathPlan.vec_from_seg(path_pts, test2_seg2)
                         angle2 = PathPlan.vector_angle(test2_vec1, test2_vec2)
