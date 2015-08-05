@@ -55,7 +55,7 @@ class SonarSimulator(object):
 
     def run(self):
         while True:
-            time.sleep(1)
+            time.sleep(0.33)
             if self.post_ready:
                 print 'Notifying MOOSDB with swath width'
                 self.comms.notify('SWATH_WIDTH', self.get_post_message(), \
