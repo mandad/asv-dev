@@ -26,8 +26,10 @@ class PathPlan(object):
         self.need_to_process = False
         self.post_next_turn = False
         self.post_end = False
+        self.turn_count = 0
         # self.op_poly = [(16,-45), (50,-150), \
         #     (-85, -195), (-122, -70)]
+        # SH 15 Survey area:
         self.op_poly = [(4075.0, -650.0), (3293, -2464), (2405, -2259), \
             (3180, -387)]
 
@@ -72,6 +74,7 @@ class PathPlan(object):
                 if msg.is_name('NEXT_SWATH_SIDE'):
                     self.need_to_process = True
                 if msg.is_name('TURN_REACHED'):
+                    self.turn_count += 1
                     self.post_next_turn = True;
 
                 if self.need_to_process and (len(self.messages['SWATH_WIDTH_RECORD']) > 0):
@@ -125,6 +128,7 @@ class PathPlan(object):
                                 self.turn_pt_message = 'point=' + \
                                     str(next_pts[-1][0] + end_heading[0] * 30) + ',' \
                                     + str(next_pts[-1][1] + end_heading[1] * 30)
+                                self.turn_count = 0
                                 self.start_line_message = 'points=' + \
                                     str(next_pts[0][0] + start_heading[0] * 20) + ',' \
                                     + str(next_pts[0][1] + start_heading[1] * 20) + \
@@ -155,7 +159,7 @@ class PathPlan(object):
                 self.comms.notify('NEW_PATH', self.get_post_message(), \
                     pymoos.time())
                 self.comms.notify('START_UPDATE', self.start_line_message, pymoos.time())
-            if self.post_next_turn:
+            if self.post_next_turn and self.turn_count == 1:
                 self.comms.notify('TURN_UPDATE', self.turn_pt_message, pymoos.time())
                 self.post_next_turn = False
             if self.post_end:
