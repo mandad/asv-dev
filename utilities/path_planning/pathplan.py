@@ -333,8 +333,8 @@ class PathPlan(object):
                     # have been affected by the other method, but this requires additional
                     # loops to know
                     if angle1 == 500 or angle2 == 500:
+                        # Means we are checking a segment at the end of the line
                         print "Encountered default angle state, this is not good."
-                        pdb.set_trace()
                     else:
                         if pts_elim1 > pts_elim2 and pts_elim1 < (pts_elim2 * 2) and angle1 < angle2:
                             print(('Bend Fudging - pts_elim1: {0}, pts_elim2: {1}\n' + \

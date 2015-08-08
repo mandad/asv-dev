@@ -6,17 +6,19 @@ Damian Manda
 8 Feb 2015
 """
 
+VISMODE = False
+
 import numpy as np
 import rasterio
-try:
-    from mayavi import mlab
-except:
-    has_mlab = False
-else:
-    has_mlab = True
-# has_mlab = False
+if VISMODE:
+    try:
+        from mayavi import mlab
+    except:
+        has_mlab = False
+    else:
+        has_mlab = True
+    import matplotlib.pyplot as plt
 import pdb
-import matplotlib.pyplot as plt
 
 class BathyGrid(object):
     def __init__(self, size_x, size_y, res, geo_transform=None):

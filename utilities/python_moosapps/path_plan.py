@@ -21,11 +21,15 @@ class PathPlan(object):
         self.messages['TURN_REACHED'] = 'false'
         self.post_ready = False
         self.post_message = ''
+        self.turn_pt_message = ''
+        self.start_line_message = ''
         self.need_to_process = False
         self.post_next_turn = False
         self.post_end = False
-        self.op_poly = [(16,-45), (50,-150), \
-            (-85, -195), (-122, -70)]
+        # self.op_poly = [(16,-45), (50,-150), \
+        #     (-85, -195), (-122, -70)]
+        self.op_poly = [(4075.0, -650.0), (3293, -2464), (2405, -2259), \
+            (3180, -387)]
 
         # VIEW_SEGLIST = "pts={10,-26:16,-45},label=emily_waypt_line_start,
         # label_color=white,edge_color=white,vertex_color=dodger_blue,
@@ -145,7 +149,7 @@ class PathPlan(object):
 
     def run(self):
         while True:
-            time.sleep(1)
+            time.sleep(0.5)
             if self.post_ready:
                 print 'Notifying MOOSDB with new path'
                 self.comms.notify('NEW_PATH', self.get_post_message(), \
