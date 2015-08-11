@@ -194,7 +194,7 @@ class PathPlan(object):
                 intersection = self.find_nearest_intersect(extend_vec, starting_pt, op_poly)
                 # Make sure we aren't extending too far
                 if self.swath_record is None:
-                    extend_max = 100
+                    extend_max = 300
                 else:
                     extend_max = 15 * self.swath_record.interval
                 if intersection[0] < extend_max:
@@ -203,6 +203,8 @@ class PathPlan(object):
                         next_path_pts_extend = np.insert(next_path_pts_extend, 0, intersection[1], 0)
                     else:
                         next_path_pts_extend = np.append(next_path_pts_extend, [intersection[1]], 0)
+                else:
+                    print "Reached edge extension max"
 
         next_path_pts = next_path_pts_extend
         print('Added {0} points.\n'.format(len(next_path_pts) - pre_len))

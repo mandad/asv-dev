@@ -11,6 +11,8 @@ class PathPlan(object):
         self.comms = pymoos.comms()
         self.comms.set_on_connect_callback(self.connect_callback)
         self.comms.set_on_mail_callback(self.message_received)
+        pymoos.set_moos_timewarp(3)
+        self.comms.set_comms_control_timewarp_scale_factor(0.4)
         self.comms.run('localhost', 9000, 'pPathPlan')
 
         # Initialize stored variables
@@ -78,9 +80,8 @@ class PathPlan(object):
                     self.post_next_turn = True;
 
                 if self.need_to_process and (len(self.messages['SWATH_WIDTH_RECORD']) > 0):
-                    self.need_to_process = False
                     
-                    print 'Initiating path planning'
+                    print '\n**** Initiating path planning ****'
                     # process MOOS message points into list
                     if len(self.messages['SWATH_EDGE']) > 0:
                         print 'Getting edge points'
@@ -94,6 +95,7 @@ class PathPlan(object):
                                 outer_rec.append((float(x[1]), float(y[1])))
                         # pdb.set_trace()
                         if len(self.messages['SWATH_WIDTH_RECORD']) > 0:
+                            self.need_to_process = False
                             print 'Getting Swath Widths'
                             swath_widths = self.messages['SWATH_WIDTH_RECORD'].split(';')
                             swath_widths = [float(sw) for sw in swath_widths]
@@ -109,6 +111,8 @@ class PathPlan(object):
                             # This is where to add an opregion if needed
                             next_pts = path_planner.generate_next_path(self.op_poly)
 
+                            print('Number of pts in new_path: {0}'.format(len(next_pts)))
+
                             if len(next_pts) > 1:
                                 point_list = [str(pt[0]) + ',' + str(pt[1]) + ':' for pt in next_pts]
                                 points_message = ''.join(point_list)
@@ -119,27 +123,22 @@ class PathPlan(object):
 
                                 end_heading = (next_pts[-1][0] - next_pts[-2][0], \
                                     next_pts[-1][1] - next_pts[-2][1])
-                                # this is actually the reverse of the start heading
-                                start_heading = (next_pts[0][0] - next_pts[1][0], \
-                                    next_pts[0][1] - next_pts[1][1])
+
                                 end_heading = pathplan.unit_vector(end_heading)
-                                start_heading = pathplan.unit_vector(start_heading)
 
                                 self.turn_pt_message = 'point=' + \
-                                    str(next_pts[-1][0] + end_heading[0] * 30) + ',' \
-                                    + str(next_pts[-1][1] + end_heading[1] * 30)
+                                    str(next_pts[-1][0] + end_heading[0] * 50) + ',' \
+                                    + str(next_pts[-1][1] + end_heading[1] * 50)
                                 self.turn_count = 0
-                                self.start_line_message = 'points=' + \
-                                    str(next_pts[0][0] + start_heading[0] * 20) + ',' \
-                                    + str(next_pts[0][1] + start_heading[1] * 20) + \
-                                    ':' + str(next_pts[0][0]) + ',' + str(next_pts[0][1])
 
+                                print('Setting post_ready=True')
                                 self.post_ready = True
                             else:
                                 self.post_ready = False
                                 self.post_end = True
                 else:
-                    self.post_ready = False
+                    pass
+                    # self.post_ready = False
         except Exception, e:
             print 'Error:' + str(e)
             raise e
@@ -155,18 +154,17 @@ class PathPlan(object):
         while True:
             time.sleep(0.5)
             if self.post_ready:
-                print 'Notifying MOOSDB with new path'
+                print 'Notifying MOOSDB with new path\n'
                 self.comms.notify('NEW_PATH', self.get_post_message(), \
                     pymoos.time())
-                self.comms.notify('START_UPDATE', self.start_line_message, pymoos.time())
+                
             if self.post_next_turn and self.turn_count == 1:
+                print 'Posting turn update'
                 self.comms.notify('TURN_UPDATE', self.turn_pt_message, pymoos.time())
                 self.post_next_turn = False
             if self.post_end:
                 self.comms.notify('FAULT', 'true', pymoos.time())
                 self.post_end = False
-
-
 
 
 def main():

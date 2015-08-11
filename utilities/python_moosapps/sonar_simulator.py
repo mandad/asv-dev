@@ -16,6 +16,8 @@ class SonarSimulator(object):
         self.comms = pymoos.comms()
         self.comms.set_on_connect_callback(self.connect_callback)
         self.comms.set_on_mail_callback(self.message_received)
+        pymoos.set_moos_timewarp(3)
+        self.comms.set_comms_control_timewarp_scale_factor(0.4)
         self.comms.run('localhost', 9000, 'uSonarSimulator')
 
         # Initialize stored variables
@@ -28,6 +30,7 @@ class SonarSimulator(object):
         self.swath_angle = SWATH_ANGLE
         self.last_port_depth = 0
         self.last_stbd_depth = 0
+        self.msg_count = 0
 
     def connect_callback(self):
         result = True
@@ -41,7 +44,7 @@ class SonarSimulator(object):
         try:
             for msg in self.comms.fetch():
                 # Shouldn't ever be binary message
-                print 'Checking message type and getting message'
+                # print 'Checking message type and getting message'
                 if msg.is_double():
                     self.messages[msg.name()] = msg.double()
                 else:
@@ -49,16 +52,22 @@ class SonarSimulator(object):
 
                 # Arbitrary message triggers output
                 if msg.is_name('NAV_HEADING'):
-                    if self.messages['NAV_X'] != 0 and self.messages['NAV_Y'] != 0:
-                        print 'Posting swath width'
-                        # Message in the format "port=52;stbd=37"
-                        self.post_ready = True
-                        current_loc = (self.messages['NAV_X'] + 353408.656, \
-                            self.messages['NAV_Y'] + 6083.832 + 4753335.914)
-                        swaths = self.get_swath_widths(current_loc, \
-                            self.messages['NAV_HEADING'])
-                        self.post_message = 'port=' + str(swaths[0])  + ';stbd=' \
-                            + str(swaths[1])
+                    # Allows skipping messages
+                    self.msg_count += 1
+                    if self.msg_count > 1:
+                        self.msg_count = 0
+                        if self.messages['NAV_X'] != 0 and self.messages['NAV_Y'] != 0:
+                            print 'Posting swath width'
+                            # Message in the format "port=52;stbd=37"
+                            self.post_ready = True
+                            current_loc = (self.messages['NAV_X'] + 353408.656, \
+                                self.messages['NAV_Y'] + 6083.832 + 4753335.914)
+                            swaths = self.get_swath_widths(current_loc, \
+                                self.messages['NAV_HEADING'])
+                            self.post_message = 'x=' + str(self.messages['NAV_X']) + \
+                                ';y=' + str(self.messages['NAV_Y']) + ';hdg=' + \
+                                str(self.messages['NAV_HEADING']) + ';port=' +  \
+                                str(swaths[0])  +  ';stbd='  + str(swaths[1])
         except Exception, e:
             print 'Error: ' + str(e)
             raise e

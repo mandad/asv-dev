@@ -60,7 +60,7 @@ def test_follow_path():
     plt.show()
     return locs
 
-def test_swath_sim(gtype='slope', num_lines=5):
+def test_swath_sim(gtype='slope', num_lines=3):
     sim = simulator.Simulator(0, 0, .5, gtype)
     # ===== Starting Line =======
     # Regular, start along x axis
@@ -79,8 +79,8 @@ def test_swath_sim(gtype='slope', num_lines=5):
 
     if sim.run_simulation(num_lines):
         # use plot_sim(False) to not show swaths
-        sim.plot_sim(False, False)
-        pdb.set_trace()
+        sim.plot_sim(True, False)
+        # pdb.set_trace()
 
 def test_swath_sim_import(terrain='flat', num_lines=2):
     if terrain == 'flat':

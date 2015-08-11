@@ -6,7 +6,7 @@ Damian Manda
 8 Feb 2015
 """
 
-VISMODE = False
+VISMODE = True
 
 import numpy as np
 import rasterio
@@ -160,6 +160,7 @@ class BathyGrid(object):
                 else:
                     plt.imshow(-np.transpose(self.grid), cmap='jet', zorder=0, \
                         extent=self.get_extents())
+                    # plt.savefig('path_display.png', dpi=600, transparent=True)
                 cbar = plt.colorbar()
                 cbar.set_label('Depth [m]')
                 if not existing_fig:

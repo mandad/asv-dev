@@ -67,7 +67,7 @@ class Simulator(object):
         """
         self.bathy_grid = gridgen.BathyGrid(size_x, size_y, 1)
         if gtype == 'hump':
-            self.bathy_grid.generate_hump(20, 15, 'y')
+            self.bathy_grid.generate_hump(20, 12, 'y')
         elif gtype == 'dip':
             self.bathy_grid.generate_dip(40, 15, 'x', 5)
         elif gtype == 'flat':
@@ -194,7 +194,7 @@ class Simulator(object):
                     print('New Path Length: {0}'.format(new_len))
 
                     # Remove pts on the path that are in the coverage
-                    # TODO: Move this to pathplan.py
+                    # TODO: Move this to pathplan.py, need to extend again after this (or at least to edge of coverage)
                     print('Eliminating Points In Existing Coverage')
                     prepared_coverage = prep(self.coverage)
                     next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(tuple(pt)))]
@@ -252,19 +252,19 @@ class Simulator(object):
             swath_xy_port = zip(*swath_edge)
             swath_edge = self.swath_record['stbd'].get_swath_outer_pts('stbd')
             swath_xy_stbd = zip(*swath_edge)
-            plt.plot(swath_xy_port[0], swath_xy_port[1], 'ro-', label='Swath Edge Port')
-            plt.plot(swath_xy_stbd[0], swath_xy_stbd[1], 'go-', label='Swath Edge Stbd')
+            plt.plot(swath_xy_port[0], swath_xy_port[1], 'ro-', label='Swath Edge Port', markersize=1)
+            plt.plot(swath_xy_stbd[0], swath_xy_stbd[1], 'go-', label='Swath Edge Stbd', markersize=1)
 
             # First Swath
-            if len(self.prev_swath) > 0:
-                swath_edge = self.prev_swath['port'].get_swath_outer_pts('port')
-                prev_swath_xy_port = zip(*swath_edge)
-                swath_edge = self.prev_swath['stbd'].get_swath_outer_pts('stbd')
-                prev_swath_xy_stbd = zip(*swath_edge)
-                plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'rs--', \
-                    label='Prev Edge Port')
-                plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'gs--', \
-                    label='Prev Edge Stbd')
+            # if len(self.prev_swath) > 0:
+            #     swath_edge = self.prev_swath['port'].get_swath_outer_pts('port')
+            #     prev_swath_xy_port = zip(*swath_edge)
+            #     swath_edge = self.prev_swath['stbd'].get_swath_outer_pts('stbd')
+            #     prev_swath_xy_stbd = zip(*swath_edge)
+            #     plt.plot(prev_swath_xy_port[0], prev_swath_xy_port[1], 'rs--', \
+            #         label='Prev Edge Port')
+            #     plt.plot(prev_swath_xy_stbd[0], prev_swath_xy_stbd[1], 'gs--', \
+            #         label='Prev Edge Stbd')
 
         # pdb.set_trace()
         # Plot the coverage recorded
