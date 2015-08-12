@@ -31,9 +31,11 @@ class PathPlan(object):
         self.turn_count = 0
         # self.op_poly = [(16,-45), (50,-150), \
         #     (-85, -195), (-122, -70)]
-        # SH 15 Survey area:
-        self.op_poly = [(4075.0, -650.0), (3293, -2464), (2405, -2259), \
-            (3180, -387)]
+        # SH 15 North Survey area:
+        # self.op_poly = [(4075.0, -650.0), (3293, -2464), (2405, -2259), \
+        #     (3180, -387)]
+        self.op_poly = [(2497.0, -4374.0), (1727, -6077), (588, -5468), \
+            (1272, -3864)]
 
         # VIEW_SEGLIST = "pts={10,-26:16,-45},label=emily_waypt_line_start,
         # label_color=white,edge_color=white,vertex_color=dodger_blue,
@@ -50,6 +52,38 @@ class PathPlan(object):
         if self.comms.wait_until_connected(2000):
             print 'Posting op region: ' + pts_string
             self.comms.notify('VIEW_SEGLIST', region_message, pymoos.time())
+            print('Updating lines')
+            # Put these in a function
+            point_list = [str(pt[0]) + ',' + str(pt[1]) + ':' for pt in self.op_poly[0:2]]
+            points_message = ''.join(point_list)
+            points_message = 'points=' + points_message[:-1]
+            self.comms.notify('SURVEY_UPDATE', points_message, pymoos.time())
+
+            start_heading = (self.op_poly[0][0] - self.op_poly[1][0], \
+                self.op_poly[0][1] - self.op_poly[1][1])
+            start_heading = pathplan.unit_vector(start_heading)
+            start_line_message = 'points=' + \
+                str(self.op_poly[0][0] + start_heading[0] * 30) + ',' \
+                + str(self.op_poly[0][1] + start_heading[1] * 30) + \
+                ':' + str(self.op_poly[0][0]) + ',' + str(self.op_poly[0][1])
+            self.comms.notify('START_UPDATE', start_line_message, pymoos.time())
+
+            end_heading = (self.op_poly[1][0] - self.op_poly[0][0], \
+                self.op_poly[1][1] - self.op_poly[0][1])
+            end_heading = pathplan.unit_vector(end_heading)
+            turn_pt_message = 'point=' + \
+                str(self.op_poly[1][0] + end_heading[0] * 50) + ',' \
+                + str(self.op_poly[1][1] + end_heading[1] * 50)
+            self.comms.notify('TURN_UPDATE', turn_pt_message, pymoos.time())
+
+            # move boat to start
+            self.comms.notify('NAV_X', str(self.op_poly[0][0] + \
+                start_heading[0] * 30), pymoos.time())
+            self.comms.notify('NAV_Y', str(self.op_poly[0][1] + \
+                start_heading[1] * 30), pymoos.time())
+
+            # pdb.set_trace()
+
         else:
             print 'Timed out connecting before sending op region'
 
@@ -123,9 +157,7 @@ class PathPlan(object):
 
                                 end_heading = (next_pts[-1][0] - next_pts[-2][0], \
                                     next_pts[-1][1] - next_pts[-2][1])
-
                                 end_heading = pathplan.unit_vector(end_heading)
-
                                 self.turn_pt_message = 'point=' + \
                                     str(next_pts[-1][0] + end_heading[0] * 50) + ',' \
                                     + str(next_pts[-1][1] + end_heading[1] * 50)
