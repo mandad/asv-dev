@@ -22,7 +22,7 @@ RESTRICT_ASV_TO_REGION = True
 # from lsi import lsi
 np.set_printoptions(suppress=True)
 MAX_BEND_ANGLE = 60 # degrees
-DEBUG_PLOTS = False
+DEBUG_PLOTS = True
 
 def unit_vector(vector):
     """
@@ -138,7 +138,7 @@ class PathPlan(object):
 
         if DEBUG_PLOTS:
             xy_path0 = zip(*next_path_pts)
-            plt.plot(xy_path0[0], xy_path0[1], 'go-', label='Before Intersect', markersize=8)
+            plt.plot(xy_path0[0], xy_path0[1], 'go-', label='Initial Path', markersize=8)
 
         # ---------- Intersections -----------
         print('Eliminating path intersects itself.')
@@ -150,7 +150,7 @@ class PathPlan(object):
 
         if DEBUG_PLOTS:
             xy_path = zip(*next_path_pts)
-            plt.plot(xy_path[0], xy_path[1], 'bs-', label='Before Bends', markersize=6)
+            plt.plot(xy_path[0], xy_path[1], 'bs-', label='After Self Intersection Removal', markersize=6)
             plt.axis('equal')
 
         # ---------- Bends -----------
@@ -162,7 +162,7 @@ class PathPlan(object):
 
         if DEBUG_PLOTS and pre_len > 0:
             xy_path2 = zip(*next_path_pts)
-            plt.plot(xy_path2[0], xy_path2[1], 'r^-', label='After Bends', markersize=6)
+            plt.plot(xy_path2[0], xy_path2[1], 'r^-', label='After Bend Removal', markersize=6)
 
         # ---------- Restrict to Region -----------
         if RESTRICT_ASV_TO_REGION:
@@ -178,13 +178,13 @@ class PathPlan(object):
 
         if DEBUG_PLOTS and pre_len > 0:
             xy_path3 = zip(*next_path_pts)
-            plt.plot(xy_path3[0], xy_path3[1], 'k+-', label='After Op Region', markersize=6)
-            plt.legend(loc='best')
-            plt.show()
-            pdb.set_trace()
+            plt.plot(xy_path3[0], xy_path3[1], 'k+-', label='After Restriction to Region', markersize=6)
+            # pdb.set_trace()
 
         # ---------- Extend -----------
         print('Extending ends of path to edge of region.')
+        # Idea: Maybe extend from the point to the nearest edge, not along the 
+        # vector of the last segment
         next_path_pts_extend = np.array(next_path_pts, copy=True)
         # Extend end points to edge of op region
         if op_poly is not None and pre_len > 1:
@@ -208,6 +208,13 @@ class PathPlan(object):
 
         next_path_pts = next_path_pts_extend
         print('Added {0} points.\n'.format(len(next_path_pts) - pre_len))
+
+        if DEBUG_PLOTS and pre_len > 0:
+            xy_path4 = zip(*next_path_pts)
+            plt.plot(xy_path4[0], xy_path4[1], 'md-', label='After Extend to Edges', markersize=6)
+            plt.legend(loc='best')
+            plt.show()
+            # pdb.set_trace()
 
         return next_path_pts
 
@@ -330,7 +337,8 @@ class PathPlan(object):
                     pts_elim2 = test2_seg2[1] - test2_seg2[0]
 
                     # Check if one method angle is better
-                    # may need to refine this threshold or only use angle
+                    # may need to refine this threshold or only use angle (or add
+                    # a buffer to the angle for ones that are close)
                     # really needs to be total points removed in region that would
                     # have been affected by the other method, but this requires additional
                     # loops to know
