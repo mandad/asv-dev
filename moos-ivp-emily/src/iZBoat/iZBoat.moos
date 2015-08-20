@@ -14,5 +14,7 @@ ProcessConfig = iZBoat
 
    //iZBoat Configuration
    MaxInputRate = 20
+   MaxRudder = 45
+   MaxThrottle = 100
 }
 
