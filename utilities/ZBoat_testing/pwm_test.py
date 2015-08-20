@@ -20,7 +20,7 @@ class ZBoatTester(object):
 
     def close_port(self):
         # The port will also close when it is deconstructed
-        self.set.close()
+        self.ser.close()
 
     def set_autonomy_mode(self):
         print('Setting Autonomous Control Mode\n')
@@ -37,14 +37,15 @@ class ZBoatTester(object):
         right_thrust = clamp(right_thrust, 1.0, 2.0)
         rudder = clamp(rudder, 1.0, 2.0)
 
-        print('Writing PWM values r_thrust=%4.3f, l_thrust=%4.3f, rudder=%4.3f')
-        self.ser.write('!pwm, *, %4.3f, %4.3f, %4.3f, *, *\r\n'.format( \
+        print('Writing PWM values r_thrust={:.3f}, l_thrust={:.3f}, rudder={:.3f}'.format( \
+            left_thrust, right_thrust, rudder))
+        self.ser.write('!pwm, *, {:.3f}, {:.3f}, {:.3f}, *, *\r\n'.format( \
             left_thrust, right_thrust, rudder))
 
     def write_loop(self, left_thrust, right_thrust, rudder):
         try:
             while True:
-                write_pwm_values(left_thrust, right_thrust, rudder)
+                self.write_pwm_values(left_thrust, right_thrust, rudder)
                 time.sleep(0.5)
         except KeyboardInterrupt:
             print('Exiting write loop')
@@ -61,10 +62,10 @@ def main(argv):
 
     if len(argv) == 2:
         # args = thrust, rudder
-        this_tester.write_pwm_values(argv[0], argv[0], argv[1])
+        this_tester.write_loop(float(argv[0]), float(argv[0]), float(argv[1]))
     elif len(argv) >= 3:
         # args = left_thrust, right_thrust, rudder
-        this_tester.write_pwm_values(argv[0], argv[1], argv[2])
+        this_tester.write_loop(float(argv[0]), float(argv[1]), float(argv[2]))
 
     this_tester.set_manual_mode()
     this_tester.close_port()
