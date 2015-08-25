@@ -103,19 +103,32 @@ comms = pymoos.comms()
 filename_hypack = ""
 
 def on_connect():
-    line_reader = HypackLineReader(argv[0])
-    line_reader.read_file()
-    msg = line_reader.get_lines_msg()
-    print('Posting Message to MOOS')
-    print(msg)
-    comms.notify('UTM_SURVEYLINE', msg, pymoos.time())
-    return true
+    # line_reader = HypackLineReader(filename_hypack)
+    # line_reader.read_file()
+    # msg = line_reader.get_lines_msg()
+    # print('Posting Message to MOOS')
+    # print(msg)
+    # comms.notify('UTM_SURVEYLINE', msg, pymoos.time())
+    return True
 
 def main(argv):
     comms.set_on_connect_callback(on_connect);
     # comms.run('192.168.2.3',9000,'pHypackPath')
-    filename_hypack = argv[1]
-    comms.run('10.42.0.15',9000,'pHypackPath')
+    filename_hypack = argv[0]
+    # comms.run('10.42.0.15',9000,'pHypackPath')
+    print('Connecting to MOOSDB')
+    comms.run('192.168.2.3',9000,'pHypackPath')
+    if comms.wait_until_connected(2000):
+        line_reader = HypackLineReader(filename_hypack)
+        line_reader.read_file()
+        msg = line_reader.get_lines_msg()
+        print('Posting Message to MOOS')
+        print(msg)
+        comms.notify('UTM_SURVEYLINE', msg, pymoos.time())
+    else:
+        print('Timed out trying to send to survey system.')
+    comms.close(True)
+
 
 if __name__ == "__main__":
     main(sys.argv[1:])        

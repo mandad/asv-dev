@@ -12,3 +12,4 @@ utilities/path_planning/path_output_flat.png
 
 .LastOpenedMOOSLogDirectory
 MOOSLog*
+*.lnw
