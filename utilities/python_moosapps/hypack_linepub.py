@@ -5,6 +5,9 @@ import math
 import pdb
 import sys
 
+TURN_PT_OFFSET = 15
+ALIGNMENT_LINE_LEN = 10
+
 def magnitude(v):
     return math.sqrt(sum(v[i]*v[i] for i in range(len(v))))
 
@@ -22,6 +25,9 @@ class SurveyLine(object):
     def add_vertex(self, x, y):
         self.points.append((x,y))
 
+    def reverse_line(self):
+        self.points.reverse()
+
     def end_line(self):
         self.calculate_alignment_line()
         self.calclulate_turn_pt()
@@ -35,16 +41,16 @@ class SurveyLine(object):
                 self.points[0][1] - self.points[1][1])
             start_heading = unit_vector(start_heading)
             # actually only one point
-            self.alignment_line.append( (self.points[0][0] + start_heading[0] * 15, \
-                self.points[0][1] + start_heading[1] * 15) )
+            self.alignment_line.append( (self.points[0][0] + start_heading[0] * ALIGNMENT_LINE_LEN, \
+                self.points[0][1] + start_heading[1] * ALIGNMENT_LINE_LEN) )
 
     def calclulate_turn_pt(self):
         if len(self.points) >= 2:
             end_heading = (self.points[-1][0] - self.points[-2][0], \
                 self.points[-1][1] - self.points[-2][1])
             end_heading = unit_vector(end_heading)
-            self.turn_point.append( (self.points[-1][0] + end_heading[0] * 20, \
-                self.points[-1][1] + end_heading[1] * 20) )
+            self.turn_point.append( (self.points[-1][0] + end_heading[0] * TURN_PT_OFFSET, \
+                self.points[-1][1] + end_heading[1] * TURN_PT_OFFSET) )
 
     def get_points_string(self):
         full_points = self.alignment_line + self.points + self.turn_point
@@ -70,6 +76,7 @@ class HypackLineReader(object):
         f = open(self.line_file, 'r')
         num_cur_line_pts = 2
         cur_line = SurveyLine();
+        line_num = 0
 
         for line in f:
             split_line = line.split()
@@ -87,6 +94,9 @@ class HypackLineReader(object):
                     # This is the line number and has no meaning to us
                     cur_line.set_line_num(int(split_line[1]))
                 elif split_line[0] == 'EOL':
+                    line_num += 1
+                    if line_num % 2 == 0:
+                        cur_line.reverse_line()
                     cur_line.end_line()
                     self.lines.append(cur_line)
 
