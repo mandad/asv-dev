@@ -34,8 +34,13 @@ class PathPlan(object):
         # SH 15 North Survey area:
         # self.op_poly = [(4075.0, -650.0), (3293, -2464), (2405, -2259), \
         #     (3180, -387)]
-        self.op_poly = [(2497.0, -4374.0), (1727, -6077), (588, -5468), \
-            (1272, -3864)]
+        # SH15 South Survey Area:
+        # self.op_poly = [(2497.0, -4374.0), (1727, -6077), (588, -5468), \
+        #     (1272, -3864)]
+        
+        #0,100 : -229,47 : -279,217 : -41,264
+        # Newport, RI
+        self.op_poly = [(0,100), (-229,47), (-279,217), (-41,264)]
 
         # VIEW_SEGLIST = "pts={10,-26:16,-45},label=emily_waypt_line_start,
         # label_color=white,edge_color=white,vertex_color=dodger_blue,
