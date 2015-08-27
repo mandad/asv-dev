@@ -9,6 +9,8 @@ from shapely.prepared import prep
 
 SWATH_INTERVAL = 10 #meters
 NEXT_PATH_SIDE = ['port', 'stbd']
+# 0 = port, 1 = stbd
+FIRST_SWATH_SIDE = 0
 DEBUG_MODE = False
 
 class RecordSwath(object):
@@ -35,7 +37,7 @@ class RecordSwath(object):
         self.messages['NEXT_SWATH_SIDE'] = 'port'
         self.messages['NEW_PATH'] = ''
         self.swath_side = 'port'
-        self.next_swath_side = 0
+        self.next_swath_side = (FIRST_SWATH_SIDE + 1) % 2
         self.post_ready = False
         self.path_ready = False
         self.path_message = ''

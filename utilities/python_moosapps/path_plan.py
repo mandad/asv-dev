@@ -40,7 +40,9 @@ class PathPlan(object):
         
         #0,100 : -229,47 : -279,217 : -41,264
         # Newport, RI
-        self.op_poly = [(0,100), (-229,47), (-279,217), (-41,264)]
+        #self.op_poly = [ (-229,47), (-279,217), (-41,264), (0,100)]
+	# South of Pier
+        self.op_poly = [ (-167, -194), (-136, -342), (199, -255), (142, -107) ]
 
         # VIEW_SEGLIST = "pts={10,-26:16,-45},label=emily_waypt_line_start,
         # label_color=white,edge_color=white,vertex_color=dodger_blue,
