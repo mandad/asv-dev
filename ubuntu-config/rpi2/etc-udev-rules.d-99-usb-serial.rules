@@ -1,0 +1,3 @@
+SUBSYSTEM=="tty", ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", , SYMLINK+="ttyUSB_1Port"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", ATTRS{serial}=="FT8XARGH", ENV{ID_USB_INTERFACE_NUM}=="00", SYMLINK+="ttyUSB_2Port_0"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6010", ATTRS{serial}=="FT8XARGH", ENV{ID_USB_INTERFACE_NUM}=="01", SYMLINK+="ttyUSB_2Port_1"
