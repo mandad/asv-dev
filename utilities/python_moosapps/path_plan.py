@@ -5,6 +5,8 @@ import pdb
 # import gridgen
 
 SWATH_OVERLAP = 0.2
+TURN_PT_OFFSET = 15
+ALIGNMENT_LINE_LEN = 10
 
 class PathPlan(object):
     def __init__(self):
@@ -70,8 +72,8 @@ class PathPlan(object):
                 self.op_poly[0][1] - self.op_poly[1][1])
             start_heading = pathplan.unit_vector(start_heading)
             start_line_message = 'points=' + \
-                str(self.op_poly[0][0] + start_heading[0] * 30) + ',' \
-                + str(self.op_poly[0][1] + start_heading[1] * 30) + \
+                str(self.op_poly[0][0] + start_heading[0] * ALIGNMENT_LINE_LEN) + ',' \
+                + str(self.op_poly[0][1] + start_heading[1] * ALIGNMENT_LINE_LEN) + \
                 ':' + str(self.op_poly[0][0]) + ',' + str(self.op_poly[0][1])
             self.comms.notify('START_UPDATE', start_line_message, pymoos.time())
 
@@ -79,8 +81,8 @@ class PathPlan(object):
                 self.op_poly[1][1] - self.op_poly[0][1])
             end_heading = pathplan.unit_vector(end_heading)
             turn_pt_message = 'point=' + \
-                str(self.op_poly[1][0] + end_heading[0] * 50) + ',' \
-                + str(self.op_poly[1][1] + end_heading[1] * 50)
+                str(self.op_poly[1][0] + end_heading[0] * TURN_PT_OFFSET) + ',' \
+                + str(self.op_poly[1][1] + end_heading[1] * TURN_PT_OFFSET)
             self.comms.notify('TURN_UPDATE', turn_pt_message, pymoos.time())
 
             # move boat to start
@@ -166,8 +168,8 @@ class PathPlan(object):
                                     next_pts[-1][1] - next_pts[-2][1])
                                 end_heading = pathplan.unit_vector(end_heading)
                                 self.turn_pt_message = 'point=' + \
-                                    str(next_pts[-1][0] + end_heading[0] * 50) + ',' \
-                                    + str(next_pts[-1][1] + end_heading[1] * 50)
+                                    str(next_pts[-1][0] + end_heading[0] * TURN_PT_OFFSET) + ',' \
+                                    + str(next_pts[-1][1] + end_heading[1] * TURN_PT_OFFSET)
                                 self.turn_count = 0
 
                                 print('Setting post_ready=True')

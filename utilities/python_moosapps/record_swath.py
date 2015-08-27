@@ -12,6 +12,7 @@ NEXT_PATH_SIDE = ['port', 'stbd']
 # 0 = port, 1 = stbd
 FIRST_SWATH_SIDE = 0
 DEBUG_MODE = False
+ALIGNMENT_LINE_LEN = 10
 
 class RecordSwath(object):
     def __init__(self):
@@ -142,8 +143,8 @@ class RecordSwath(object):
                                 next_path[0][1] - next_path[1][1])
                             start_heading = pathplan.unit_vector(start_heading)
                             self.start_line_message = 'points=' + \
-                                    str(next_path[0][0] + start_heading[0] * 30) + ',' \
-                                    + str(next_path[0][1] + start_heading[1] * 30) + \
+                                    str(next_path[0][0] + start_heading[0] * ALIGNMENT_LINE_LEN) + ',' \
+                                    + str(next_path[0][1] + start_heading[1] * ALIGNMENT_LINE_LEN) + \
                                     ':' + str(next_path[0][0]) + ',' + str(next_path[0][1])
 
                             point_list = [str(pt[0]) + ',' + str(pt[1]) + ':' for pt in next_path]
