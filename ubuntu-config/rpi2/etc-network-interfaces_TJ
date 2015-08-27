@@ -1,0 +1,43 @@
+# interfaces(5) file used by ifup(8) and ifdown(8)
+# Include files from /etc/network/interfaces.d:
+source-directory /etc/network/interfaces.d
+
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+allow-hotplug eth0
+#iface eth0 inet dhcp
+#iface eth0:1 inet static
+#	address 192.168.2.9
+#	netmask 255.255.255.0
+#	gateway 192.168.2.1
+#	dns-nameservers 192.168.2.20 192.168.2.21
+auto eth0
+iface eth0 inet static
+	address 192.168.2.3
+	netmask 255.255.255.0
+        gateway 192.168.2.1
+#        address 10.42.0.15
+#        gateway 10.42.0.1
+#        dns-nameservers 10.48.16.35 10.48.16.36
+
+#auto wlan0
+#allow-hotplug wlan0
+#iface wlan0 inet dhcp
+#	wpa-ssid "BULLET"
+#	wpa-psk "asvpassword"
+#       gateway 10.42.0.1
+#	address 10.42.0.80
+#	netmask 255.255.255.0
+	
+#auto wlan0
+#allow-hotplug wlan0
+#iface wlan0 inet dhcp
+#	wpa-ssid "TJWLAN"
+#	wpa-psk "TJW0rk1n3asy"
+#        hwaddress ether E0-F8-47-23-84-C0
+#       gateway 10.42.0.1
+#	address 10.42.0.80
+#	netmask 255.255.255.0
