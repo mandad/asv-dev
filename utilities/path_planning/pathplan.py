@@ -401,9 +401,11 @@ class PathPlan(object):
         non_bend_idx = np.unique(non_bend_idx)
 
         #if only have first seg + last point
+	# need to possibly worry about eliminating first point
+        # Better way - advance along edge by distance of last swath offset
         if non_bend_idx.size <= 3 and len(path_pts) > 5:
             # Try again eliminating the first segment
-            return PathPlan.remove_bends(path_pts[1:])
+            return PathPlan.remove_bends([path_pts[0]]+path_pts[2:])
         else:
             return path_pts[non_bend_idx]
 

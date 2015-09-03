@@ -115,9 +115,12 @@ class RecordSwath(object):
                             self.swath_record_message = self.swath_record_message[:-1]
 
                             # Build full coverage model
-                            new_coverage = self.swath_record['stbd'].get_swath_coverage('stbd')
-                            new_coverage = new_coverage.union(self.swath_record['port'].get_swath_coverage('port'))
-                            self.coverage = self.coverage.union(new_coverage)
+                            try:
+                                new_coverage = self.swath_record['stbd'].get_swath_coverage('stbd')
+                                new_coverage = new_coverage.union(self.swath_record['port'].get_swath_coverage('port'))
+                                self.coverage = self.coverage.union(new_coverage)
+                            except Exception, e:
+                                print("Error adding coverage")
 
                             self.swath_record['stbd'].reset_line()
                             self.swath_record['port'].reset_line()
@@ -134,9 +137,11 @@ class RecordSwath(object):
                             next_path = [(float(pt.split(',')[0]), float(pt.split(',')[1])) \
                                 for pt in next_path_pts]
                             new_len = len(next_path)
-                            prepared_coverage = prep(self.coverage)
-                            next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(pt))]
-                            print('Removed {0} points'.format(new_len - len(next_path)))
+                            if False:
+                                #if self.coverage.area != 0:
+                                prepared_coverage = prep(self.coverage)
+                                next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(pt))]
+                                print('Removed {0} points'.format(new_len - len(next_path)))
 
                             # this is actually the reverse of the start heading
                             start_heading = (next_path[0][0] - next_path[1][0], \
