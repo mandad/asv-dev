@@ -3,7 +3,6 @@
 initialize   DEPLOY = false
 initialize   RETURN = false
 initialize   LOITER = false
-initialize   REACHED_HOME = false
 initialize   AVOID = true
 
 Set MODE = ACTIVE {
