@@ -7,19 +7,20 @@ from shapely.geometry import Polygon, MultiPoint, Point, MultiPolygon
 import shapely.geometry
 from shapely.prepared import prep
 
-SWATH_INTERVAL = 10 #meters
+SWATH_INTERVAL = 15 #meters
 NEXT_PATH_SIDE = ['port', 'stbd']
 # 0 = port, 1 = stbd
-FIRST_SWATH_SIDE = 0
+FIRST_SWATH_SIDE = 1
 DEBUG_MODE = False
 ALIGNMENT_LINE_LEN = 10
+REMOVE_IN_COVERAGE = True
 
 class RecordSwath(object):
     def __init__(self):
         self.comms = pymoos.comms()
         self.comms.set_on_connect_callback(self.connect_callback)
         self.comms.set_on_mail_callback(self.message_received)
-        pymoos.set_moos_timewarp(3)
+        pymoos.set_moos_timewarp(7)
         self.comms.set_comms_control_timewarp_scale_factor(0.4)
         self.comms.run('localhost', 9000, 'uRecordSwath')
         self.swath_record = dict()
@@ -41,6 +42,7 @@ class RecordSwath(object):
         self.next_swath_side = (FIRST_SWATH_SIDE + 1) % 2
         self.post_ready = False
         self.path_ready = False
+        self.post_end = False
         self.path_message = ''
         self.outer_message = ''
         self.swath_record_message = ''
@@ -137,25 +139,29 @@ class RecordSwath(object):
                             next_path = [(float(pt.split(',')[0]), float(pt.split(',')[1])) \
                                 for pt in next_path_pts]
                             new_len = len(next_path)
-                            if False:
+                            if REMOVE_IN_COVERAGE:
                                 #if self.coverage.area != 0:
                                 prepared_coverage = prep(self.coverage)
                                 next_path = [pt for pt in next_path if not prepared_coverage.contains(Point(pt))]
                                 print('Removed {0} points'.format(new_len - len(next_path)))
 
-                            # this is actually the reverse of the start heading
-                            start_heading = (next_path[0][0] - next_path[1][0], \
-                                next_path[0][1] - next_path[1][1])
-                            start_heading = pathplan.unit_vector(start_heading)
-                            self.start_line_message = 'points=' + \
-                                    str(next_path[0][0] + start_heading[0] * ALIGNMENT_LINE_LEN) + ',' \
-                                    + str(next_path[0][1] + start_heading[1] * ALIGNMENT_LINE_LEN) + \
-                                    ':' + str(next_path[0][0]) + ',' + str(next_path[0][1])
+                            if len(next_path) < 3:
+                                self.post_end = True
+                                print('Path too short, ending survey')
+                            else:
+                                # this is actually the reverse of the start heading
+                                start_heading = (next_path[0][0] - next_path[1][0], \
+                                    next_path[0][1] - next_path[1][1])
+                                start_heading = pathplan.unit_vector(start_heading)
+                                self.start_line_message = 'points=' + \
+                                        str(next_path[0][0] + start_heading[0] * ALIGNMENT_LINE_LEN) + ',' \
+                                        + str(next_path[0][1] + start_heading[1] * ALIGNMENT_LINE_LEN) + \
+                                        ':' + str(next_path[0][0]) + ',' + str(next_path[0][1])
 
-                            point_list = [str(pt[0]) + ',' + str(pt[1]) + ':' for pt in next_path]
-                            points_message = ''.join(point_list)
-                            self.path_message = 'points=' + points_message[:-1]
-                            self.path_ready = True
+                                point_list = [str(pt[0]) + ',' + str(pt[1]) + ':' for pt in next_path]
+                                points_message = ''.join(point_list)
+                                self.path_message = 'points=' + points_message[:-1]
+                                self.path_ready = True
                         else:
                             print('No path points received')
             return True
@@ -166,7 +172,10 @@ class RecordSwath(object):
 
     def run(self):
         while True:
-            time.sleep(0.3)
+            time.sleep(0.1)
+            if self.post_end:
+                self.comms.notify('FAULT', 'true', pymoos.time())
+                self.post_end = False
             if self.post_ready:
                 print('Posting Swath edge to MOOSDB')
                 self.comms.notify('SWATH_EDGE', self.outer_message, pymoos.time())

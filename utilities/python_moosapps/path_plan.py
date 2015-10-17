@@ -5,15 +5,20 @@ import pdb
 # import gridgen
 
 SWATH_OVERLAP = 0.2
-TURN_PT_OFFSET = 15
-ALIGNMENT_LINE_LEN = 10
+# For actually running Z-Boat
+# TURN_PT_OFFSET = 15
+# ALIGNMENT_LINE_LEN = 10
+
+# Sim
+TURN_PT_OFFSET = 25
+ALIGNMENT_LINE_LEN = 20
 
 class PathPlan(object):
     def __init__(self):
         self.comms = pymoos.comms()
         self.comms.set_on_connect_callback(self.connect_callback)
         self.comms.set_on_mail_callback(self.message_received)
-        pymoos.set_moos_timewarp(3)
+        pymoos.set_moos_timewarp(7)
         self.comms.set_comms_control_timewarp_scale_factor(0.4)
         self.comms.run('localhost', 9000, 'pPathPlan')
 
@@ -38,15 +43,16 @@ class PathPlan(object):
         #     (3180, -387)]
         # SH15 South Survey Area:
         # self.op_poly = [(2497.0, -4374.0), (1727, -6077), (588, -5468), \
-        #     (1272, -3864)]
+             # (1272, -3864)]
+        # Small region for half step testing, SH 2015
+        self.op_poly = [(655, -4429), (550, -4813), (198, -4725), (300, -4353)]
         
-        #0,100 : -229,47 : -279,217 : -41,264
         # Newport, RI
         #self.op_poly = [ (-229,47), (-279,217), (-41,264), (0,100)]
-	# South of Pier
+    	# South of Pier
         #self.op_poly = [ (-167, -194), (-136, -342), (199, -255), (142, -107) ]
-	# Smaller South of Pier
-	self.op_poly = [ (-210, -192), (-191,-307), (10,-254), (-16,-144)]
+    	# Smaller South of Pier
+    	# self.op_poly = [ (-210, -192), (-191,-307), (10,-254), (-16,-144)]
 
         # VIEW_SEGLIST = "pts={10,-26:16,-45},label=emily_waypt_line_start,
         # label_color=white,edge_color=white,vertex_color=dodger_blue,
@@ -145,40 +151,45 @@ class PathPlan(object):
                             swath_widths = self.messages['SWATH_WIDTH_RECORD'].split(';')
                             swath_widths = [float(sw) for sw in swath_widths]
 
-                            if len(swath_widths) != len(outer_rec):
-                                print 'Different number of swath widths and locations, aborting'
-                                return False
-
-                            print 'Planning next path'
-                            path_planner = pathplan.PathPlan(None, \
-                                self.messages['NEXT_SWATH_SIDE'], SWATH_OVERLAP, \
-                                outer_rec, swath_widths)
-                            # This is where to add an opregion if needed
-                            next_pts = path_planner.generate_next_path(self.op_poly)
-
-                            print('Number of pts in new_path: {0}'.format(len(next_pts)))
-
-                            if len(next_pts) > 1:
-                                point_list = [str(pt[0]) + ',' + str(pt[1]) + ':' for pt in next_pts]
-                                points_message = ''.join(point_list)
-
-                                # Message in the format "points=x1,y1:x2,y2 ..."
-                                # self.post_message = 'points=' + points_message[:-1]
-                                self.post_message = points_message[:-1]
-
-                                end_heading = (next_pts[-1][0] - next_pts[-2][0], \
-                                    next_pts[-1][1] - next_pts[-2][1])
-                                end_heading = pathplan.unit_vector(end_heading)
-                                self.turn_pt_message = 'point=' + \
-                                    str(next_pts[-1][0] + end_heading[0] * TURN_PT_OFFSET) + ',' \
-                                    + str(next_pts[-1][1] + end_heading[1] * TURN_PT_OFFSET)
-                                self.turn_count = 0
-
-                                print('Setting post_ready=True')
-                                self.post_ready = True
-                            else:
-                                self.post_ready = False
+                            # All swath widths are zero when they have been filtered by depth
+                            if all(width == 0 for width in swath_widths):
+                                print 'Depth threshold reached, ending.'
                                 self.post_end = True
+                            else:
+                                if len(swath_widths) != len(outer_rec):
+                                    print 'Different number of swath widths and locations, aborting'
+                                    return False
+
+                                print 'Planning next path'
+                                path_planner = pathplan.PathPlan(None, \
+                                    self.messages['NEXT_SWATH_SIDE'], SWATH_OVERLAP, \
+                                    outer_rec, swath_widths)
+                                # This is where to add an opregion if needed
+                                next_pts = path_planner.generate_next_path(self.op_poly)
+
+                                print('Number of pts in new_path: {0}'.format(len(next_pts)))
+
+                                if len(next_pts) > 1:
+                                    point_list = [str(pt[0]) + ',' + str(pt[1]) + ':' for pt in next_pts]
+                                    points_message = ''.join(point_list)
+
+                                    # Message in the format "points=x1,y1:x2,y2 ..."
+                                    # self.post_message = 'points=' + points_message[:-1]
+                                    self.post_message = points_message[:-1]
+
+                                    end_heading = (next_pts[-1][0] - next_pts[-2][0], \
+                                        next_pts[-1][1] - next_pts[-2][1])
+                                    end_heading = pathplan.unit_vector(end_heading)
+                                    self.turn_pt_message = 'point=' + \
+                                        str(next_pts[-1][0] + end_heading[0] * TURN_PT_OFFSET) + ',' \
+                                        + str(next_pts[-1][1] + end_heading[1] * TURN_PT_OFFSET)
+                                    self.turn_count = 0
+
+                                    print('Setting post_ready=True')
+                                    self.post_ready = True
+                                else:
+                                    self.post_ready = False
+                                    self.post_end = True
                 else:
                     pass
                     # self.post_ready = False
@@ -195,7 +206,7 @@ class PathPlan(object):
 
     def run(self):
         while True:
-            time.sleep(0.5)
+            time.sleep(0.1)
             if self.post_ready:
                 print 'Notifying MOOSDB with new path\n'
                 self.comms.notify('NEW_PATH', self.get_post_message(), \
