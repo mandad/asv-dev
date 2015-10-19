@@ -20,7 +20,7 @@ class RecordSwath(object):
         self.comms = pymoos.comms()
         self.comms.set_on_connect_callback(self.connect_callback)
         self.comms.set_on_mail_callback(self.message_received)
-        pymoos.set_moos_timewarp(7)
+        pymoos.set_moos_timewarp($(WARP))
         self.comms.set_comms_control_timewarp_scale_factor(0.4)
         self.comms.run('localhost', 9000, 'uRecordSwath')
         self.swath_record = dict()

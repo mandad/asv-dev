@@ -18,7 +18,7 @@ class PathPlan(object):
         self.comms = pymoos.comms()
         self.comms.set_on_connect_callback(self.connect_callback)
         self.comms.set_on_mail_callback(self.message_received)
-        pymoos.set_moos_timewarp(7)
+        pymoos.set_moos_timewarp($(WARP))
         self.comms.set_comms_control_timewarp_scale_factor(0.4)
         self.comms.run('localhost', 9000, 'pPathPlan')
 
@@ -45,7 +45,8 @@ class PathPlan(object):
         # self.op_poly = [(2497.0, -4374.0), (1727, -6077), (588, -5468), \
              # (1272, -3864)]
         # Small region for half step testing, SH 2015
-        self.op_poly = [(655, -4429), (550, -4813), (198, -4725), (300, -4353)]
+        # self.op_poly = [(655, -4429), (550, -4813), (198, -4725), (300, -4353)]
+        self.op_poly = $(OP_POLY)
         
         # Newport, RI
         #self.op_poly = [ (-229,47), (-279,217), (-41,264), (0,100)]
@@ -93,11 +94,17 @@ class PathPlan(object):
                 + str(self.op_poly[1][1] + end_heading[1] * TURN_PT_OFFSET)
             self.comms.notify('TURN_UPDATE', turn_pt_message, pymoos.time())
 
+            home_message = 'station_pt = ' + str(self.op_poly[0][0] + \
+                start_heading[0] * 30) + ',' + str(self.op_poly[0][1] + \
+                start_heading[1] * 30)
+            self.comms.notify('HOME_UPDATE', home_message, pymoos.time())
+
+
             # move boat to start
-            self.comms.notify('NAV_X', str(self.op_poly[0][0] + \
-                start_heading[0] * 30), pymoos.time())
-            self.comms.notify('NAV_Y', str(self.op_poly[0][1] + \
-                start_heading[1] * 30), pymoos.time())
+            # self.comms.notify('NAV_X', str(self.op_poly[0][0] + \
+            #     start_heading[0] * 30), pymoos.time())
+            # self.comms.notify('NAV_Y', str(self.op_poly[0][1] + \
+            #     start_heading[1] * 30), pymoos.time())
 
             # pdb.set_trace()
 

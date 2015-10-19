@@ -14,12 +14,12 @@ DEPTH_THRESHOLD_HALT = 5
 class SonarSimulator(object):
     def __init__(self):
         self.bathy_grid = gridgen.BathyGrid.from_bathymetry( \
-            '../path_planning/terrain/SH15_Surface.tif', False)
+            $(BATHY_GRID), False)
 
         self.comms = pymoos.comms()
         self.comms.set_on_connect_callback(self.connect_callback)
         self.comms.set_on_mail_callback(self.message_received)
-        pymoos.set_moos_timewarp(7)
+        pymoos.set_moos_timewarp($(WARP))
         self.comms.set_comms_control_timewarp_scale_factor(0.4)
         self.comms.run('localhost', 9000, 'uSonarSimulator')
 
@@ -65,8 +65,8 @@ class SonarSimulator(object):
                             print 'Posting swath width'
                             # Message in the format "port=52;stbd=37"
                             self.post_ready = True
-                            current_loc = (self.messages['NAV_X'] + 353408.656, \
-                                self.messages['NAV_Y'] + 6083.832 + 4753335.914)
+                            current_loc = (self.messages['NAV_X'] + $(X_OFFSET), \
+                                self.messages['NAV_Y'] + $(Y_OFFSET))
                             if OUTPUT_MODE == "Depth":
                                 depths = self.get_depths(current_loc, \
                                     self.messages['NAV_HEADING'])

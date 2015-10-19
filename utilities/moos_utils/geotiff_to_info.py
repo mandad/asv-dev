@@ -1,7 +1,7 @@
 from osgeo import osr, gdal
 import sys
 
-def main(filename):
+def main(filename, for_sim=False):
     # get the existing coordinate system
     ds = gdal.Open(filename)
     old_cs = osr.SpatialReference()
@@ -56,11 +56,20 @@ def main(filename):
     print("lat_south = {0:.7f}".format(south))
     print("lon_west = {0:.7f}".format(west))
     print("lon_east = {0:.7f}".format(east))
-    print("datum_lat = {0:.7f}".format((north + south) / 2))
-    print("datum_lon = {0:.7f}".format((east + west) / 2))
+    if for_sim:
+        print("datum_lat = {0:.7f}".format(south))
+        print("datum_lon = {0:.7f}".format(west))
+        print("//x_offset = {0:.3f}".format(minx))
+        print("//y_offset = {0:.3f}".format(miny))
+    else:
+        print("datum_lat = {0:.7f}".format((north + south) / 2))
+        print("datum_lon = {0:.7f}".format((east + west) / 2))
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Usage: python geotiff_to_info.py filename.tif")
+        print("Usage: python geotiff_to_info.py [--for_sim] filename.tif")
     else:
-        main(sys.argv[1])
+        if len(sys.argv) > 2:
+            main(sys.argv[2], True)
+        else:
+            main(sys.argv[1])
