@@ -10,8 +10,8 @@ SWATH_OVERLAP = 0.2
 # ALIGNMENT_LINE_LEN = 10
 
 # Sim
-TURN_PT_OFFSET = 25
-ALIGNMENT_LINE_LEN = 20
+TURN_PT_OFFSET = 50
+ALIGNMENT_LINE_LEN = 30
 
 class PathPlan(object):
     def __init__(self):

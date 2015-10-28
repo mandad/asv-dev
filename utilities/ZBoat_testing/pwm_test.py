@@ -72,6 +72,6 @@ def main(argv):
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
-        print('Usage: pwm_test.py thrust rudder')
+        print('Usage: pwm_test.py thrust rudder\n pwm_test.py left_trust right_thrust rudder')
     else:
         main(sys.argv[1:])

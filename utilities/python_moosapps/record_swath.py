@@ -12,7 +12,8 @@ NEXT_PATH_SIDE = ['port', 'stbd']
 # 0 = port, 1 = stbd
 FIRST_SWATH_SIDE = 1
 DEBUG_MODE = False
-ALIGNMENT_LINE_LEN = 10
+# ALIGNMENT_LINE_LEN = 10
+ALIGNMENT_LINE_LEN = 30
 REMOVE_IN_COVERAGE = True
 
 class RecordSwath(object):
