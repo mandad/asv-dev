@@ -3,7 +3,7 @@ import time
 import serial
 
 class ZBoatTester(object):
-    def __init__(self, serial_port='/dev/ttyUSB0', baudrate=115200):
+    def __init__(self, serial_port='/dev/tty.usbserial', baudrate=115200):
         self.serial_port = serial_port
         self.baudrate = baudrate
         self.port_open = False
