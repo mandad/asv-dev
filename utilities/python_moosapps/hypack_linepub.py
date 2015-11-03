@@ -127,7 +127,10 @@ def main(argv):
     filename_hypack = argv[0]
     # comms.run('10.42.0.15',9000,'pHypackPath')
     print('Connecting to MOOSDB')
-    comms.run('192.168.2.3',9000,'pHypackPath')
+    post_ip = '192.168.1.105'
+    if len(argv) > 1:
+        post_ip = argv[1]
+    comms.run(post_ip, 9000, 'pHypackPath')
     if comms.wait_until_connected(2000):
         line_reader = HypackLineReader(filename_hypack)
         line_reader.read_file()
