@@ -3,7 +3,10 @@ import time
 import serial
 
 class ZBoatTester(object):
-    def __init__(self, serial_port='/dev/tty.usbserial', baudrate=115200):
+    #'/dev/tty.usbserial'
+    #'\\.\COMxx'
+    #'/dev/ttyUSB0'
+    def __init__(self, serial_port='/dev/ttyUSB0', baudrate=115200):
         self.serial_port = serial_port
         self.baudrate = baudrate
         self.port_open = False
@@ -57,18 +60,20 @@ def main(argv):
         this_tester = ZBoatTester(argv[3])
     else:
         this_tester = ZBoatTester()
-    this_tester.open_port()
-    this_tester.set_autonomy_mode()
+    if this_tester.open_port():
+        this_tester.set_autonomy_mode()
 
-    if len(argv) == 2:
-        # args = thrust, rudder
-        this_tester.write_loop(float(argv[0]), float(argv[0]), float(argv[1]))
-    elif len(argv) >= 3:
-        # args = left_thrust, right_thrust, rudder
-        this_tester.write_loop(float(argv[0]), float(argv[1]), float(argv[2]))
+        if len(argv) == 2:
+            # args = thrust, rudder
+            this_tester.write_loop(float(argv[0]), float(argv[0]), float(argv[1]))
+        elif len(argv) >= 3:
+            # args = left_thrust, right_thrust, rudder
+            this_tester.write_loop(float(argv[0]), float(argv[1]), float(argv[2]))
 
-    this_tester.set_manual_mode()
-    this_tester.close_port()
+        this_tester.set_manual_mode()
+        this_tester.close_port()
+    else:
+        print('Error opening port: ' + this_tester.serial_port)
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
