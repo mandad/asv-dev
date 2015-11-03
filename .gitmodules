@@ -1,6 +1,3 @@
 [submodule "utilities/path_planning/lsi"]
 	path = utilities/path_planning/lsi
 	url = https://github.com/mandad/lsi
-[submodule "utilities/gp9_ros"]
-	path = utilities/gp9_ros
-	url = https://github.com/mandad/gp9_ros.git
