@@ -6,12 +6,12 @@ import pdb
 
 SWATH_OVERLAP = 0.2
 # For actually running Z-Boat
-# TURN_PT_OFFSET = 15
-# ALIGNMENT_LINE_LEN = 10
+TURN_PT_OFFSET = 15
+ALIGNMENT_LINE_LEN = 10
 
 # Sim
-TURN_PT_OFFSET = 50
-ALIGNMENT_LINE_LEN = 30
+#TURN_PT_OFFSET = 50
+#ALIGNMENT_LINE_LEN = 30
 
 class PathPlan(object):
     def __init__(self):

@@ -12,9 +12,11 @@ NEXT_PATH_SIDE = ['port', 'stbd']
 # 0 = port, 1 = stbd
 FIRST_SWATH_SIDE = 1
 DEBUG_MODE = False
-# ALIGNMENT_LINE_LEN = 10
-ALIGNMENT_LINE_LEN = 30
-REMOVE_IN_COVERAGE = True
+#Zboat
+ALIGNMENT_LINE_LEN = 10
+#Sim
+#ALIGNMENT_LINE_LEN = 30
+REMOVE_IN_COVERAGE = False
 
 class RecordSwath(object):
     def __init__(self):
