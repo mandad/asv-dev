@@ -6,7 +6,7 @@ class ZBoatTester(object):
     #'/dev/tty.usbserial'
     #'\\.\COMxx'
     #'/dev/ttyUSB0'
-    def __init__(self, serial_port='/dev/ttyUSB0', baudrate=115200):
+    def __init__(self, serial_port='/dev/ttyUSB0', baudrate=38400):
         self.serial_port = serial_port
         self.baudrate = baudrate
         self.port_open = False
