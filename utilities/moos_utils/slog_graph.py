@@ -15,7 +15,7 @@ class SLogGraph(object):
         try:
             self.log_file = open(self.filename, 'r')
         except Exception, e:
-            print("Error opening file: " + filename)
+            print("Error opening file: " + self.filename)
             return False
         return True
 
@@ -62,22 +62,29 @@ class SLogGraph(object):
         return data_array
 
     def plot_all_data(self):
-        plt.plot(self.data[:,0], self.data[:,1:])
-        plt.xlabel('Time [s]')
-        leg = plt.legend(self.headings[1:], shadow=True, fancybox=True)
-        ltext  = leg.get_texts()
-        plt.setp(ltext, fontsize='small')
-        plt.show()
-
-    def plot_cols(self, columns_to_plot):
-        if len(columns_to_plot) > 0:
-            plt.plot(self.data[:,0], self.data[:,columns_to_plot])
+        if self.valid_data:
+            plt.plot(self.data[:,0], self.data[:,1:])
             plt.xlabel('Time [s]')
-            leg = plt.legend(self.headings[columns_to_plot], shadow=True, \
-                fancybox=True)
+            leg = plt.legend(self.headings[1:], shadow=True, fancybox=True, \
+                loc='best')
             ltext  = leg.get_texts()
             plt.setp(ltext, fontsize='small')
             plt.show()
+
+    def plot_cols(self, columns_to_plot):
+        if len(columns_to_plot) > 0 and self.valid_data:
+            plt.plot(self.data[:,0], self.data[:,columns_to_plot])
+            plt.xlabel('Time [s]')
+            leg = plt.legend(self.headings[columns_to_plot], shadow=True, \
+                fancybox=True, loc='best')
+            ltext  = leg.get_texts()
+            plt.setp(ltext, fontsize='small')
+            plt.show()
+
+    def list_cols(self):
+        if self.valid_data:
+            for i, header in enumerate(self.headings):
+                print('{:>2} '.format(i) + header)
 
 
 def main():
