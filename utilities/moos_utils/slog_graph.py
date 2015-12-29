@@ -14,7 +14,7 @@ class SLogGraph(object):
         if filename is not None:
             self.filename = filename
             self.parse_file()
-            
+
     def open_file(self):
         try:
             self.log_file = open(self.filename, 'r')
@@ -67,7 +67,7 @@ class SLogGraph(object):
 
     def plot_all_data(self):
         if self.valid_data:
-            plt.plot(self.data[:,0], self.data[:,1:])
+            plt.plot(self.data[self.min_index:,0], self.data[self.min_index:,1:])
             plt.xlabel('Time [s]')
             leg = plt.legend(self.headings[1:], shadow=True, fancybox=True, \
                 loc='best')
@@ -77,7 +77,7 @@ class SLogGraph(object):
 
     def plot_cols(self, columns_to_plot):
         if len(columns_to_plot) > 0 and self.valid_data:
-            plt.plot(self.data[:,0], self.data[:,columns_to_plot])
+            plt.plot(self.data[self.min_index:,0], self.data[self.min_index:,columns_to_plot])
             plt.xlabel('Time [s]')
             leg = plt.legend(self.headings[columns_to_plot], shadow=True, \
                 fancybox=True, loc='best')
@@ -92,16 +92,15 @@ class SLogGraph(object):
 
     def get_col_data(self, cols):
         if self.valid_data:
-            return self.data[:,cols]
+            return self.data[self.min_index:,cols]
         return None
 
     def set_min_time(self, min_time):
         self.min_time = min_time
         if self.valid_data:
-            self.min_index = np.argmax(self.data>min_time) - 1
+            self.min_index = np.argmax(self.data[:,0]>min_time) - 1
             return True
         return False
-
 
 def main():
     parser = argparse.ArgumentParser()
