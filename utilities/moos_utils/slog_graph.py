@@ -8,9 +8,13 @@ class SLogGraph(object):
         self.initialized = False
         self.headings = []
         self.valid_data = False
+        self.min_time = 0
+        self.min_index = 0
+
         if filename is not None:
             self.filename = filename
             self.parse_file()
+            
     def open_file(self):
         try:
             self.log_file = open(self.filename, 'r')
@@ -85,6 +89,18 @@ class SLogGraph(object):
         if self.valid_data:
             for i, header in enumerate(self.headings):
                 print('{:>2} '.format(i) + header)
+
+    def get_col_data(self, cols):
+        if self.valid_data:
+            return self.data[:,cols]
+        return None
+
+    def set_min_time(self, min_time):
+        self.min_time = min_time
+        if self.valid_data:
+            self.min_index = np.argmax(self.data>min_time) - 1
+            return True
+        return False
 
 
 def main():
