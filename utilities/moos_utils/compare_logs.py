@@ -19,7 +19,7 @@ def compare_logs(filenames, cols):
 
     # Format the plot
     plt.xlabel('Time [s]')
-    leg = plt.legend(np.tile(log_graphs[0].headings[cols_arr],2), shadow=True, \
+    leg = plt.legend(np.tile(log_graphs[0].headings[cols_arr],len(filenames)), shadow=True, \
         fancybox=True, loc='best')
     ltext  = leg.get_texts()
     plt.setp(ltext, fontsize='small')
