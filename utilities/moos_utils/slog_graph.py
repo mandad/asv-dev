@@ -10,6 +10,8 @@ class SLogGraph(object):
         self.valid_data = False
         self.min_time = 0
         self.min_index = 0
+        self.max_time = 0
+        self.max_index = 0
 
         if filename is not None:
             self.filename = filename
@@ -52,6 +54,7 @@ class SLogGraph(object):
         self.data = np.genfromtxt(self.filename, comments="%", delimiter=None, \
             missing_values='NaN')
         self.valid_data = True
+        self.max_index = self.data.shape[0] - 1
 
     # Not needed, the numpy genfromtxt does this
     def add_row(self, data_row, data_array):
@@ -67,7 +70,7 @@ class SLogGraph(object):
 
     def plot_all_data(self):
         if self.valid_data:
-            plt.plot(self.data[self.min_index:,0], self.data[self.min_index:,1:])
+            plt.plot(self.data[self.min_index:self.max_index,0], self.data[self.min_index:self.max_index,1:])
             plt.xlabel('Time [s]')
             leg = plt.legend(self.headings[1:], shadow=True, fancybox=True, \
                 loc='best')
@@ -77,7 +80,7 @@ class SLogGraph(object):
 
     def plot_cols(self, columns_to_plot):
         if len(columns_to_plot) > 0 and self.valid_data:
-            plt.plot(self.data[self.min_index:,0], self.data[self.min_index:,columns_to_plot])
+            plt.plot(self.data[self.min_index:self.max_index,0], self.data[self.min_index:self.max_index,columns_to_plot])
             plt.xlabel('Time [s]')
             leg = plt.legend(self.headings[columns_to_plot], shadow=True, \
                 fancybox=True, loc='best')
@@ -92,7 +95,7 @@ class SLogGraph(object):
 
     def get_col_data(self, cols):
         if self.valid_data:
-            return self.data[self.min_index:,cols]
+            return self.data[self.min_index:self.max_index,cols]
         return None
 
     def set_min_time(self, min_time):
@@ -101,6 +104,14 @@ class SLogGraph(object):
             self.min_index = np.argmax(self.data[:,0]>min_time) - 1
             return True
         return False
+
+    def set_max_time(self, max_time):
+        self.max_time = max_time
+        if self.valid_data:
+            self.max_index = np.argmax(self.data[:,0]>max_time)
+            return True
+        return False
+
 
 def main():
     parser = argparse.ArgumentParser()

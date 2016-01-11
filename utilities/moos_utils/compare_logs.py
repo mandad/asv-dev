@@ -6,10 +6,14 @@ import pdb
 
 log_graphs = []
 
-def compare_logs(filenames, cols):
+def compare_logs(filenames, cols, min_time = 0, max_time = None):
     cols_arr = np.array(cols)
     for f in filenames:
         this_log = slog_graph.SLogGraph(f)
+        if min_time > 0:
+            this_log.set_min_time(min_time)
+        if max_time is not None:
+            this_log.set_max_time(max_time)
         log_graphs.append(this_log)
 
     # pdb.set_trace()
@@ -33,9 +37,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('filenames', nargs='+')
     parser.add_argument('--cols', nargs='*', type=int)
-    parser.add_argument('--min_time', type=float)
+    parser.add_argument('--min_time', type=float, default=0)
+    parser.add_argument('--max_time', type=float)
     args = parser.parse_args()
-    compare_logs(args.filenames, args.cols)
+    if args.max_time is not None:
+        compare_logs(args.filenames, args.cols, args.min_time, args.max_time)
+    else:
+        compare_logs(args.filenames, args.cols, args.min_time)
 
 if __name__ == '__main__':
     main()
