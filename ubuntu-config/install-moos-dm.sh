@@ -9,13 +9,15 @@ git clone https://github.com/wjwwood/serial.git
 git clone https://github.com/mandad/python-moos.git
 git clone https://github.com/mandad/asv-dev.git
 git clone https://github.com/mandad/essential-moos.git
+git clone https://github.com/mandad/core-moos.git
 svn co https://oceanai.mit.edu/svn/moos-ivp-aro/trunk/ moos-ivp
 
 #copy patches
 cp essential-moos/Essentials/pLogger/MOOSLogger.* moos-ivp/MOOS/MOOSEssentials/Essentials/pLogger/
+cp core-moos/Core/libMOOS/Comms/ThreadedCommServer.cpp moos-ivp/MOOS/MOOSCore/Core/libMOOS/Comms/
 
 #Code dependencies
-sudo apt-get -y install g++ subversion xterm cmake libfltk1.3-dev freeglut3-dev libpng12-dev libjpeg-dev libxft-dev libxinerama-dev libtiff5-dev libproj-dev 
+sudo apt-get -y install g++ subversion xterm cmake libfltk1.3-dev freeglut3-dev libpng12-dev libjpeg-dev libxft-dev libxinerama-dev libtiff5-dev libproj-dev
 sudo apt-get -y install cmake-curses-gui python-dev libboost-all-dev
 
 #ROS Stuff
