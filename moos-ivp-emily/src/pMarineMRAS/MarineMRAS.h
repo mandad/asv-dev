@@ -11,10 +11,12 @@
 #include "MOOS/libMOOS/Thirdparty/AppCasting/AppCastingMOOSApp.h"
 #include "CourseChangeMRAS.h"
 #include "CourseKeepMRAS.h"
+#include "SpeedControl.h"
 
 enum class ControllerType {
   CourseChange,
-  CourseKeep
+  CourseKeep,
+  CourseKeepNoAdapt
 };
 
 class MarineMRAS : public AppCastingMOOSApp
@@ -33,6 +35,7 @@ class MarineMRAS : public AppCastingMOOSApp
    void PostAllStop();
    void AddHeadingHistory(double heading, double heading_time);
    ControllerType DetermineController();
+   bool IsTurning();
 
  protected: // Standard AppCastingMOOSApp function to overload 
    bool buildReport();
@@ -61,12 +64,16 @@ class MarineMRAS : public AppCastingMOOSApp
     double m_rudder_speed;
     bool   m_discard_large_ROT;
     bool   m_output;
+    bool   m_record_mode;
+    bool   m_course_keep_only;
+    bool   m_adapt_turns;
 
  private: // State variables
     double m_desired_heading;
     double m_current_heading;
     double m_desired_speed;
     double m_current_speed;
+    double m_current_speed_time;
     double m_last_heading_time;
     bool   m_first_heading;
     double m_previous_heading;
@@ -79,6 +86,7 @@ class MarineMRAS : public AppCastingMOOSApp
 
     CourseChangeMRAS m_CourseControl;
     CourseKeepMRAS m_CourseKeepControl;
+    SpeedControl m_speed_control;
     ControllerType m_last_controller;
 
 };
