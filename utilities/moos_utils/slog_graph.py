@@ -2,6 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 
+def angle180(degval):
+    while degval > 180:
+        degval -= 360.0
+    while degval <= -180:
+        degval += 360.0;
+    return degval
+
 class SLogGraph(object):
     def __init__(self, filename):
         self.num_data = 0
@@ -55,6 +62,7 @@ class SLogGraph(object):
             missing_values='NaN')
         self.valid_data = True
         self.max_index = self.data.shape[0] - 1
+        self.constrain_heading_cols()
 
     # Not needed, the numpy genfromtxt does this
     def add_row(self, data_row, data_array):
@@ -111,6 +119,11 @@ class SLogGraph(object):
             self.max_index = np.argmax(self.data[:,0]>max_time)
             return True
         return False
+
+    def constrain_heading_cols(self):
+        if self.valid_data:
+            f = np.vectorize(angle180, otypes=[np.float])
+            self.data[:,(1,3)] = f(self.data[:,(1,3)])
 
 
 def main():
