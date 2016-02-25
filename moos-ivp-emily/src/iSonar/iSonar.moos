@@ -1,9 +1,0 @@
-//------------------------------------------------
-// iSonar config block
-
-ProcessConfig = iSonar
-{
-   AppTick   = 4
-   CommsTick = 4
-}
-

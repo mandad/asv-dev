@@ -1,9 +1,0 @@
-//------------------------------------------------
-// pSurveyPath config block
-
-ProcessConfig = pSurveyPath
-{
-   AppTick   = 4
-   CommsTick = 4
-}
-
