@@ -106,6 +106,11 @@ class SLogGraph(object):
             return self.data[self.min_index:self.max_index,cols]
         return None
 
+    def set_time_range(self, time_range):
+        if (len(time_range) == 2):
+            self.set_min_time(time_range[0])
+            self.set_max_time(time_range[1])
+
     def set_min_time(self, min_time):
         self.min_time = min_time
         if self.valid_data:

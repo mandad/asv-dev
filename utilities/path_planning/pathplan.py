@@ -183,12 +183,12 @@ class PathPlan(object):
 
         # ---------- Extend -----------
         print('Extending ends of path to edge of region.')
-        # Idea: Maybe extend from the point to the nearest edge, not along the 
+        # Idea: Maybe extend from the point to the nearest edge, not along the
         # vector of the last segment
         next_path_pts_extend = np.array(next_path_pts, copy=True)
         # Extend end points to edge of op region
         if op_poly is not None and pre_len > 1:
-            for i, segments in enumerate([(1,0), (len(next_path_pts)-2, len(next_path_pts) - 1)]): 
+            for i, segments in enumerate([(1,0), (len(next_path_pts)-2, len(next_path_pts) - 1)]):
                 extend_vec = next_path_pts[segments[1]] - next_path_pts[segments[0]]
                 starting_pt = next_path_pts[segments[1]]
                 intersection = self.find_nearest_intersect(extend_vec, starting_pt, op_poly)
@@ -218,7 +218,7 @@ class PathPlan(object):
 
         return next_path_pts
 
-    @staticmethod 
+    @staticmethod
     def remove_all(process, path_pts):
         """Repeats a process until it makes no more changes to the path
         Currently does not make a copy of the passed input, may want to reconsider this
@@ -241,7 +241,7 @@ class PathPlan(object):
         # and then delete unused ones at the end since a new array is created each
         # time np.append runs
         """
-        intersect_pts = []
+        #intersect_pts = []
         non_intersect_idx = np.array([], dtype=np.int64)
         i = 0
         while i < (len(path_pts) - 3):
@@ -257,7 +257,7 @@ class PathPlan(object):
                     seg_pts.append(j+1)
             if len(seg_pts) > 0:
                 # Store the last one it intersects with, want to remove indexes btwn these
-                intersect_pts.append((i+1, seg_pts[-1]))
+                #intersect_pts.append((i+1, seg_pts[-1]))
                 i = seg_pts[-1]
             else:
                 i = i + 1
@@ -271,7 +271,7 @@ class PathPlan(object):
 
         return path_pts[non_intersect_idx]
 
-    @staticmethod 
+    @staticmethod
     def remove_bends_gradient(path_pts):
         # sec_grad = np.gradient(np.gradient(path_pts)[0])[0]
         # sec_grad_sum = np.sum(sec_grad,1)
@@ -291,7 +291,7 @@ class PathPlan(object):
         # Note that this goes to the last point being checked
         # There has got to be a more efficient way to do this
         """
-        # TODO: think through the recursive logic a bit more 
+        # TODO: think through the recursive logic a bit more
         # if len(path_pts) < 4:
         #     return path_pts
 
@@ -299,7 +299,7 @@ class PathPlan(object):
         non_bend_idx = [0]
         this_seg = np.array([0, 1])
         next_seg = np.array([1, 2])
-        
+
         while next_seg[1] < len(path_pts) - 1:
             this_vec = path_pts[this_seg[1]] - path_pts[this_seg[0]]
             next_vec = path_pts[next_seg[1]] - path_pts[next_seg[0]]
@@ -380,7 +380,7 @@ class PathPlan(object):
             # could be causing the problem
             all_ind = range(len(path_pts))
             #this might also work with this_seg[0]+1
-            all_ind.remove(this_seg[0]) 
+            all_ind.remove(this_seg[0])
             # might want to put this recursion path at the end
             return PathPlan.remove_bends(path_pts[all_ind])
         else:
@@ -522,4 +522,3 @@ class PathPlan(object):
         if mags == 0:
             return 0
         return np.arccos(dotp/mags) * 180/np.pi
-

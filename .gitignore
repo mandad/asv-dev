@@ -14,3 +14,4 @@ utilities/path_planning/path_output_flat.png
 MOOSLog*
 *.slog
 *.lnw
+.ipynb_checkpoints
