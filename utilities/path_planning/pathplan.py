@@ -204,7 +204,7 @@ class PathPlan(object):
                     else:
                         next_path_pts_extend = np.append(next_path_pts_extend, [intersection[1]], 0)
                 else:
-                    print "Reached edge extension max"
+                    print("Reached edge extension max")
 
         next_path_pts = next_path_pts_extend
         print('Added {0} points.\n'.format(len(next_path_pts) - pre_len))
@@ -401,7 +401,7 @@ class PathPlan(object):
         non_bend_idx = np.unique(non_bend_idx)
 
         #if only have first seg + last point
-	# need to possibly worry about eliminating first point
+    	# need to possibly worry about eliminating first point
         # Better way - advance along edge by distance of last swath offset
         if non_bend_idx.size <= 3 and len(path_pts) > 5:
             # Try again eliminating the first segment
