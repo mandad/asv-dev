@@ -161,7 +161,7 @@ class RecordSwath(object):
         if len(self.min_record) > 0:
             last_min = self.min_record[-1]
             last_rec = self.full_record[-1]
-            if last_min[0] != last_rec[0] and last_min[1] != last_rec[1]:
+            if last_min[0] != last_rec[0] or last_min[1] != last_rec[1]:
                 self.min_record.append(last_rec)
             return  True
         else:
@@ -208,7 +208,7 @@ class RecordSwath(object):
             this_pos = (record[0], record[1])
             swath_add = MultiPoint([last_outer_pt, last_pos, this_pos, this_outer_pt])
             step_polygons.append(swath_add.convex_hull)
-            
+
             # Store for next iteration
             last_outer_pt = this_outer_pt
             last_pos = this_pos

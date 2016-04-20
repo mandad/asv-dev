@@ -8,7 +8,7 @@ RAY_TRACE_RES = 1.0
 SWATH_ANGLE = 70
 PRINT_DEBUG = False
 OUTPUT_MODE = "Depth"
-DEPTH_THRESHOLD_HALFSTEP = 8
+DEPTH_THRESHOLD_HALFSTEP = 6
 DEPTH_THRESHOLD_HALT = 4
 
 class SonarSimulator(object):
@@ -87,7 +87,8 @@ class SonarSimulator(object):
                                 self.post_message = 'x=' + str(self.messages['NAV_X']) + \
                                     ';y=' + str(self.messages['NAV_Y']) + ';hdg=' + \
                                     str(self.messages['NAV_HEADING']) + ';port=' +  \
-                                    str(swaths[0])  +  ';stbd='  + str(swaths[1])
+                                    str(swaths[0])  +  ';stbd='  + str(swaths[1]) + ';depth=' \
+                                    + str(depths[side])
 
                             else:
                                 swaths = self.get_swath_widths(current_loc, \
