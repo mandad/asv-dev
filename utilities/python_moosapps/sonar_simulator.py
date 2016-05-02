@@ -9,7 +9,7 @@ SWATH_ANGLE = 70
 PRINT_DEBUG = False
 OUTPUT_MODE = "Depth"
 DEPTH_THRESHOLD_HALFSTEP = 6
-DEPTH_THRESHOLD_HALT = 4
+DEPTH_THRESHOLD_HALT = 5
 
 class SonarSimulator(object):
     def __init__(self):
@@ -71,9 +71,9 @@ class SonarSimulator(object):
                                 depths = self.get_depths(current_loc, \
                                     self.messages['NAV_HEADING'])
                                 if self.messages['NEXT_SWATH_SIDE'] == 'port':
-                                    side = 1
-                                else:
                                     side = 0
+                                else:
+                                    side = 1
                                 swaths = [0, 0]
                                 swaths[0] = beamtrace.width_from_depth(self.swath_angle, depths[0])
                                 swaths[1] = beamtrace.width_from_depth(self.swath_angle, depths[1])
