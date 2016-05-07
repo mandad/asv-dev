@@ -5,7 +5,7 @@ import followpath
 import beamtrace
 
 RAY_TRACE_RES = 1.0
-SWATH_ANGLE = 65
+SWATH_ANGLE = 70
 PRINT_DEBUG = False
 OUTPUT_MODE = "Depth"
 DEPTH_THRESHOLD_HALFSTEP = 6
