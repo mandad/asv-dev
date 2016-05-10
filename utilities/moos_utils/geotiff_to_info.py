@@ -23,16 +23,16 @@ def main(filename, for_sim=False):
     new_cs.ImportFromWkt(wgs84_wkt)
 
     # create a transform object to convert between coordinate systems
-    transform = osr.CoordinateTransformation(old_cs,new_cs) 
+    transform = osr.CoordinateTransformation(old_cs,new_cs)
 
     #get the point to transform, pixel (0,0) in this case
     width = ds.RasterXSize
     height = ds.RasterYSize
     gt = ds.GetGeoTransform()
     minx = gt[0]
-    miny = gt[3] + width*gt[4] + height*gt[5] 
+    miny = gt[3] + width*gt[4] + height*gt[5]
     maxx = gt[0] + width*gt[1] + height*gt[2]
-    maxy = gt[3] 
+    maxy = gt[3]
 
     #get the coordinates in lat long
     coords = list()

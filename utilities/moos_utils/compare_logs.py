@@ -14,7 +14,7 @@ styles = ['-', '--', '-.', ':']
 
 def compare_logs(filenames, cols, min_time = 0, max_time = None, \
     secondary_cols = None, ylabel = None, lw = [1.0], style_os = 0, diff=False, 
-    fft=False, legend = None, color_os=0):
+    fft=False, legend = None, color_os=0, ylabel2=None):
     cols_arr = np.array(cols)
     # Open the files
     for f in filenames:
@@ -91,16 +91,20 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
         all_plot_cols = cols_arr
     if legend is not None:
         labels = legend.split("|")
-    leg = plt.legend(handles, labels, shadow=True, fancybox=True, loc='best')
+    leg = plt.legend(handles, labels, shadow=True, fancybox=True, loc='upper right') #'best'
     ltext  = leg.get_texts()
     if not fft:
         ax1.set_xlabel('Time [s]')
         if ylabel is not None:
             ax1.set_ylabel(ylabel)
+        if ylabel2 is not None:
+            ax2.set_ylabel(ylabel2, rotation=270, labelpad=15)
     else:
         plt.xlabel('frequency [Hz]')
         plt.ylabel('PSD [ROT^2/Hz]')
-    plt.setp(ltext, fontsize='small')
+    plt.setp(ltext, fontsize=12)
+    if min_time > 0 and max_time is not None:
+        plt.xlimit([min_time, max_time])
     plt.show()
 
 def add_file_to_plot(index, cols):
@@ -115,6 +119,7 @@ def main():
     parser.add_argument('--min_time', type=float, default=0)
     parser.add_argument('--max_time', type=float)
     parser.add_argument('--ylabel')
+    parser.add_argument('--ylabel2')
     parser.add_argument('--lw', nargs='*', type=float, default=[1.0])
     parser.add_argument('--style_os', type=int, default=0)
     parser.add_argument('--color_os', type=int, default=0)
@@ -125,7 +130,7 @@ def main():
     # if args.max_time is not None:
     compare_logs(args.filenames, args.cols, args.min_time, args.max_time, \
         args.sec_cols, args.ylabel, args.lw, args.style_os, args.diff, args.fft,
-        args.legend, args.color_os)
+        args.legend, args.color_os, args.ylabel2)
     # else:
     #     compare_logs(args.filenames, args.cols, args.min_time)
 

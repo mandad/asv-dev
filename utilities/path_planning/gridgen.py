@@ -6,7 +6,7 @@ Damian Manda
 8 Feb 2015
 """
 
-VISMODE = True
+VISMODE = False
 
 import numpy as np
 import rasterio
@@ -21,7 +21,7 @@ if VISMODE:
 import pdb
 
 class BathyGrid(object):
-    def __init__(self, size_x, size_y, res, geo_transform=None):
+    def __init__(self, size_x, size_y, res, geo_transform=None, affine=None):
         self.grid = None
         self.size_x = size_x
         self.size_y = size_y
@@ -42,6 +42,9 @@ class BathyGrid(object):
             y_dir = 1
             x_dir = 1
 
+        if affine is not None:
+            self.affine = affine
+
         self.index_x = np.linspace(start_x, start_x + size_x * res * x_dir, size_x)
         self.index_y = np.linspace(start_y, start_y + size_y * res * y_dir, size_y)
 
@@ -51,8 +54,9 @@ class BathyGrid(object):
         # to get pixels, mx, my are in map units
         dimensions = grid_file.shape
         resolution = round(max(grid_file.res))
-        config_cls = cls(dimensions[1], dimensions[0], resolution, grid_file.get_transform())
-        config_cls.pregenerated_grid(grid_file.read_band(1), depth_pos)
+        config_cls = cls(dimensions[1], dimensions[0], resolution, \
+            grid_file.get_transform(), grid_file.affine)
+        config_cls.pregenerated_grid(grid_file.read(1, masked=True), depth_pos)
         grid_file.close()
         return config_cls
 
@@ -191,18 +195,22 @@ class BathyGrid(object):
         # y_idx = self.find_nearest(self.index_y, y)
 
         # Translate locations to indicies
-        x_idx = np.clip(int((x - self.geo_transform[0]) / self.geo_transform[1]), \
-            0, self.size_x - 1)
-        y_idx = np.clip(int((y - self.geo_transform[3]) / self.geo_transform[5]), \
-            0, self.size_y - 1)
+        if self.imported:
+            # Translate UTM coordinates to local grid
+            x_idx, y_idx = ~self.affine * (x, y)
+            x_idx = np.clip(int(x_idx), 0, self.size_x - 1)
+            y_idx = np.clip(int(y_idx), 0, self.size_y - 1)
+            # ooprint('x: {0:.2f}, y: {1:.2f} || x_idx: {2}, y_idx:{3}\n'.format(x, y, x_idx, y_idx))
+        else:
+            x_idx = np.clip(int((x - self.geo_transform[0]) / self.geo_transform[1]), \
+                0, self.size_x - 1)
+            y_idx = np.clip(int((y - self.geo_transform[3]) / self.geo_transform[5]), \
+                0, self.size_y - 1)
 
         # Could interpolate or something if wanted to get fancy
-        if self.imported:
-            depth_val = self.grid[y_idx, x_idx]
-            if depth_val is np.ma.masked:
-                depth_val = self.grid_mean
-        else:
-            depth_val = self.grid[x_idx, y_idx]
+        depth_val = self.grid[y_idx, x_idx]
+        if depth_val is np.ma.masked:
+            depth_val = self.grid_mean
 
         # pdb.set_trace()
         return depth_val

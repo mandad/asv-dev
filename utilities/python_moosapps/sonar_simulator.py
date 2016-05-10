@@ -8,8 +8,8 @@ RAY_TRACE_RES = 1.0
 SWATH_ANGLE = 70
 PRINT_DEBUG = False
 OUTPUT_MODE = "Depth"
-DEPTH_THRESHOLD_HALFSTEP = 6
-DEPTH_THRESHOLD_HALT = 5
+DEPTH_THRESHOLD_HALFSTEP = 8
+DEPTH_THRESHOLD_HALT = 4
 
 class SonarSimulator(object):
     def __init__(self):
@@ -30,6 +30,7 @@ class SonarSimulator(object):
         self.messages['NAV_HEADING'] = 0
         self.messages['NEXT_SWATH_SIDE'] = 'stbd'
         self.post_ready = False
+        self.post_message = ""
 
         self.swath_angle = SWATH_ANGLE
         self.last_port_depth = 0
