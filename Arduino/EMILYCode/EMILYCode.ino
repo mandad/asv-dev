@@ -11,7 +11,7 @@
 #include <ReceiverMega.h>
 //#include "MOOS.h"
 
-//#define _DEBUG
+#define _DEBUG
  
 Servo throttle;
 Servo rudder;
@@ -91,7 +91,7 @@ int missing_moos_comms = 0;
 #define THROTTLE_LOW_ON   1200    //Lowest with engine still running
 #define THROTTLE_MAX      1584
 
-#define starter_signal    22
+#define starter_signal    25
 #define inhibit_signal    23
 
 void setup() 
