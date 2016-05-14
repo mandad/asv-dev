@@ -91,7 +91,7 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
         all_plot_cols = cols_arr
     if legend is not None:
         labels = legend.split("|")
-    leg = plt.legend(handles, labels, shadow=True, fancybox=True, loc='upper right') #'best'
+    leg = plt.legend(handles, labels, shadow=True, fancybox=True, loc='lower right') #'best'
     ltext  = leg.get_texts()
     if not fft:
         ax1.set_xlabel('Time [s]')
@@ -102,9 +102,10 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
     else:
         plt.xlabel('frequency [Hz]')
         plt.ylabel('PSD [ROT^2/Hz]')
-    plt.setp(ltext, fontsize=12)
+    plt.setp(ltext, fontsize=14)
     if min_time > 0 and max_time is not None:
         plt.xlimit([min_time, max_time])
+    #plt.ylim([0, 90])
     plt.show()
 
 def add_file_to_plot(index, cols):

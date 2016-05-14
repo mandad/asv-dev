@@ -31,6 +31,8 @@ class SonarSimulator(object):
         self.messages['NEXT_SWATH_SIDE'] = 'stbd'
         self.post_ready = False
         self.post_message = ""
+        self.post_stbd = ""
+        self.post_port = ""
 
         self.swath_angle = SWATH_ANGLE
         self.last_port_depth = 0
@@ -90,6 +92,8 @@ class SonarSimulator(object):
                                     str(self.messages['NAV_HEADING']) + ';port=' +  \
                                     str(swaths[0])  +  ';stbd='  + str(swaths[1]) + ';depth=' \
                                     + str(depths[side])
+                                self.post_stbd = depths[1]
+                                self.post_port = depths[0]
 
                             else:
                                 swaths = self.get_swath_widths(current_loc, \
@@ -114,12 +118,13 @@ class SonarSimulator(object):
             time.sleep(0.1)
             if self.post_ready:
                 print 'Notifying MOOSDB with swath width'
-                # if OUTPUT_MODE == "Depth":
-                #     self.comms.notify('SONAR_DEPTH_PORT_M', self.get_post_message(), pymoos.time())
-                #     self.comms.notify('SONAR_DEPTH_STBD_M', self.get_post_message(), pymoos.time())
-                # else:
-                self.comms.notify('SWATH_WIDTH', self.get_post_message(), \
-                    pymoos.time())
+                if OUTPUT_MODE == "Depth":
+                    self.comms.notify('SONAR_DEPTH_PORT_M', float(self.post_port), pymoos.time())
+                    self.comms.notify('SONAR_DEPTH_STBD_M', float(self.post_stbd), pymoos.time())
+                    self.post_ready = False
+                else:
+                    self.comms.notify('SWATH_WIDTH', self.get_post_message(), \
+                        pymoos.time())
 
     def get_swath_widths(self, this_loc, hdg_deg):
         """
