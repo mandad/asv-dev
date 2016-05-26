@@ -198,6 +198,7 @@ class BathyGrid(object):
         if self.imported:
             # Translate UTM coordinates to local grid
             x_idx, y_idx = ~self.affine * (x, y)
+            # print("Getting Depth at local: {0}, {1} | UTM: {2}, {3}".format(x_idx, y_idx, x, y))
             x_idx = np.clip(int(x_idx), 0, self.size_x - 1)
             y_idx = np.clip(int(y_idx), 0, self.size_y - 1)
             # ooprint('x: {0:.2f}, y: {1:.2f} || x_idx: {2}, y_idx:{3}\n'.format(x, y, x_idx, y_idx))

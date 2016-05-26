@@ -1,5 +1,6 @@
 from osgeo import osr, gdal
 import sys
+import utm
 
 def main(filename, for_sim=False):
     # get the existing coordinate system
@@ -57,8 +58,8 @@ def main(filename, for_sim=False):
     print("lon_west = {0:.7f}".format(west))
     print("lon_east = {0:.7f}".format(east))
     if for_sim:
-        print("datum_lat = {0:.7f}".format(south))
-        print("datum_lon = {0:.7f}".format(west))
+        print("datum_lat = {0:.7f}".format(coords[2][1]))
+        print("datum_lon = {0:.7f}".format(coords[2][0]))
         print("//x_offset = {0:.3f}".format(minx))
         print("//y_offset = {0:.3f}".format(miny))
     else:

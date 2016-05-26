@@ -2,6 +2,7 @@ import slog_graph
 import argparse
 import numpy as np
 from scipy import signal
+import matplotlib
 import matplotlib.pyplot as plt
 import pdb
 
@@ -41,7 +42,7 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
     for i in range(len(log_graphs)):
         col_ind = 0;
         if diff:
-            if len(cols) != 2:
+            if len(cols) < 2:
                 print("Error: Can only do a difference with two columns.")
                 return
             label_text = log_graphs[i].headings[cols[0]] +  " - " + \
@@ -50,7 +51,10 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
                 - log_graphs[i].get_col_data(cols[1]), \
                 color=colors[color_os], linestyle=styles[i+style_os], lw=lw[0], \
                 label=label_text)
-        elif fft:
+            # Advance the counters so we can plot more if needed
+            cols_arr = cols_arr[2:]
+            col_ind = 2
+        if fft:
             if len(cols) > 1:
                 print("Error: Can only do an fft with one column.")
                 return
@@ -91,7 +95,7 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
         all_plot_cols = cols_arr
     if legend is not None:
         labels = legend.split("|")
-    leg = plt.legend(handles, labels, shadow=True, fancybox=True, loc='lower right') #'best'
+    leg = plt.legend(handles, labels, shadow=True, fancybox=True, loc='best') #'best'
     ltext  = leg.get_texts()
     if not fft:
         ax1.set_xlabel('Time [s]')
@@ -104,8 +108,9 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
         plt.ylabel('PSD [ROT^2/Hz]')
     plt.setp(ltext, fontsize=14)
     if min_time > 0 and max_time is not None:
-        plt.xlimit([min_time, max_time])
+        plt.xlim([min_time, max_time])
     #plt.ylim([0, 90])
+    matplotlib.rcParams.update({'font.size': 14})
     plt.show()
 
 def add_file_to_plot(index, cols):

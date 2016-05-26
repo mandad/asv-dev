@@ -3,6 +3,7 @@ import time
 import gridgen
 import followpath
 import beamtrace
+import utm
 
 RAY_TRACE_RES = 1.0
 SWATH_ANGLE = 70
@@ -27,6 +28,8 @@ class SonarSimulator(object):
         self.messages = dict()
         self.messages['NAV_X'] = 0
         self.messages['NAV_Y'] = 0
+        self.messages['NAV_LAT'] = 0
+        self.messages['NAV_LONG'] = 0
         self.messages['NAV_HEADING'] = 0
         self.messages['NEXT_SWATH_SIDE'] = 'stbd'
         self.post_ready = False
@@ -43,6 +46,8 @@ class SonarSimulator(object):
         result = True
         result = result and self.comms.register('NAV_X', 0)
         result = result and self.comms.register('NAV_Y', 0)
+        result = result and self.comms.register('NAV_LAT', 0)
+        result = result and self.comms.register('NAV_LONG', 0)
         result = result and self.comms.register('NAV_HEADING', 0)
         result = result and self.comms.register('NEXT_SWATH_SIDE', 0)
 
@@ -68,8 +73,12 @@ class SonarSimulator(object):
                             print 'Posting swath width'
                             # Message in the format "port=52;stbd=37"
                             self.post_ready = True
-                            current_loc = (self.messages['NAV_X'] + $(X_OFFSET), \
-                                self.messages['NAV_Y'] + $(Y_OFFSET))
+                            # current_loc = (self.messages['NAV_X'] + $(X_OFFSET), \
+                            #     self.messages['NAV_Y'] + $(Y_OFFSET))
+                            # This is a more versatile way, but it doesnt work with H12450
+                            current_utm = utm.from_latlon(self.messages['NAV_LAT'], \
+                                self.messages['NAV_LONG'])
+                            current_loc = (current_utm[0], current_utm[1])
                             if OUTPUT_MODE == "Depth":
                                 depths = self.get_depths(current_loc, \
                                     self.messages['NAV_HEADING'])
