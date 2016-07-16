@@ -27,7 +27,7 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
         log_graphs.append(this_log)
 
     # Make the plots
-    plt.figure(num=1, figsize=(17,10))
+    plt.figure(num=1, figsize=(17,10))#, dpi=100)
     ax1 = plt.gca()
     if secondary_cols is not None:
         ax2 = ax1.twinx()
@@ -109,7 +109,7 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
     plt.setp(ltext, fontsize=14)
     if min_time > 0 and max_time is not None:
         plt.xlim([min_time, max_time])
-    #plt.ylim([0, 90])
+    # plt.ylim([-100, 60])
     matplotlib.rcParams.update({'font.size': 14})
     plt.show()
 

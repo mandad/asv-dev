@@ -53,15 +53,19 @@ def main(filename, for_sim=False):
     west = (coords[0][0] + coords[2][0]) / 2
     east = (coords[1][0] + coords[3][0]) / 2
 
-    print("lat_north = {0:.7f}".format(north))
-    print("lat_south = {0:.7f}".format(south))
-    print("lon_west = {0:.7f}".format(west))
-    print("lon_east = {0:.7f}".format(east))
+    print("lat_north = {0:.7f}".format(coords[0][1]))   # from NW
+    print("lat_south = {0:.7f}".format(coords[3][1]))   # from SE
+    print("lon_west = {0:.7f}".format(coords[0][0]))    # from NW
+    print("lon_east = {0:.7f}".format(coords[3][0]))    # from SE
     if for_sim:
-        print("datum_lat = {0:.7f}".format(coords[2][1]))
-        print("datum_lon = {0:.7f}".format(coords[2][0]))
+        # SW
+        #print("datum_lat = {0:.7f}".format(coords[2][1]))
+        #print("datum_lon = {0:.7f}".format(coords[2][0]))
+        # NE
+        print("datum_lat = {0:.7f}".format(coords[0][1]))
+        print("datum_lon = {0:.7f}".format(coords[0][0]))
         print("//x_offset = {0:.3f}".format(minx))
-        print("//y_offset = {0:.3f}".format(miny))
+        print("//y_offset = {0:.3f}".format(maxy))
     else:
         print("datum_lat = {0:.7f}".format((north + south) / 2))
         print("datum_lon = {0:.7f}".format((east + west) / 2))
