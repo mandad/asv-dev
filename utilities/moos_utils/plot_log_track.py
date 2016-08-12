@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-import tiff_convert
+#import tiff_convert
 
 xlog = np.genfromtxt('NAV_X.klog')
 xcoord = xlog[:,3]
