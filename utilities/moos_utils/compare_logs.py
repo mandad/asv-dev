@@ -70,9 +70,26 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
                 color=colors[color_os], linestyle=styles[i+style_os],)
         else:
             for col in cols_arr:
+                # Mod for heading wrap
+                # if col_ind == 0:
+                #     col_data = log_graphs[i].get_col_data(col)
+                #     #pdb.set_trace()
+                #     #col_data = [x if x > -150 else x+360 for x in col_data]
+                #     col_data[col_data < -175] = col_data[col_data < -175] + 360
+                #     #pdb.set_trace()
+                #     ax1.plot(log_graphs[i].get_col_data(0), col_data, \
+                #     color=colors[(col_ind + color_os) % len(colors)], linestyle=styles[i+style_os], \
+                #     lw=lw[col_ind], label=log_graphs[i].headings[col])
+                # else:
+                #     ax1.plot(log_graphs[i].get_col_data(0), log_graphs[i].get_col_data(col), \
+                #         color=colors[(col_ind + color_os) % len(colors)], linestyle=styles[i+style_os], \
+                #         lw=lw[col_ind], label=log_graphs[i].headings[col])
+                # end mod for heading wrap
+                begin comment this out for heading wrap
                 ax1.plot(log_graphs[i].get_col_data(0), log_graphs[i].get_col_data(col), \
                     color=colors[(col_ind + color_os) % len(colors)], linestyle=styles[i+style_os], \
                     lw=lw[col_ind], label=log_graphs[i].headings[col])
+                # end comment for heading wrap
                 col_ind = (col_ind + 1)
             if secondary_cols is not None:
                 for col in secondary_cols:
@@ -106,7 +123,7 @@ def compare_logs(filenames, cols, min_time = 0, max_time = None, \
     else:
         plt.xlabel('frequency [Hz]')
         plt.ylabel('PSD [ROT^2/Hz]')
-    plt.setp(ltext, fontsize=14)
+    plt.setp(ltext, fontsize=18)
     if min_time > 0 and max_time is not None:
         plt.xlim([min_time, max_time])
     # plt.ylim([-100, 60])
