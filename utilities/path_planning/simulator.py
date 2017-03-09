@@ -21,8 +21,9 @@ import pdb
 
 NEXT_PATH_SIDE = ['port', 'stbd']
 SWATH_OVERLAP = 0.2
+SWATH_ANGLE = 70
 RAY_TRACE_RES = 1.0
-PRINT_DEBUG = False
+PRINT_DEBUG = True
 BLUE = '#6699cc'
 GRAY = '#999999'
 
@@ -43,7 +44,7 @@ class Simulator(object):
         self.veh_locs = [(start_x, start_y)]
         self.port_outer = []
         self.stbd_outer = []
-        self.swath_angle = 65
+        self.swath_angle = SWATH_ANGLE
         self.last_port_depth = 0
         self.last_stbd_depth = 0
 

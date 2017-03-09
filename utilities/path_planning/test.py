@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import sys
 import pdb
 
-swath_angle = 65
+swath_angle = 70
 
 def test_path_bend(scenario=0):
     path_points = [(90, 120), (105, 140), (112, 160), (160, 180), (130, 110), \
@@ -79,7 +79,7 @@ def test_swath_sim(gtype='slope', num_lines=3):
 
     if sim.run_simulation(num_lines):
         # use plot_sim(False) to not show swaths
-        sim.plot_sim(True, False)
+        sim.plot_sim(False, False)
         # pdb.set_trace()
 
 def test_swath_sim_import(terrain='flat', num_lines=2):

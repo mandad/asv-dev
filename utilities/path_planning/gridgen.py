@@ -6,7 +6,7 @@ Damian Manda
 8 Feb 2015
 """
 
-VISMODE = False
+VISMODE = True
 
 import numpy as np
 import rasterio
@@ -18,6 +18,8 @@ if VISMODE:
     else:
         has_mlab = True
     import matplotlib.pyplot as plt
+else:
+    has_mlab = False
 import pdb
 
 class BathyGrid(object):
@@ -157,13 +159,15 @@ class BathyGrid(object):
         if self.grid is not None:
             if has_mlab and view_3D:
                 mlab.surf(-self.grid, colormap='jet', warp_scale='20')
-            else:
+            elif VISMODE:
                 if self.imported:
                     plt.imshow(-self.grid, cmap='jet', zorder=0, \
                         extent=self.get_extents())
                 else:
-                    plt.imshow(-np.transpose(self.grid), cmap='jet', zorder=0, \
+                    plt.imshow(np.flipud(np.transpose(self.grid)), cmap='jet_r', zorder=0, \
                         extent=self.get_extents())
+                    #plt.imshow(-np.transpose(self.grid), cmap='jet', zorder=0, \
+                    #    extent=self.get_extents())
                     # plt.savefig('path_display.png', dpi=600, transparent=True)
                 cbar = plt.colorbar()
                 cbar.set_label('Depth [m]')
@@ -207,9 +211,14 @@ class BathyGrid(object):
                 0, self.size_x - 1)
             y_idx = np.clip(int((y - self.geo_transform[3]) / self.geo_transform[5]), \
                 0, self.size_y - 1)
+            print('index: ({0}, {1})'.format(x_idx, y_idx))
 
         # Could interpolate or something if wanted to get fancy
-        depth_val = self.grid[y_idx, x_idx]
+        #pdb.set_trace()
+        if self.imported:
+            depth_val = self.grid[y_idx, x_idx]
+        else:
+            depth_val = self.grid[x_idx, y_idx]
         if depth_val is np.ma.masked:
             depth_val = self.grid_mean
 
