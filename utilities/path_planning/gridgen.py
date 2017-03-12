@@ -189,6 +189,9 @@ class BathyGrid(object):
         slope = np.pi/2. - np.arctan(np.sqrt(x**2 + y**2))
         return np.average(slope)
 
+    def harmonic_mean_depth(self):
+        return False
+
     def get_depth(self, x, y):
         """Get the depth from the grid at a specified x,y point which does not
         necessarily correspond to the size of the grid"""
@@ -211,7 +214,6 @@ class BathyGrid(object):
                 0, self.size_x - 1)
             y_idx = np.clip(int((y - self.geo_transform[3]) / self.geo_transform[5]), \
                 0, self.size_y - 1)
-            print('index: ({0}, {1})'.format(x_idx, y_idx))
 
         # Could interpolate or something if wanted to get fancy
         #pdb.set_trace()

@@ -12,6 +12,7 @@ import gridgen
 import pathplan
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
 from descartes.patch import PolygonPatch
 from shapely.geometry import Polygon, MultiPoint, Point, MultiPolygon
 import shapely.geometry
@@ -85,6 +86,11 @@ class Simulator(object):
             self.bathy_grid.generate_hole(30, 20)
         elif gtype == 'bump':
             self.bathy_grid.generate_bump(30, 20)
+
+        if PRINT_DEBUG:
+            print('Grid Mean: {0}'.format(np.mean(self.bathy_grid.grid)))
+            print('Grid Harmonic Mean: {0}'.format(scipy.stats.hmean( \
+                self.bathy_grid.grid, axis=None)))
 
     def grid_from_file(self, filename):
         self.bathy_grid = gridgen.BathyGrid.from_bathymetry(filename, False)

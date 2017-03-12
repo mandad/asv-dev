@@ -61,10 +61,11 @@ def test_follow_path():
     return locs
 
 def test_swath_sim(gtype='slope', num_lines=3):
-    sim = simulator.Simulator(0, 0, .5, gtype)
+    start_y = 99
+    sim = simulator.Simulator(0, start_y, .5, gtype)
     # ===== Starting Line =======
     # Regular, start along x axis
-    sim.add_waypoints([(0, 0), (1000, 0)])
+    sim.add_waypoints([(0, start_y), (1000, start_y)])
 
     # 90 degree rotated
     # sim = simulator.Simulator(1000, 0, .5, gtype)
